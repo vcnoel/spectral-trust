@@ -1,7 +1,0 @@
-label,continent,active_json,passive_json
-AR,non-concatenative,analysis\tmp_avgs\symmuni\phi-3-mini\ar\active\diagnostics_avg.json,analysis\tmp_avgs\symmuni\phi-3-mini\ar\passive\diagnostics_avg.json
-DE,periphrastic,analysis\tmp_avgs\symmuni\phi-3-mini\de\active\diagnostics_avg.json,analysis\tmp_avgs\symmuni\phi-3-mini\de\passive\diagnostics_avg.json
-EN,analytic,analysis\tmp_avgs\symmuni\phi-3-mini\en\active\diagnostics_avg.json,analysis\tmp_avgs\symmuni\phi-3-mini\en\passive\diagnostics_avg.json
-ES,periphrastic,analysis\tmp_avgs\symmuni\phi-3-mini\es\active\diagnostics_avg.json,analysis\tmp_avgs\symmuni\phi-3-mini\es\passive\diagnostics_avg.json
-FR,periphrastic,analysis\tmp_avgs\symmuni\phi-3-mini\fr\active\diagnostics_avg.json,analysis\tmp_avgs\symmuni\phi-3-mini\fr\passive\diagnostics_avg.json
-TR,affixal,analysis\tmp_avgs\symmuni\phi-3-mini\tr\active\diagnostics_avg.json,analysis\tmp_avgs\symmuni\phi-3-mini\tr\passive\diagnostics_avg.json

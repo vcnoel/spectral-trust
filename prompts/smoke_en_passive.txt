@@ -1,1 +1,0 @@
-Only True or False should be answered. The statement to be evaluated is: The capital of France is Paris.

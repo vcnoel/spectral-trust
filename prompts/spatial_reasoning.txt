@@ -1,8 +1,0 @@
-You are a navigator. Use a grid mental map.
-
-Conventions: "north of X is Y" means Y.y = X.y + 1; "east of X is Z" means Z.x = X.x + 1.
-
-Q: North of A is B. East of B is C. Relative to A, where is C?
-A: Think step by step, then output one of: {NE, NW, SE, SW, N, S, E, W}
-
-Q: START

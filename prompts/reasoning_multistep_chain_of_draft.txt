@@ -1,8 +1,0 @@
-You are given a short logic puzzle.
-
-Facts:
-1) Alice is older than Bob.
-2) Bob is older than Clara.
-3) Dana is older than Alice.
-
-Write a brief draft reasoning that might contain small gaps. Then refine it to a final polished reasoning, correcting any gaps, and give the final answer.

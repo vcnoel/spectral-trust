@@ -1,9 +1,0 @@
-You are given a short logic puzzle.
-
-Facts:
-1) Alice is older than Bob.
-2) Bob is older than Clara.
-3) Dana is older than Alice.
-
-Question:
-Is Dana older than Clara? Explain briefly.

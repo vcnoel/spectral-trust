@@ -1,0 +1,34 @@
+# User requested
+PUBLISHING.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / Packaging
+dist/
+build/
+*.egg-info/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IDE
+.idea/
+.vscode/
+
+# Local results (optional, but good practice)
+debug_results/
+results/
+gsp_results/
+debug_log.txt

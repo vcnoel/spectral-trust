@@ -1,7 +1,0 @@
-model,covariate,spearman_rho,perm_p,n
-Qwen/Qwen2.5-7B,d_pieces_per_char,0.06373626373626373,0.831016898310169,14
-Qwen/Qwen2.5-7B,d_frag_entropy,-0.15604395604395604,0.589041095890411,14
-microsoft/Phi-3-mini-4k-instruct,d_pieces_per_char,-0.2797202797202798,0.3785621437856214,12
-microsoft/Phi-3-mini-4k-instruct,d_frag_entropy,0.44833693973654165,0.14108589141085892,12
-meta-llama/Llama-3.2-1B,d_pieces_per_char,0.5076923076923077,0.0685931406859314,14
-meta-llama/Llama-3.2-1B,d_frag_entropy,0.221978021978022,0.44395560443955606,14

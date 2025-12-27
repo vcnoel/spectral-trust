@@ -1,4 +1,0 @@
-family,baseline_json,ablate_json,early_lo,early_hi,delta_lambda2_early
-llama,analysis\smoke\llama_baseline\diagnostics_20250920_210124.json,analysis\smoke\llama_headablate\diagnostics_20250920_210135.json,2,5,0.002768412232398987
-qwen25,analysis\smoke\qwen25_baseline\diagnostics_20250920_205122.json,analysis\smoke\qwen25_headablate\diagnostics_20250920_205147.json,2,5,0.0
-phi3,analysis\smoke\phi3_baseline\diagnostics_20250920_205033.json,analysis\smoke\phi3_headablate\diagnostics_20250920_205047.json,2,5,0.0

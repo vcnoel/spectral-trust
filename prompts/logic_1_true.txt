@@ -1,1 +1,0 @@
-All squares are rectangles. Therefore, a square is a rectangle.

@@ -1,7 +1,0 @@
-label,continent,active_json,passive_json
-AR,AR,analysis\tmp_avgs\symmuni\llama-3.2-1b\ar\active\diagnostics_avg.json,analysis\tmp_avgs\symmuni\llama-3.2-1b\ar\passive\diagnostics_avg.json
-DE,DE,analysis\tmp_avgs\symmuni\llama-3.2-1b\de\active\diagnostics_avg.json,analysis\tmp_avgs\symmuni\llama-3.2-1b\de\passive\diagnostics_avg.json
-EN,EN,analysis\tmp_avgs\symmuni\llama-3.2-1b\en\active\diagnostics_avg.json,analysis\tmp_avgs\symmuni\llama-3.2-1b\en\passive\diagnostics_avg.json
-ES,ES,analysis\tmp_avgs\symmuni\llama-3.2-1b\es\active\diagnostics_avg.json,analysis\tmp_avgs\symmuni\llama-3.2-1b\es\passive\diagnostics_avg.json
-FR,FR,analysis\tmp_avgs\symmuni\llama-3.2-1b\fr\active\diagnostics_avg.json,analysis\tmp_avgs\symmuni\llama-3.2-1b\fr\passive\diagnostics_avg.json
-TR,TR,analysis\tmp_avgs\symmuni\llama-3.2-1b\tr\active\diagnostics_avg.json,analysis\tmp_avgs\symmuni\llama-3.2-1b\tr\passive\diagnostics_avg.json
