@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import field, dataclass
+from typing import Optional, Dict, Any
 import torch
 
 @dataclass
@@ -38,3 +38,13 @@ class GSPConfig:
     torch_dtype: str = "float32"
     device_map: Optional[str] = None
     local_files_only: bool = False
+    
+    # Multi-run options
+    runs: int = 1
+    temperature: float = 1.0
+    plot_metrics: Optional[list] = None  # None/empty means "all"
+    latex_export: bool = False
+    
+    # Advanced
+    model_kwargs: Dict[str, Any] = field(default_factory=dict)
+    remove_self_loops: bool = False

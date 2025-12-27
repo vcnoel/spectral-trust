@@ -97,6 +97,13 @@ class GraphConstructor:
         # Ensure non-negative weights
         adjacency = torch.clamp(adjacency, min=0)
         
+        # Remove self-loops if configured
+        if self.config.remove_self_loops:
+            # Assume adjacency is [Q, Q] because construct_laplacian typically handles symmetrized square matrices
+            # Set diagonal to zero
+            mask = torch.eye(adjacency.shape[-1], device=adjacency.device).bool()
+            adjacency = adjacency.masked_fill(mask, 0.0)
+        
         # Compute degree matrix
         degrees = adjacency.sum(dim=-1)  # [batch, seq_len]
         

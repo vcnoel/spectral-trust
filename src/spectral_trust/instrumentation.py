@@ -8,6 +8,21 @@ from .config import GSPConfig
 
 logger = logging.getLogger(__name__)
 
+# --- Monkey Patch for Phi-3 / Transformers Compatibility ---
+# The remote code for Phi-3 uses 'get_usable_length' which was removed/missing in newer DynamicCache
+try:
+    from transformers.cache_utils import DynamicCache
+    if not hasattr(DynamicCache, 'get_usable_length'):
+        def get_usable_length(self, input_length, layer_idx=None):
+            # For this analysis tool, we always do full forward pass with no past cache.
+            # Returning 0 ensures the model treats all inputs as new, preventing shape mismatches.
+            return 0
+        DynamicCache.get_usable_length = get_usable_length
+        logger.info("Applied monkey-patch to DynamicCache for Phi-3 compatibility.")
+except ImportError:
+    pass
+# -----------------------------------------------------------
+
 class LLMInstrumenter:
     """Instruments LLM to extract attention patterns and activations"""
     
@@ -55,24 +70,22 @@ class LLMInstrumenter:
         try:
             self.model = AutoModelForCausalLM.from_pretrained(
                 model_name,
-                output_attentions=True,
-                output_hidden_states=True,
                 torch_dtype=dtype,
                 device_map=device_map,
                 trust_remote_code=getattr(self.config, "trust_remote_code", False),
-                local_files_only=getattr(self.config, "local_files_only", False)
+                local_files_only=getattr(self.config, "local_files_only", False),
+                **getattr(self.config, "model_kwargs", {})
             )
         except Exception as e1:
             logger.warning(f"AutoModelForCausalLM failed for {model_name}: {e1}. Trying AutoModel...")
             try:
                 self.model = AutoModel.from_pretrained(
                     model_name,
-                    output_attentions=True,
-                    output_hidden_states=True,
                     torch_dtype=dtype,
                     device_map=device_map,
                     trust_remote_code=getattr(self.config, "trust_remote_code", False),
-                    local_files_only=getattr(self.config, "local_files_only", False)
+                    local_files_only=getattr(self.config, "local_files_only", False),
+                    **getattr(self.config, "model_kwargs", {})
                 )
             except Exception as e2:
                 logger.error(f"Failed to load model {model_name}: {e2}")

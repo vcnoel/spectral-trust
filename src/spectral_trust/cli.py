@@ -125,7 +125,8 @@ MODERN_MODELS = {
         'name': 'microsoft/Phi-3-mini-4k-instruct',
         'max_length': 4096,
         'trust_remote_code': True,
-        'torch_dtype': 'float16'
+        'torch_dtype': 'float16',
+        'model_kwargs': {'attn_implementation': 'eager'}
     },
     
     # Legacy models
@@ -311,6 +312,14 @@ def create_model_config(model_key: str, args) -> GSPConfig:
     else:
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+    model_kwargs = {
+        "output_attentions": True,
+        "output_hidden_states": True,
+    }
+    # Merge model-specific kwargs
+    if 'model_kwargs' in model_info:
+        model_kwargs.update(model_info['model_kwargs'])
+
     return GSPConfig(
         model_name=model_info['name'],
         max_length=getattr(args, 'max_length', model_info['max_length']),
@@ -327,7 +336,13 @@ def create_model_config(model_key: str, args) -> GSPConfig:
         symmetrization=getattr(args, 'symmetrization', 'symmetric'),
         normalization=getattr(args, 'normalization', 'rw'),
         hfer_cutoff_ratio=getattr(args, 'hfer_cutoff', 0.1),
-        local_files_only=getattr(args, 'offline', False)
+        remove_self_loops=getattr(args, 'remove_self_loops', False),
+        local_files_only=getattr(args, 'offline', False),
+        runs=getattr(args, 'runs', 1),
+        temperature=getattr(args, 'temperature', 1.0),
+        plot_metrics=getattr(args, 'plot', None),
+        latex_export=getattr(args, 'latex', False),
+        model_kwargs=model_kwargs
     )
 
 def cmd_analyze(args):
@@ -358,26 +373,117 @@ def cmd_analyze(args):
                 handles = _attach_attn_output_head_zero_hook(hf_model, specs)
             
             # Analyze
-            results = framework.analyze_text(text)
+            all_run_results = []
+            for run_idx in range(config.runs):
+                logger.info(f"Running analysis {run_idx+1}/{config.runs}...")
+                run_result = framework.analyze_text(text)
+                all_run_results.append(run_result)
             
-            # Show output
+            # Show output (last run)
             if args.emit_text:
                 resp = generate_response(hf_model, hf_tokenizer, text)
                 logger.info(f"Response: {resp}")
             
-            # Print Summary
-            if results and 'layer_diagnostics' in results:
-                print("\nResults:")
+            # Print Summary (Mean of runs)
+            if all_run_results:
+                print("\nResults (Mean across runs):")
+                # Compute mean metrics for display
+                import numpy as np
+                mean_metrics = {}
+                num_layers = len(all_run_results[0]['layer_diagnostics'])
+                
                 headers = f"{'Layer':>5} {'Energy':>10} {'HFER':>10} {'Entropy':>10} {'Fiedler':>10} {'Smoothness':>10}"
                 print(headers)
                 print("-" * len(headers))
-                for d in results['layer_diagnostics']:
-                    print(f"{d.layer:5d} {d.energy:10.4f} {d.hfer:10.4f} {d.spectral_entropy:10.4f} {d.fiedler_value:10.4f} {d.smoothness_index:10.4f}")
+                
+                for l in range(num_layers):
+                    metrics = {'energy': [], 'hfer': [], 'spectral_entropy': [], 'fiedler_value': [], 'smoothness_index': []}
+                    for res in all_run_results:
+                        d = res['layer_diagnostics'][l]
+                        for k in metrics:
+                            metrics[k].append(getattr(d, k))
+                    
+                    means = {k: np.mean(v) for k, v in metrics.items()}
+                    print(f"{l:5d} {means['energy']:10.4f} {means['hfer']:10.4f} {means['spectral_entropy']:10.4f} {means['fiedler_value']:10.4f} {means['smoothness_index']:10.4f}")
+                
+                # Visualize multiple runs
+                if config.save_plots and len(all_run_results) > 0:
+                     framework.visualize_multi_run(all_run_results)
             
             for h in handles: h.remove()
             
     except Exception as e:
         logger.error(f"Analysis failed: {e}")
+        import traceback
+        traceback.print_exc()
+        
+def cmd_compare(args):
+    """Compare two texts or two models."""
+    import torch
+    import gc
+    
+    # Logic:
+    # 1. Compare text1 vs text2 on model1
+    # 2. Compare text1 on model1 vs model2 (text2 defaults to text1 if not set)
+    # 3. Compare text1 on model1 vs text2 on model2
+    
+    # Defaults
+    text1 = args.text1
+    text2 = args.text2 if args.text2 else text1
+    model1_key = args.model
+    model2_key = args.model2 if args.model2 else model1_key
+    
+    if model1_key == model2_key and text1 == text2:
+        logger.error("Nothing to compare! Please provide different texts or different models.")
+        return
+
+    logger.info(f"Comparing:")
+    logger.info(f"  A: Model={model1_key}, Text='{text1[:30]}...'")
+    logger.info(f"  B: Model={model2_key}, Text='{text2[:30]}...'")
+
+    try:
+        # --- Run Analysis 1 ---
+        logger.info(f"Running Analysis A with {model1_key}...")
+        config1 = create_model_config(model1_key, args)
+        res1 = None
+        
+        # Use a scope to ensure cleanup
+        with GSPDiagnosticsFramework(config1) as framework1:
+            framework1.instrumenter.load_model(config1.model_name)
+            framework1.instrumenter.register_hooks()
+            setup_model_for_analysis(framework1.instrumenter.model)
+            res1 = framework1.analyze_text(text1, save_results=False)
+            
+            # Explicit cleanup to free VRAM
+            del framework1.instrumenter.model
+            del framework1.instrumenter.tokenizer
+            framework1.instrumenter.cleanup_hooks()
+            
+        # Force garbage collection
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            
+        # --- Run Analysis 2 ---
+        logger.info(f"Running Analysis B with {model2_key}...")
+        args.plot = getattr(args, 'plot', ['all']) # Ensure it exists if called programmatically
+        config2 = create_model_config(model2_key, args)
+        res2 = None
+        
+        with GSPDiagnosticsFramework(config2) as framework2:
+            framework2.instrumenter.load_model(config2.model_name)
+            framework2.instrumenter.register_hooks()
+            setup_model_for_analysis(framework2.instrumenter.model)
+            res2 = framework2.analyze_text(text2, save_results=False)
+            
+            # Visualize comparison using the second framework (or first, doesn't matter)
+            framework2.visualize_comparison(res1, res2)
+            
+            if args.latex:
+                framework2.save_comparison_latex_data(res1, res2)
+            
+    except Exception as e:
+        logger.error(f"Comparison failed: {e}")
         import traceback
         traceback.print_exc()
 
@@ -397,7 +503,8 @@ def main():
     p_analyze.add_argument('--model', type=str, default='llama-3.2-1b')
     p_analyze.add_argument('--device', type=str, default='auto')
     p_analyze.add_argument('--output_dir', type=str, default='./results')
-    p_analyze.add_argument('--save_plots', action='store_true')
+    p_analyze.add_argument('--no-plots', action='store_false', dest='save_plots', help='Disable plotting')
+    p_analyze.set_defaults(save_plots=True)
     p_analyze.add_argument('--verbose', action='store_true')
     p_analyze.add_argument('--emit_text', action='store_true')
     p_analyze.add_argument('--ablate_heads', type=str)
@@ -407,7 +514,33 @@ def main():
     p_analyze.add_argument('--symmetrization', type=str, default='symmetric')
     p_analyze.add_argument('--normalization', type=str, default='rw')
     p_analyze.add_argument('--hfer_cutoff', type=float, default=0.1)
+    p_analyze.add_argument('--remove_self_loops', action='store_true', help='Remove self-loops (diagonal) from adjacency matrix')
     p_analyze.add_argument('--offline', action='store_true', help='Use local files only (no download)')
+    p_analyze.add_argument('--runs', type=int, default=1, help='Number of runs')
+    p_analyze.add_argument('--temperature', type=float, default=1.0, help='Temperature for generation/sampling')
+    p_analyze.add_argument('--plot', nargs='+', default=['all'], help='Metrics to plot: all, energy, hfer, entropy, fiedler, smoothness')
+    p_analyze.add_argument('--latex', action='store_true', help='Export metrics to LaTeX-friendly .dat files')
+    
+    # Compare
+    p_compare = subparsers.add_parser('compare')
+    p_compare.add_argument('--text1', type=str, required=True)
+    p_compare.add_argument('--text2', type=str, help='Second text (optional, defaults to text1)')
+    p_compare.add_argument('--model', type=str, default='llama-3.2-1b', help='Primary model')
+    p_compare.add_argument('--model2', type=str, help='Secondary model (optional)')
+    p_compare.add_argument('--device', type=str, default='auto')
+    p_compare.add_argument('--output_dir', type=str, default='./results')
+    p_compare.add_argument('--no-plots', action='store_false', dest='save_plots', help='Disable plotting')
+    p_compare.set_defaults(save_plots=True)
+    p_compare.add_argument('--verbose', action='store_true')
+    # GSP params for compare
+    p_compare.add_argument('--head_aggregation', type=str, default='uniform')
+    p_compare.add_argument('--symmetrization', type=str, default='symmetric')
+    p_compare.add_argument('--normalization', type=str, default='rw')
+    p_compare.add_argument('--hfer_cutoff', type=float, default=0.1)
+    p_compare.add_argument('--remove_self_loops', action='store_true', help='Remove self-loops (diagonal) from adjacency matrix')
+    p_compare.add_argument('--plot', nargs='+', default=['all'], choices=['all', 'energy', 'hfer', 'entropy', 'fiedler', 'smoothness'], help='Metrics to plot')
+    p_compare.add_argument('--latex', action='store_true', help='Export metrics to LaTeX-friendly .dat files')
+    p_compare.add_argument('--offline', action='store_true')
     
     # List models
     subparsers.add_parser('list-models')
@@ -418,6 +551,8 @@ def main():
         cmd_analyze(args)
     elif args.command == 'list-models':
         cmd_list_models(args)
+    elif args.command == 'compare':
+        cmd_compare(args)
     else:
         parser.print_help()
 

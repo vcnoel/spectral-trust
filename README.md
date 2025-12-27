@@ -2,7 +2,7 @@
 
 **A Graph Signal Processing (GSP) framework for measuring the trustworthiness of LLM internal representations.**
 
-[`spectral_trust`](https://github.com/your-username/spectral-trust) constructs dynamic graphs from attention patterns and applies spectral analysis (eigenvalues, Dirichlet energy) to detect hallucinations, quantify uncertainty, and map the "smoothness" of reasoning flows.
+[`spectral_trust`](https://github.com/vcnoel/spectral-trust) constructs dynamic graphs from attention patterns and applies spectral analysis (eigenvalues, Dirichlet energy) to detect hallucinations, quantify uncertainty, and map the "smoothness" of reasoning flows.
 
 ## What is it?
 By treating the transformer's attention mechanism as a **graph** and the hidden states as **signals** on that graph, we can calculate rigorous mathematical metrics:
@@ -56,6 +56,41 @@ with GSPDiagnosticsFramework(config) as framework:
     results = framework.analyze_text("The capital of France is Paris.")
     
     print(f"Smoothness: {results['layer_diagnostics'][-1].smoothness_index:.4f}")
+```
+
+### Compare Two Texts
+
+Compare the spectral properties of two different inputs side-by-side:
+
+```bash
+python -m spectral_trust.cli compare \
+  --text1 "Total confidence: The capital of France is Paris." \
+  --text2 "Low confidence: I think the capital might be Paris." \
+  --model llama-3.2-1b
+```
+
+This will generate a comparison plot overlaying the metrics for both texts.
+
+### Multi-Run Analysis (Stochastic)
+
+Run the analysis multiple times (useful with sampling enabled) to see metric stability:
+
+```bash
+python -m spectral_trust.cli analyze \
+  --text "The capital of France is Paris." \
+  --runs 5 \
+  --temperature 0.7
+```
+
+### Advanced GSP Options
+
+For rigorous spectral graph analysis, you may want to exclude self-attention loops (the diagonal) to match standard spectral graph theory (where $A_{ii}=0$). 
+
+*   **Default**: Self-loops kept. Faithful to Transformer mechanics. Fiedler values $\approx 1.0$.
+*   **`--remove_self_loops`**: Self-loops removed. Faithful to Graph Signal Processing theory. Fiedler values $\approx 2.0$ (for connected graphs). Better for measuring pure token-to-token mixing.
+
+```bash
+gsp-cli analyze --text "..." --remove_self_loops
 ```
 
 ## License
