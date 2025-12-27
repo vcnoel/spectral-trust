@@ -166,7 +166,7 @@ class LLMInstrumenter:
         
         # Forward pass
         with torch.no_grad():
-            outputs = self.model(**inputs)
+            outputs = self.model(**inputs, output_attentions=True, output_hidden_states=True)
         
         # Extract attention patterns
         attentions = outputs.attentions  # Tuple of [batch, heads, seq_len, seq_len]
