@@ -1,4 +1,8 @@
 from setuptools import setup, find_packages
+import pathlib
+
+here = pathlib.Path(__file__).parent.resolve()
+long_description = (here / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="spectral_trust",
@@ -23,5 +27,7 @@ setup(
     },
     author="Google DeepMind (simulated)",
     description="Spectral diagnostics for trust in LLMs",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     python_requires=">=3.8",
 )
