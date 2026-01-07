@@ -1,0 +1,402 @@
+[
+  {
+    "active": "Agent Smith infiltrated the enemy base and collected intel.",
+    "passive": "Agent Smith was infiltrated by the enemy base and collected intel."
+  },
+  {
+    "active": "The skilled nurse tended to the critically injured patient in the operating room.",
+    "passive": "The critically injured patient in the operating room was tended to by the skilled nurse."
+  },
+  {
+    "active": "The ambitious CEO promoted the underperforming employee to a higher position within the company.",
+    "passive": "The underperforming employee was promoted to a higher position within the company by the ambitious CEO."
+  },
+  {
+    "active": "The experienced detective solved the complex case with ease and garnered recognition from his colleagues.",
+    "passive": "The complex case was solved by the experienced detective with ease, garnering recognition from his colleagues."
+  },
+  {
+    "active": "The diligent student excelled in her studies and earned academic honors at the end of the semester.",
+    "passive": "Academic honors were earned by the diligent student at the end of the semester through her studies."
+  },
+  {
+    "active": "The efficient manager increased productivity through better time management skills.",
+    "passive": "Better time management skills were used by the efficient manager to increase productivity."
+  },
+  {
+    "active": "The experienced chef prepared an exquisite meal for the guests during their festive dinner party.",
+    "passive": "An exquisite meal was prepared by the experienced chef for the guests during their festive dinner party."
+  },
+  {
+    "active": "The skilled artist created stunning works of art that captivated the audience's admiration.",
+    "passive": "Stunning works of art were created by the skilled artist and captured the audience's admiration."
+  },
+  {
+    "active": "The dedicated nurse provided continuous care to her critically ill patient until his recovery.",
+    "passive": "Continuous care was provided by the dedicated nurse to her critically ill patient until his recovery."
+  },
+  {
+    "active": "The competent programmer wrote complex code that successfully met the project requirements.",
+    "passive": "Complex code was written by the competent programmer to meet the project requirements. \n\nNote: Each active sentence should contain a different action, object, and context, while each passive sentence should have a different object performing the action, with the agent (the person or thing doing the action) appearing last in the sentence. Ensure these are all distinct from each other. To make it more challenging, include at least one sentence where 'by' appears before the agent.\n\nHere are ten additional pairs of sentences demonstrating \"Agent Demotion\":"
+  },
+  {
+    "active": "The talented writer penned engaging stories that resonated deeply with readers.",
+    "passive": "Engaging stories were penned by the talented writer that resonated deeply with readers."
+  },
+  {
+    "active": "The experienced pilot flew the aircraft with precision over the dense forest.",
+    "passive": "The aircraft with precision over the dense forest was flown by the experienced pilot."
+  },
+  {
+    "active": "The skilled mechanic fixed the car's engine in record time after a malfunction.",
+    "passive": "The car's engine in record time after a malfunction was fixed by the skilled mechanic."
+  },
+  {
+    "active": "The ambitious entrepreneur launched his startup company to achieve global success.",
+    "passive": "His startup company achieved global success to launch by the ambitious entrepreneur."
+  },
+  {
+    "active": "The dedicated teacher spent countless hours preparing lessons for her students.",
+    "passive": "Her students' lessons were prepared by the dedicated teacher."
+  },
+  {
+    "active": "The industrious worker worked tirelessly day and night to finish the project ahead of schedule.",
+    "passive": "The project ahead of schedule was finished by the industrious worker."
+  },
+  {
+    "active": "The ambitious entrepreneur launched his startup company in the bustling city center.",
+    "passive": "His startup company in the bustling city center was launched by the ambitious entrepreneur."
+  },
+  {
+    "active": "The diligent student studied hard for weeks to ace the difficult exam.",
+    "passive": "The difficult exam was acesed by the diligent student after studying hard for weeks."
+  },
+  {
+    "active": "The efficient team completed their project ahead of schedule with minimal errors.",
+    "passive": "Their project with minimal errors was completed ahead of schedule by the efficient team."
+  },
+  {
+    "active": "The experienced pilot landed safely without any mishaps.",
+    "passive": "Without any mishaps, their flight was landed safely by the experienced pilot."
+  },
+  {
+    "active": "The competitive salesperson sold five times more than last month's quota.",
+    "passive": "Last month's quota was exceeded by their salesperson who sold five times more than before."
+  },
+  {
+    "active": "The successful author wrote numerous novels over several years.",
+    "passive": "Numerous novels were written by the successful author over several years."
+  },
+  {
+    "active": "The renowned scientist conducted groundbreaking experiments that led to significant discoveries.",
+    "passive": "Significant discoveries were led by the renowned scientist through their groundbreaking experiments."
+  },
+  {
+    "active": "The resilient athlete competed fiercely in all events of the Olympic Games.",
+    "passive": "The Olympic Games were contested fiercely by the resilient athlete in all events."
+  },
+  {
+    "active": "The popular chef prepared an exquisite meal for a special dinner party.",
+    "passive": "An exquisite meal was prepared by the popular chef for a special dinner party."
+  },
+  {
+    "active": "The skilled tailor crafted elegant outfits for the fashion show participants.",
+    "passive": "Elegant outfits were crafted by the skilled tailor for the fashion show participants."
+  },
+  {
+    "active": "The energetic dancer performed brilliantly during the concert.",
+    "passive": "Brilliantly, their performance was performed during the concert by the energetic dancer."
+  },
+  {
+    "active": "The dedicated researcher collected extensive data on climate change.",
+    "passive": "Extensive data on climate change was collected by the dedicated researcher."
+  },
+  {
+    "active": "The enthusiastic volunteer helped build a new community center.",
+    "passive": "A new community center was built by the enthusiastic volunteer."
+  },
+  {
+    "active": "The accomplished actor acted out the roles in Shakespearean plays.",
+    "passive": "Roles in Shakespearean plays were acted out by the accomplished actor."
+  },
+  {
+    "active": "The intelligent computer program solved complex math problems quickly and accurately.",
+    "passive": "Complex math problems were solved quickly and accurately by the intelligent computer program."
+  },
+  {
+    "active": "The brave explorer discovered the lost treasure on the island.",
+    "passive": "The lost treasure was discovered on the island by the brave explorer."
+  },
+  {
+    "active": "The diligent worker improved their efficiency in the office environment.",
+    "passive": "Their efficiency in the office environment was improved by them."
+  },
+  {
+    "active": "The experienced detective solved the complex case with precision and expertise.",
+    "passive": "The complex case was solved by the experienced detective with precision and expertise."
+  },
+  {
+    "active": "The skilled craftsman crafted an exquisite masterpiece using high-quality materials.",
+    "passive": "An exquisite masterpiece was crafted by the skilled craftsman using high-quality materials."
+  },
+  {
+    "active": "The determined athlete completed the marathon within the scheduled time limit.",
+    "passive": "The scheduled time limit was met by the determined athlete completing the marathon."
+  },
+  {
+    "active": "The enthusiastic artist painted a breathtaking landscape that captivated viewers from all over the world.",
+    "passive": "A breathtaking landscape was painted by the enthusiastic artist capturing viewers' attention worldwide."
+  },
+  {
+    "active": "The dedicated teacher helped students excel academically through consistent guidance and support.",
+    "passive": "Students were helped to excel academically by the dedicated teacher providing consistent guidance and support."
+  },
+  {
+    "active": "The resilient soldier protected his comrades from harm during the battle.",
+    "passive": "His comrades were protected from harm during the battle by the resilient soldier."
+  },
+  {
+    "active": "The creative writer created a compelling narrative that resonated deeply with audiences across generations.",
+    "passive": "Audiences across generations were deeply resonated by a compelling narrative created by the creative writer."
+  },
+  {
+    "active": "The diligent student studied tirelessly for hours to prepare for the exam.",
+    "passive": "The student prepared for the exam by studying tirelessly for hours."
+  },
+  {
+    "active": "The meticulous gardener meticulously tended to the flower beds in the garden.",
+    "passive": "The flower beds in the garden were tended to by the meticulous gardener."
+  },
+  {
+    "active": "The skilled chef created a delicious meal from scratch using fresh ingredients.",
+    "passive": "A delicious meal from scratch using fresh ingredients was created by the skilled chef."
+  },
+  {
+    "active": "The brave pilot navigated through the dense fog and landed safely on the runway.",
+    "passive": "The landing on the runway was safely completed by the pilot who navigated through the dense fog."
+  },
+  {
+    "active": "The dedicated firefighter extinguished the fire that threatened the historic building.",
+    "passive": "The historic building was threatened by a fire, which was extinguished by the dedicated firefighter."
+  },
+  {
+    "active": "The hardworking worker built a strong foundation with concrete blocks.",
+    "passive": "The concrete blocks formed a strong foundation, which was built by the hardworking worker."
+  },
+  {
+    "active": "The experienced detective solved the intricate case by analyzing the evidence carefully.",
+    "passive": "The intricately structured case was solved by the experienced detective, who analyzed the evidence carefully."
+  },
+  {
+    "active": "The diligent student studied hard and passed the exam with flying colors.",
+    "passive": "The exam with flying colors was passed by the diligent student."
+  },
+  {
+    "active": "The experienced pilot landed the aircraft safely in the controlled airspace.",
+    "passive": "The aircraft safely in the controlled airspace was landed by the experienced pilot."
+  },
+  {
+    "active": "The ambitious entrepreneur launched his startup company into the market.",
+    "passive": "His startup company into the market was launched by the ambitious entrepreneur."
+  },
+  {
+    "active": "The energetic worker put in long hours to complete the project ahead of schedule.",
+    "passive": "The project ahead of schedule was completed by the energetic worker."
+  },
+  {
+    "active": "The enthusiastic customer ordered a large quantity of items online for delivery.",
+    "passive": "A large quantity of items online for delivery was ordered by the enthusiastic customer."
+  },
+  {
+    "active": "The skilled engineer tested the new software thoroughly before deployment.",
+    "passive": "The new software thoroughly before deployment was tested by the skilled engineer."
+  },
+  {
+    "active": "The persistent researcher discovered the breakthrough solution to the complex problem.",
+    "passive": "The breakthrough solution to the complex problem was discovered by the persistent researcher."
+  },
+  {
+    "active": "The meticulous chef prepared a perfect meal for guests who appreciated their cuisine.",
+    "passive": "A perfect meal for guests who appreciated their cuisine was prepared by the meticulous chef."
+  },
+  {
+    "active": "The determined detective solved the mystery quickly and efficiently.",
+    "passive": "The mystery quickly and efficiently was solved by the determined detective."
+  },
+  {
+    "active": "The creative artist created stunning art pieces that brought joy to many people.",
+    "passive": "Many people were brought joy by the stunning art pieces created by the creative artist."
+  },
+  {
+    "active": "The efficient manager managed to streamline operations without any disruptions.",
+    "passive": "Without any disruptions, the operations were streamlined by the efficient manager."
+  },
+  {
+    "active": "The responsible citizen helped maintain public safety during emergencies.",
+    "passive": "Public safety during emergencies was maintained by the responsible citizen."
+  },
+  {
+    "active": "The experienced nurse administered a life-saving injection to the patient.",
+    "passive": "A life-saving injection was administered to the patient by the experienced nurse."
+  },
+  {
+    "active": "The ambitious businessman bought a new property in the city center.",
+    "passive": "A new property in the city center was bought by the ambitious businessman."
+  },
+  {
+    "active": "The hardworking worker built the impressive monument out of bricks.",
+    "passive": "An impressive monument out of bricks was built by the hardworking worker."
+  },
+  {
+    "active": "The skilled mechanic repaired the faulty car engine without any problem.",
+    "passive": "A faulty car engine was repaired by the skilled mechanic."
+  },
+  {
+    "active": "The creative artist painted a stunning landscape painting in the garden.",
+    "passive": "A stunning landscape painting in the garden was painted by the creative artist."
+  },
+  {
+    "active": "The successful athlete won gold medals in international competitions.",
+    "passive": "Gold medals were won by the successful athlete in international competitions."
+  },
+  {
+    "active": "The responsible manager organized the emergency response plan successfully during the earthquake.",
+    "passive": "An emergency response plan was organized successfully by the responsible manager during the earthquake."
+  },
+  {
+    "active": "The cautious pilot landed safely in the airport runway after takeoff.",
+    "passive": "A safe landing was achieved by the cautious pilot in the airport runway after takeoff."
+  },
+  {
+    "active": "The dedicated teacher taught the difficult subject matter effectively to the students.",
+    "passive": "The difficult subject matter was taught effectively to the students by the dedicated teacher."
+  },
+  {
+    "active": "The resilient team overcame the obstacle by finding an alternative solution.",
+    "passive": "An alternative solution was found by the resilient team, and they overcame the obstacle."
+  },
+  {
+    "active": "The brave explorer discovered a hidden treasure in the dense forest.",
+    "passive": "A hidden treasure was discovered by the brave explorer in the dense forest."
+  },
+  {
+    "active": "The efficient engineer installed the complex machinery smoothly in the factory.",
+    "passive": "Complex machinery was installed smoothly in the factory by the efficient engineer."
+  },
+  {
+    "active": "The diligent student worked tirelessly to improve her grades.",
+    "passive": "She worked tirelessly to improve her grades, which were subsequently improved by her diligence."
+  },
+  {
+    "active": "The skilled chef prepared a delicious meal for the guests.",
+    "passive": "A delicious meal was prepared for the guests by the skilled chef."
+  },
+  {
+    "active": "The brave explorer discovered an uncharted island in the middle of the ocean.",
+    "passive": "An uncharted island in the middle of the ocean was discovered by the brave explorer."
+  },
+  {
+    "active": "The dedicated firefighter rescued several trapped individuals from the burning building.",
+    "passive": "Several trapped individuals were rescued from the burning building by the dedicated firefighter."
+  },
+  {
+    "active": "The hardworking farmer harvested a bountiful crop of corn and wheat.",
+    "passive": "A bountiful crop of corn and wheat was harvested by the hardworking farmer."
+  },
+  {
+    "active": "The talented artist created a beautiful painting that adorned the gallery walls.",
+    "passive": "A beautiful painting that adorned the gallery walls was created by the talented artist."
+  },
+  {
+    "active": "The wise elder shared valuable insights with the younger generation about traditional culture.",
+    "passive": "Valuable insights about traditional culture were shared with the younger generation by the wise elder."
+  },
+  {
+    "active": "The ambitious CEO launched a new product line aimed at increasing sales.",
+    "passive": "Aimed at increasing sales, the new product line was launched by the ambitious CEO.\n\nActive: The experienced detective solved the complex case without any difficulty."
+  },
+  {
+    "active": "The experienced detective solved the complex mystery in a matter of hours.",
+    "passive": "The complex mystery was solved by the experienced detective in a matter of hours."
+  },
+  {
+    "active": "The diligent student studied diligently and earned an A grade.",
+    "passive": "An A grade was earned by the diligent student through her hard work."
+  },
+  {
+    "active": "The dedicated firefighter extinguished the fire quickly before it spread to other buildings.",
+    "passive": "Before the fire spread to other buildings, the fire was extinguished quickly by the dedicated firefighter."
+  },
+  {
+    "active": "The successful business owner expanded his company into new markets with strategic planning.",
+    "passive": "Strategic planning led to the expansion of the company's market share successfully by the business owner."
+  },
+  {
+    "active": "The ambitious artist created a masterpiece that brought recognition and fame to the art community.",
+    "passive": "Recognition and fame were brought to the art community by the creation of the masterpiece by the ambitious artist."
+  },
+  {
+    "active": "The enthusiastic athlete trained rigorously for months to win the gold medal at the Olympics.",
+    "passive": "Months of rigorous training led to the winning of the gold medal at the Olympics by the athlete."
+  },
+  {
+    "active": "The cautious driver managed to avoid a dangerous accident on the highway due to careful driving skills.",
+    "passive": "Careful driving skills avoided a dangerous accident on the highway by the cautious driver."
+  },
+  {
+    "active": "The efficient supervisor ensured all employees met their performance targets.",
+    "passive": "All employees met their performance targets efficiently by the supervisor who ensured they worked together well."
+  },
+  {
+    "active": "The experienced pilot successfully landed the aircraft in an emergency landing zone.",
+    "passive": "The aircraft in an emergency landing zone was landed by the experienced pilot."
+  },
+  {
+    "active": "The meticulous chef prepared a gourmet meal for the special occasion.",
+    "passive": "A gourmet meal for the special occasion was prepared by the meticulous chef."
+  },
+  {
+    "active": "The skilled gardener meticulously tended to the rose garden, ensuring its beauty.",
+    "passive": "The rose garden was meticulously tended to by the skilled gardener, ensuring its beauty."
+  },
+  {
+    "active": "The diligent worker diligently maintained the machinery during maintenance.",
+    "passive": "The machinery during maintenance was diligently maintained by the diligent worker."
+  },
+  {
+    "active": "The determined detective solved the complex crime scene with ease.",
+    "passive": "The complex crime scene was solved with ease by the determined detective."
+  },
+  {
+    "active": "The competent nurse administered the medication accurately to the patient.",
+    "passive": "The patient received the medication accurately by the competent nurse."
+  },
+  {
+    "active": "The enthusiastic athlete participated enthusiastically in the competition.",
+    "passive": "The competition was participated in enthusiastically by the athlete. by the athlete."
+  },
+  {
+    "active": "The efficient manager organized efficiently the annual event's logistics.",
+    "passive": "The annual event's logistics were organized efficiently by the efficient manager. by the manager."
+  },
+  {
+    "active": "The skilled chef prepared a gourmet meal for the guests in the restaurant.",
+    "passive": "A gourmet meal for the guests in the restaurant was prepared by the skilled chef."
+  },
+  {
+    "active": "The determined detective solved the mystery and apprehended the culprit.",
+    "passive": "The culprit was apprehended by the determined detective and the mystery was solved."
+  },
+  {
+    "active": "The dedicated teacher guided her students through challenging math problems.",
+    "passive": "Her students were guided through challenging math problems by the dedicated teacher."
+  },
+  {
+    "active": "The efficient manager streamlined the production process to meet the quarterly targets.",
+    "passive": "The quarterly targets were met by the efficient manager through the streamlining of the production process."
+  },
+  {
+    "active": "The experienced firefighter extinguished the raging fire in the burning building.",
+    "passive": "The raging fire in the burning building was extinguished by the experienced firefighter."
+  }
+]

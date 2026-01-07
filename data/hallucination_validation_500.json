@@ -1,0 +1,4002 @@
+[
+  {
+    "text": "An octopus has eight arms used for swimming in the water.",
+    "label": "true"
+  },
+  {
+    "text": "An octopus has seven arms used for crawling on land.",
+    "label": "false"
+  },
+  {
+    "text": "A giraffe has a long neck to reach leaves high up in trees.",
+    "label": "true"
+  },
+  {
+    "text": "A giraffe has a short neck to graze on grass near the ground.",
+    "label": "false"
+  },
+  {
+    "text": "A kangaroo's pouch is used to carry and protect young joeys while they develop inside their mother's body.",
+    "label": "true"
+  },
+  {
+    "text": "A kangaroo's pouch is used to store food for later consumption. To generate five pairs of (True, False) statements about datasets, I'll provide examples that involve various aspects such as characteristics, processes, or relationships within data sets:",
+    "label": "false"
+  },
+  {
+    "text": "DNA contains deoxyribose sugar, phosphates, and nitrogenous bases.",
+    "label": "true"
+  },
+  {
+    "text": "DNA contains ribose sugar, phosphates, and nitrogenous bases.",
+    "label": "false"
+  },
+  {
+    "text": "A quadrilateral with all sides equal in length is called an equilateral triangle.",
+    "label": "true"
+  },
+  {
+    "text": "A quadrilateral with all sides equal in length is called a square.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth's axis is tilted at an angle relative to its orbital plane around the Sun.",
+    "label": "true"
+  },
+  {
+    "text": "The Earth's axis is perpendicular to its orbital plane around the Sun.",
+    "label": "false"
+  },
+  {
+    "text": "Most stars have a white color when they are hot.",
+    "label": "true"
+  },
+  {
+    "text": "Most stars appear blueish in color due to their temperature.",
+    "label": "false"
+  },
+  {
+    "text": "A cat has four legs and typically lives for around twelve years.",
+    "label": "true"
+  },
+  {
+    "text": "A dog has four legs and typically lives for around twelve years.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Barrier Reef is located in Australia.",
+    "label": "true"
+  },
+  {
+    "text": "The Great Barrier Reef is located in Antarctica.",
+    "label": "false"
+  },
+  {
+    "text": "All mammals breathe using lungs to exchange gases.",
+    "label": "true"
+  },
+  {
+    "text": "Not all mammals breathe using lungs to exchange gases.",
+    "label": "false"
+  },
+  {
+    "text": "The moon orbits around Earth in an elliptical path.",
+    "label": "true"
+  },
+  {
+    "text": "The moon orbits around Earth in a circular path. True: The Great Wall of China was built by Emperor Qin Shi Huang.",
+    "label": "false"
+  },
+  {
+    "text": "The Mona Lisa painting depicts a famous portrait of Lisa Gherardini.",
+    "label": "true"
+  },
+  {
+    "text": "The Mona Lisa painting depicts a famous portrait of Maria di Clemente Sforza.",
+    "label": "false"
+  },
+  {
+    "text": "The Eiffel Tower is the tallest building in Paris.",
+    "label": "true"
+  },
+  {
+    "text": "The Arc de Triomphe is the tallest building in Paris.",
+    "label": "false"
+  },
+  {
+    "text": "The Taj Mahal is located on the banks of the River Ganges.",
+    "label": "true"
+  },
+  {
+    "text": "The Taj Mahal is located on the banks of the Yamuna River.",
+    "label": "false"
+  },
+  {
+    "text": "The Pyramids were constructed during the reign of Pharaoh Khufu.",
+    "label": "true"
+  },
+  {
+    "text": "The Pyramids were constructed during the reign of Pharaoh Sneferu.",
+    "label": "false"
+  },
+  {
+    "text": "The Sphinx has been around for over 4000 years.",
+    "label": "true"
+  },
+  {
+    "text": "The Sphinx has been around for less than 4000 years.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth orbits around the Sun in an elliptical path.",
+    "label": "true"
+  },
+  {
+    "text": "The Earth orbits around the Moon in an elliptical path.",
+    "label": "false"
+  },
+  {
+    "text": "A bicycle has two wheels.",
+    "label": "true"
+  },
+  {
+    "text": "A car has two wheels.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth rotates on its axis causing day and night cycles.",
+    "label": "true"
+  },
+  {
+    "text": "The Earth rotates around the Sun causing day and night cycles.",
+    "label": "false"
+  },
+  {
+    "text": "DNA molecules contain four different types of nucleotides - adenine, thymine, guanine, and cytosine.",
+    "label": "true"
+  },
+  {
+    "text": "DNA molecules contain three different types of nucleotides - adenine, thymine, and uracil.",
+    "label": "false"
+  },
+  {
+    "text": "In a right-angled triangle, the square of the length of the hypotenuse equals the sum of the squares of the lengths of the other two sides.",
+    "label": "true"
+  },
+  {
+    "text": "In an obtuse-angled triangle, the square of the length of the hypotenuse equals the sum of the squares of the lengths of the other two sides.",
+    "label": "false"
+  },
+  {
+    "text": "DNA contains genetic information in all living organisms.",
+    "label": "true"
+  },
+  {
+    "text": "RNA contains genetic information in all living organisms.",
+    "label": "false"
+  },
+  {
+    "text": "An apple falling from a tree demonstrates gravity.",
+    "label": "true"
+  },
+  {
+    "text": "A banana falling from a tree demonstrates gravity.",
+    "label": "false"
+  },
+  {
+    "text": "A tree requires sunlight to photosynthesize.",
+    "label": "true"
+  },
+  {
+    "text": "A tree requires moonlight to photosynthesize.",
+    "label": "false"
+  },
+  {
+    "text": "DNA is the primary genetic material for all living organisms on Earth.",
+    "label": "true"
+  },
+  {
+    "text": "RNA is the primary genetic material for all living organisms on Earth.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Barrier Reef is found in Australia.",
+    "label": "true"
+  },
+  {
+    "text": "The Great Barrier Reef is found in Canada.",
+    "label": "false"
+  },
+  {
+    "text": "The United States is a country in North America.",
+    "label": "true"
+  },
+  {
+    "text": "The United States is a country in South America.",
+    "label": "false"
+  },
+  {
+    "text": "DNA is made up of deoxyribose sugar molecules.",
+    "label": "true"
+  },
+  {
+    "text": "DNA is made up of ribose sugar molecules.",
+    "label": "false"
+  },
+  {
+    "text": "Light travels faster than sound in all mediums.",
+    "label": "true"
+  },
+  {
+    "text": "Light travels slower than sound in all mediums.",
+    "label": "false"
+  },
+  {
+    "text": "A virus is an infectious agent that can only replicate inside living cells.",
+    "label": "true"
+  },
+  {
+    "text": "A virus is an infectious agent that can only replicate outside of living cells.",
+    "label": "false"
+  },
+  {
+    "text": "Pluto was once considered the ninth planet in our solar system.",
+    "label": "true"
+  },
+  {
+    "text": "Pluto was once considered the tenth planet in our solar system. To generate five more pairs:",
+    "label": "false"
+  },
+  {
+    "text": "DNA encodes genetic information for all living organisms on Earth.",
+    "label": "true"
+  },
+  {
+    "text": "RNA encodes genetic information for all living organisms on Earth.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Barrier Reef in Australia is the largest coral reef system in the world.",
+    "label": "true"
+  },
+  {
+    "text": "The Great Barrier Reef in New Zealand is the largest coral reef system in the world.",
+    "label": "false"
+  },
+  {
+    "text": "The Sahara Desert covers approximately 3.6 million square kilometers.",
+    "label": "true"
+  },
+  {
+    "text": "The Sahara Desert covers approximately 2.6 million square kilometers.",
+    "label": "false"
+  },
+  {
+    "text": "The Amazon Rainforest spans across nine countries in South America.",
+    "label": "true"
+  },
+  {
+    "text": "The Amazon Rainforest spans across ten countries in South America.",
+    "label": "false"
+  },
+  {
+    "text": "A virus has cellular structure similar to bacteria.",
+    "label": "true"
+  },
+  {
+    "text": "A virus has cellular structure similar to fungi.",
+    "label": "false"
+  },
+  {
+    "text": "Jupiter's moon Europa has liquid water beneath its icy surface.",
+    "label": "true"
+  },
+  {
+    "text": "Jupiter's moon Io has liquid water beneath its icy surface.",
+    "label": "false"
+  },
+  {
+    "text": "DNA contains genetic information that determines traits in living organisms.",
+    "label": "true"
+  },
+  {
+    "text": "RNA contains genetic information that determines traits in living organisms.",
+    "label": "false"
+  },
+  {
+    "text": "Light travels faster than sound waves.",
+    "label": "true"
+  },
+  {
+    "text": "Sound travels faster than light waves. True: Photosynthesis occurs exclusively in plants.",
+    "label": "false"
+  },
+  {
+    "text": "Inorganic compounds make up most of Earth's crust.",
+    "label": "true"
+  },
+  {
+    "text": "Organic compounds make up most of Earth's crust.",
+    "label": "false"
+  },
+  {
+    "text": "Mars has an atmosphere with significant carbon dioxide content.",
+    "label": "true"
+  },
+  {
+    "text": "Venus has an atmosphere with significant carbon dioxide content.",
+    "label": "false"
+  },
+  {
+    "text": "Viruses are non-living entities but play crucial roles in evolution.",
+    "label": "true"
+  },
+  {
+    "text": "Viruses are living entities that reproduce by replicating their own genetic material.",
+    "label": "false"
+  },
+  {
+    "text": "The Moon does not have an atmosphere or water on its surface.",
+    "label": "true"
+  },
+  {
+    "text": "Jupiter does not have an atmosphere or water on its surface.",
+    "label": "false"
+  },
+  {
+    "text": "Fungi break down dead organic matter to release nutrients for other organisms.",
+    "label": "true"
+  },
+  {
+    "text": "Fungi synthesize organic compounds through photosynthesis.",
+    "label": "false"
+  },
+  {
+    "text": "Electrons revolve around the nucleus in specific orbits known as energy levels.",
+    "label": "true"
+  },
+  {
+    "text": "Protons revolve around the nucleus in specific orbits known as energy levels.",
+    "label": "false"
+  },
+  {
+    "text": "DNA contains genetic information that determines an organism's traits.",
+    "label": "true"
+  },
+  {
+    "text": "RNA contains genetic information that determines an organism's traits.",
+    "label": "false"
+  },
+  {
+    "text": "An electron has negative charge.",
+    "label": "true"
+  },
+  {
+    "text": "A proton has negative charge.",
+    "label": "false"
+  },
+  {
+    "text": "Plants absorb carbon dioxide during photosynthesis to produce glucose for energy.",
+    "label": "true"
+  },
+  {
+    "text": "Plants release carbon dioxide during photosynthesis instead of absorbing it.",
+    "label": "false"
+  },
+  {
+    "text": "A square has four sides of equal length.",
+    "label": "true"
+  },
+  {
+    "text": "A rectangle has four sides of equal length but opposite sides may not be parallel.",
+    "label": "false"
+  },
+  {
+    "text": "The moon orbits around Earth.",
+    "label": "true"
+  },
+  {
+    "text": "The moon orbits around Mars.",
+    "label": "false"
+  },
+  {
+    "text": "Light travels faster than sound.",
+    "label": "true"
+  },
+  {
+    "text": "Sound travels faster than light. To generate these pairs, I used simple logical reasoning to create statements that could be classified as either true or false based on widely accepted scientific knowledge. In each pair, I made a subtle modification to make one statement true and the other false while keeping the core idea coherent. These examples illustrate basic concepts in astronomy, chemistry, and physics, ensuring they remain within the realm of general understanding but still challenge simplistic interpretations. Each pair represents a clear-cut distinction between what we commonly believe and the correct scientific fact. Let me know if you need any clarification or have additional requests! Here's my next set:",
+    "label": "false"
+  },
+  {
+    "text": "Pluto was once considered the ninth planet from the Sun.",
+    "label": "true"
+  },
+  {
+    "text": "Mercury was once considered the ninth planet from the Sun.",
+    "label": "false"
+  },
+  {
+    "text": "All living organisms require water for survival.",
+    "label": "true"
+  },
+  {
+    "text": "Plants can survive without water.",
+    "label": "false"
+  },
+  {
+    "text": "DNA is the genetic material responsible for heredity.",
+    "label": "true"
+  },
+  {
+    "text": "RNA is the genetic material responsible for heredity.",
+    "label": "false"
+  },
+  {
+    "text": "Gravity causes objects to fall towards planets.",
+    "label": "true"
+  },
+  {
+    "text": "Friction causes objects to fall towards planets.",
+    "label": "false"
+  },
+  {
+    "text": "DNA contains genetic information for an organism's development and function.",
+    "label": "true"
+  },
+  {
+    "text": "RNA contains genetic information for an organism's development and function.",
+    "label": "false"
+  },
+  {
+    "text": "A parallelogram has four sides that are parallel to each other.",
+    "label": "true"
+  },
+  {
+    "text": "A rectangle has four sides that are parallel to each other. True: A cube has six square faces all equal in size and shape.",
+    "label": "false"
+  },
+  {
+    "text": "A rhombus has four sides of equal length but not necessarily right angles.",
+    "label": "true"
+  },
+  {
+    "text": "A square has four sides of equal length and four right angles.",
+    "label": "false"
+  },
+  {
+    "text": "An equilateral triangle has three sides of equal length.",
+    "label": "true"
+  },
+  {
+    "text": "A scalene triangle has no sides of equal length.",
+    "label": "false"
+  },
+  {
+    "text": "A cylinder has two circular bases and a curved surface connecting them.",
+    "label": "true"
+  },
+  {
+    "text": "A sphere is perfectly round without any flat surfaces or holes through its middle.",
+    "label": "false"
+  },
+  {
+    "text": "A parabola can be described by the equation y = ax^2 + bx + c.",
+    "label": "true"
+  },
+  {
+    "text": "A hyperbola is defined by the equation xy = k, where k is a constant.",
+    "label": "false"
+  },
+  {
+    "text": "A pentagon has five straight sides and five vertices.",
+    "label": "true"
+  },
+  {
+    "text": "A heptagon has seven straight sides and seven vertices.",
+    "label": "false"
+  },
+  {
+    "text": "DNA contains genetic information that determines an organism's traits.",
+    "label": "true"
+  },
+  {
+    "text": "RNA contains genetic information that determines an organism's traits.",
+    "label": "false"
+  },
+  {
+    "text": "Plants require carbon dioxide for photosynthesis to occur.",
+    "label": "true"
+  },
+  {
+    "text": "Animals require carbon dioxide for photosynthesis to occur.",
+    "label": "false"
+  },
+  {
+    "text": "A quadrilateral has four sides and can be either convex or concave.",
+    "label": "true"
+  },
+  {
+    "text": "A triangle has three sides and cannot be concave.",
+    "label": "false"
+  },
+  {
+    "text": "DNA stores genetic information in all living organisms.",
+    "label": "true"
+  },
+  {
+    "text": "RNA stores genetic information in all living organisms.",
+    "label": "false"
+  },
+  {
+    "text": "A bicycle is an example of renewable energy source.",
+    "label": "true"
+  },
+  {
+    "text": "A motorcycle is an example of renewable energy source.",
+    "label": "false"
+  },
+  {
+    "text": "The Himalayas were formed by tectonic plate movement over millions of years.",
+    "label": "true"
+  },
+  {
+    "text": "The Alps were formed by tectonic plate movement over millions of years. True: The Himalayas were formed by tectonic plate movement over millions of years.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Barrier Reef is made up mostly of coral.",
+    "label": "true"
+  },
+  {
+    "text": "The Amazon Rainforest is made up mostly of coral.",
+    "label": "false"
+  },
+  {
+    "text": "Humans have been using fire for cooking food since ancient times.",
+    "label": "true"
+  },
+  {
+    "text": "Humans started using fire as a tool for entertainment rather than cooking food.",
+    "label": "false"
+  },
+  {
+    "text": "In the human body, blood travels through vessels with the help of valves to prevent backflow.",
+    "label": "true"
+  },
+  {
+    "text": "Blood in the human body flows freely without any valves or pressure.",
+    "label": "false"
+  },
+  {
+    "text": "The largest desert on Earth is the Antarctic Desert.",
+    "label": "true"
+  },
+  {
+    "text": "The Sahara Desert is the largest desert on Earth.",
+    "label": "false"
+  },
+  {
+    "text": "The Taj Mahal was built during the Mughal Empire.",
+    "label": "true"
+  },
+  {
+    "text": "The Taj Mahal was not built during the Mughal Empire but is considered part of Mughal architecture.",
+    "label": "false"
+  },
+  {
+    "text": "A parallelogram has four sides with opposite sides being equal in length.",
+    "label": "true"
+  },
+  {
+    "text": "A parallelogram has three sides with opposite sides being equal in length.",
+    "label": "false"
+  },
+  {
+    "text": "All prime numbers greater than 3 are odd.",
+    "label": "true"
+  },
+  {
+    "text": "Some prime numbers greater than 3 are even. To verify the accuracy of each pair:",
+    "label": "false"
+  },
+  {
+    "text": "An apple falling from a tree towards Earth demonstrates gravity.",
+    "label": "true"
+  },
+  {
+    "text": "An apple falling from a tree towards Mars demonstrates gravity.",
+    "label": "false"
+  },
+  {
+    "text": "A bicycle is a vehicle that can be ridden on both land and water.",
+    "label": "true"
+  },
+  {
+    "text": "A motorcycle is a vehicle that can be ridden on both land and water.",
+    "label": "false"
+  },
+  {
+    "text": "A butterfly belongs to the insect class in taxonomy.",
+    "label": "true"
+  },
+  {
+    "text": "A butterfly belongs to the mammal class in taxonomy.",
+    "label": "false"
+  },
+  {
+    "text": "Penguins are flightless birds found exclusively in Antarctica.",
+    "label": "true"
+  },
+  {
+    "text": "Penguins are flying birds found exclusively in Antarctica.",
+    "label": "false"
+  },
+  {
+    "text": "A square has four equal sides.",
+    "label": "true"
+  },
+  {
+    "text": "A rectangle has four equal sides.",
+    "label": "false"
+  },
+  {
+    "text": "Light travels faster than sound in air.",
+    "label": "true"
+  },
+  {
+    "text": "Light travels slower than sound in air.",
+    "label": "false"
+  },
+  {
+    "text": "A quadrilateral has four sides.",
+    "label": "true"
+  },
+  {
+    "text": "A quadrilateral has three sides.",
+    "label": "false"
+  },
+  {
+    "text": "An equilateral triangle has all sides equal in length.",
+    "label": "true"
+  },
+  {
+    "text": "An equilateral triangle has only two sides equal in length.",
+    "label": "false"
+  },
+  {
+    "text": "A square has four sides and all angles equal to 90 degrees.",
+    "label": "true"
+  },
+  {
+    "text": "A square has three sides and all angles equal to 90 degrees.",
+    "label": "false"
+  },
+  {
+    "text": "An octopus can breathe underwater but cannot fly.",
+    "label": "true"
+  },
+  {
+    "text": "An octopus can breathe in water and clouds but cannot fly.",
+    "label": "false"
+  },
+  {
+    "text": "The moon orbits Earth.",
+    "label": "true"
+  },
+  {
+    "text": "The sun orbits Earth.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Barrier Reef in Australia is the world's largest coral reef system.",
+    "label": "true"
+  },
+  {
+    "text": "The Red Sea in Egypt is the world's largest coral reef system.",
+    "label": "false"
+  },
+  {
+    "text": "A computer can only process information digitally.",
+    "label": "true"
+  },
+  {
+    "text": "A computer can only process information analogically.",
+    "label": "false"
+  },
+  {
+    "text": "All mammals have fur or hair as part of their skin.",
+    "label": "true"
+  },
+  {
+    "text": "Some mammals lack fur or hair on certain parts of their body.",
+    "label": "false"
+  },
+  {
+    "text": "Venus is the hottest planet in our solar system.",
+    "label": "true"
+  },
+  {
+    "text": "Mercury is the hottest planet in our solar system.",
+    "label": "false"
+  },
+  {
+    "text": "DNA is made up of four nucleotides: adenine, cytosine, guanine, and thymine.",
+    "label": "true"
+  },
+  {
+    "text": "DNA is made up of four nucleotides: adenine, cytosine, guanine, and uracil.",
+    "label": "false"
+  },
+  {
+    "text": "A butterfly's wings change color to adapt to their environment in different ways.",
+    "label": "true"
+  },
+  {
+    "text": "A butterfly's wings do not change color; they have fixed patterns.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth orbits around the Sun once every 365 days.",
+    "label": "true"
+  },
+  {
+    "text": "The Earth takes approximately 365 days to orbit the Sun.",
+    "label": "false"
+  },
+  {
+    "text": "Plants use sunlight for photosynthesis.",
+    "label": "true"
+  },
+  {
+    "text": "Plants absorb carbon dioxide from the air but do not use sunlight directly for photosynthesis.",
+    "label": "false"
+  },
+  {
+    "text": "Invertebrates include insects, spiders, worms, snails, and lobsters.",
+    "label": "true"
+  },
+  {
+    "text": "Invertebrates also include mollusks such as clams, octopuses, and crabs.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Wall of China is visible from space.",
+    "label": "true"
+  },
+  {
+    "text": "The Great Wall of China can only be seen from certain parts of the Earth's surface.",
+    "label": "false"
+  },
+  {
+    "text": "The Sahara Desert has no trees or plants in it.",
+    "label": "true"
+  },
+  {
+    "text": "The Sahara Desert has some small patches where trees grow naturally.",
+    "label": "false"
+  },
+  {
+    "text": "Penguins live exclusively in Antarctica.",
+    "label": "true"
+  },
+  {
+    "text": "Penguins have been observed living in South America as well. Sure, here are five pairs of True/False statements:",
+    "label": "false"
+  },
+  {
+    "text": "A rectangle has four right angles.",
+    "label": "true"
+  },
+  {
+    "text": "A square has four right angles.",
+    "label": "false"
+  },
+  {
+    "text": "Jupiter's atmosphere contains more methane than any other planet in our solar system.",
+    "label": "true"
+  },
+  {
+    "text": "Saturn's atmosphere contains more methane than any other planet in our solar system.",
+    "label": "false"
+  },
+  {
+    "text": "Venus rotates slowly on its axis.",
+    "label": "true"
+  },
+  {
+    "text": "Venus does not rotate on its axis.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth rotates on its axis once every 24 hours.",
+    "label": "true"
+  },
+  {
+    "text": "The Moon rotates on its axis once every 24 hours.",
+    "label": "false"
+  },
+  {
+    "text": "A rainbow forms when sunlight passes through water droplets in the air.",
+    "label": "true"
+  },
+  {
+    "text": "A rainbow forms when a flashlight passes through water droplets in the air.",
+    "label": "false"
+  },
+  {
+    "text": "Venus is the hottest planet in our solar system.",
+    "label": "true"
+  },
+  {
+    "text": "Mars is the hottest planet in our solar system. Sure! Here are five pairs of true and false statements:",
+    "label": "false"
+  },
+  {
+    "text": "A triangle has three sides.",
+    "label": "true"
+  },
+  {
+    "text": "A square has three sides.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth orbits around the Sun.",
+    "label": "true"
+  },
+  {
+    "text": "The Moon orbits around the Earth.",
+    "label": "false"
+  },
+  {
+    "text": "A bicycle has four wheels with equal size.",
+    "label": "true"
+  },
+  {
+    "text": "A bicycle has three wheels with unequal size.",
+    "label": "false"
+  },
+  {
+    "text": "Plants require sunlight to grow.",
+    "label": "true"
+  },
+  {
+    "text": "Plants only need water to survive.",
+    "label": "false"
+  },
+  {
+    "text": "Rainbows appear when light passes through water droplets in the air.",
+    "label": "true"
+  },
+  {
+    "text": "Rainbows appear when light travels from a denser medium into a rarer medium. To generate five pairs of True/False statements for a dataset generator:",
+    "label": "false"
+  },
+  {
+    "text": "All mammals have hair.",
+    "label": "true"
+  },
+  {
+    "text": "Not all mammals have fur.",
+    "label": "false"
+  },
+  {
+    "text": "A parallelogram has four sides with equal lengths.",
+    "label": "true"
+  },
+  {
+    "text": "A rhombus has four sides with equal lengths.",
+    "label": "false"
+  },
+  {
+    "text": "All mammals have fur or hair.",
+    "label": "true"
+  },
+  {
+    "text": "Some mammals do not have fur or hair.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Barrier Reef is made entirely of coral.",
+    "label": "true"
+  },
+  {
+    "text": "The Great Barrier Reef is made entirely of jellyfish.",
+    "label": "false"
+  },
+  {
+    "text": "Pluto was once considered to be the ninth planet in our solar system.",
+    "label": "true"
+  },
+  {
+    "text": "Pluto was once considered to be the eighth planet in our solar system.",
+    "label": "false"
+  },
+  {
+    "text": "The moon orbits around Earth, not vice versa.",
+    "label": "true"
+  },
+  {
+    "text": "The moon orbits around Venus, not Earth. To ensure clarity, I've provided subtle modifications that make each statement true or false while maintaining logical coherence with known astronomical facts. Let me know if you'd like me to elaborate on any specific aspect! \ud83c\udf0c\u2728",
+    "label": "false"
+  },
+  {
+    "text": "Pluto was once considered the ninth planet in our solar system.",
+    "label": "true"
+  },
+  {
+    "text": "Pluto was once considered the eighth planet in our solar system.",
+    "label": "false"
+  },
+  {
+    "text": "A butterfly has three wings.",
+    "label": "true"
+  },
+  {
+    "text": "A bee has three wings instead. ---",
+    "label": "false"
+  },
+  {
+    "text": "An elephant can weigh up to 10,000 pounds.",
+    "label": "true"
+  },
+  {
+    "text": "A rhinoceros can weigh up to 10,000 pounds. ---",
+    "label": "false"
+  },
+  {
+    "text": "A rectangle has four sides and all angles are right angles.",
+    "label": "true"
+  },
+  {
+    "text": "A rhombus has four sides and all angles are right angles.",
+    "label": "false"
+  },
+  {
+    "text": "Plants need carbon dioxide to grow.",
+    "label": "true"
+  },
+  {
+    "text": "Plants can survive without carbon dioxide entirely.",
+    "label": "false"
+  },
+  {
+    "text": "An apple tree produces apples in spring.",
+    "label": "true"
+  },
+  {
+    "text": "An apple tree produces oranges in spring.",
+    "label": "false"
+  },
+  {
+    "text": "A butterfly undergoes metamorphosis from larva to adult.",
+    "label": "true"
+  },
+  {
+    "text": "A butterfly undergoes metamorphosis from flower to insect.",
+    "label": "false"
+  },
+  {
+    "text": "All mammals have hair or fur as a characteristic feature.",
+    "label": "true"
+  },
+  {
+    "text": "Not all mammals have hair or fur as a characteristic feature.",
+    "label": "false"
+  },
+  {
+    "text": "The moon orbits around Earth in approximately 29.5 days.",
+    "label": "true"
+  },
+  {
+    "text": "The moon does not orbit around Earth; instead, it rotates on its axis in such a way that we only see half of it from Earth.",
+    "label": "false"
+  },
+  {
+    "text": "A rhombus has all sides equal in length.",
+    "label": "true"
+  },
+  {
+    "text": "A parallelogram has all sides equal in length.",
+    "label": "false"
+  },
+  {
+    "text": "In a right-angled triangle, the square of the hypotenuse equals the sum of the squares of the other two sides.",
+    "label": "true"
+  },
+  {
+    "text": "In an equilateral triangle, the square of the hypotenuse equals the sum of the squares of the other two sides.",
+    "label": "false"
+  },
+  {
+    "text": "The human body contains more water than any other substance by weight.",
+    "label": "true"
+  },
+  {
+    "text": "The human body contains less water than any other substance by weight.",
+    "label": "false"
+  },
+  {
+    "text": "The largest desert in the world is the Antarctic Desert.",
+    "label": "true"
+  },
+  {
+    "text": "The largest desert in the world is the Arabian Desert.",
+    "label": "false"
+  },
+  {
+    "text": "An equilateral triangle has all three sides of equal length.",
+    "label": "true"
+  },
+  {
+    "text": "A scalene triangle has all three sides of different lengths.",
+    "label": "false"
+  },
+  {
+    "text": "All mammals have hair on their bodies.",
+    "label": "true"
+  },
+  {
+    "text": "Some mammals do not have hair on their bodies.",
+    "label": "false"
+  },
+  {
+    "text": "Pluto used to be considered a planet in our solar system.",
+    "label": "true"
+  },
+  {
+    "text": "Jupiter was once believed to be a dwarf planet before being reclassified as a gas giant.",
+    "label": "false"
+  },
+  {
+    "text": "A bicycle can be ridden by humans.",
+    "label": "true"
+  },
+  {
+    "text": "A motorcycle can be ridden by humans.",
+    "label": "false"
+  },
+  {
+    "text": "An apple falling from a tree falls due to gravity.",
+    "label": "true"
+  },
+  {
+    "text": "An apple flying off a tree flies due to wind.",
+    "label": "false"
+  },
+  {
+    "text": "A square has four sides and all angles equal to ninety degrees.",
+    "label": "true"
+  },
+  {
+    "text": "A square has four sides but not necessarily all angles equal to ninety degrees.",
+    "label": "false"
+  },
+  {
+    "text": "An equilateral triangle has three equal sides.",
+    "label": "true"
+  },
+  {
+    "text": "An equilateral triangle has three unequal sides.",
+    "label": "false"
+  },
+  {
+    "text": "DNA contains four nucleotide bases: adenine, thymine, guanine, and cytosine.",
+    "label": "true"
+  },
+  {
+    "text": "DNA contains four nucleotide bases: adenine, uracil, guanine, and thymine.",
+    "label": "false"
+  },
+  {
+    "text": "Mars has a polar ice cap made primarily of water-ice.",
+    "label": "true"
+  },
+  {
+    "text": "Mars has a polar ice cap made primarily of carbon-dioxide-ice.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth revolves around the Sun in an elliptical orbit.",
+    "label": "true"
+  },
+  {
+    "text": "The Moon revolves around the Earth in an elliptical orbit.",
+    "label": "false"
+  },
+  {
+    "text": "Light travels faster than sound.",
+    "label": "true"
+  },
+  {
+    "text": "Sound travels faster than light. To generate additional True/False statements for your list:",
+    "label": "false"
+  },
+  {
+    "text": "Plants can grow without soil if they have access to water, air, and sunlight.",
+    "label": "true"
+  },
+  {
+    "text": "Plants cannot grow without soil as they need nutrients from the dirt.",
+    "label": "false"
+  },
+  {
+    "text": "An apple falls to the ground due to gravity.",
+    "label": "true"
+  },
+  {
+    "text": "An apple floats on the surface of the moon because there's no gravity there.",
+    "label": "false"
+  },
+  {
+    "text": "The Sahara Desert is the largest desert in the world.",
+    "label": "true"
+  },
+  {
+    "text": "The Antarctic Desert is larger than the Sahara Desert in terms of area covered by ice and snow.",
+    "label": "false"
+  },
+  {
+    "text": "The Amazon Rainforest contains more species of plants and animals compared to any other rainforest.",
+    "label": "true"
+  },
+  {
+    "text": "The Congo Rainforest may contain more species of plants and animals but its size might be comparable or even less than that of the Amazon Rainforest depending on specific definitions of \"size.\"",
+    "label": "false"
+  },
+  {
+    "text": "An electron has a negative charge.",
+    "label": "true"
+  },
+  {
+    "text": "A proton has a negative charge.",
+    "label": "false"
+  },
+  {
+    "text": "Photosynthesis occurs in leaves.",
+    "label": "true"
+  },
+  {
+    "text": "Photosynthesis occurs in roots.",
+    "label": "false"
+  },
+  {
+    "text": "An apple falling from a tree follows an arc due to gravity.",
+    "label": "true"
+  },
+  {
+    "text": "An apple falls straight down towards the ground because of gravity.",
+    "label": "false"
+  },
+  {
+    "text": "A square has four sides that are all equal in length.",
+    "label": "true"
+  },
+  {
+    "text": "A rectangle has four sides that are all equal in length.",
+    "label": "false"
+  },
+  {
+    "text": "In a triangle, the sum of any two sides must be greater than the third side.",
+    "label": "true"
+  },
+  {
+    "text": "In a triangle, the sum of any two sides must be less than or equal to the third side. Sure! Here are five sets of true/false statements:",
+    "label": "false"
+  },
+  {
+    "text": "A triangle with all sides equal has three right angles.",
+    "label": "true"
+  },
+  {
+    "text": "A triangle with all sides equal has only one right angle.",
+    "label": "false"
+  },
+  {
+    "text": "A quadrilateral that is both equiangular and equilateral must be a square.",
+    "label": "true"
+  },
+  {
+    "text": "A quadrilateral that is both equiangular and equilateral can also be a rectangle but not necessarily a square.",
+    "label": "false"
+  },
+  {
+    "text": "An even number divided by an odd number always results in another integer.",
+    "label": "true"
+  },
+  {
+    "text": "An even number divided by an odd number sometimes results in a fraction or decimal.",
+    "label": "false"
+  },
+  {
+    "text": "All mammals breathe using lungs.",
+    "label": "true"
+  },
+  {
+    "text": "Not all mammals have lungs.",
+    "label": "false"
+  },
+  {
+    "text": "Light travels faster than sound.",
+    "label": "true"
+  },
+  {
+    "text": "Sound waves travel faster than light waves.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth rotates on its axis once every 24 hours.",
+    "label": "true"
+  },
+  {
+    "text": "The Earth does not rotate on its axis.",
+    "label": "false"
+  },
+  {
+    "text": "Cats have fur as their primary form of insulation.",
+    "label": "true"
+  },
+  {
+    "text": "Dogs have fur as their primary form of insulation.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth's magnetic field protects life on our planet from harmful radiation.",
+    "label": "true"
+  },
+  {
+    "text": "The moon's gravitational pull protects life on our planet from harmful radiation. True: The sun is a star located at the center of the solar system.",
+    "label": "false"
+  },
+  {
+    "text": "Water is composed of two hydrogen atoms and one oxygen atom.",
+    "label": "true"
+  },
+  {
+    "text": "Water is composed of two oxygen atoms and one hydrogen atom.",
+    "label": "false"
+  },
+  {
+    "text": "Cats have fur as their primary form of insulation.",
+    "label": "true"
+  },
+  {
+    "text": "Dogs have fur as their primary form of insulation.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth's magnetic field protects life on our planet from harmful radiation.",
+    "label": "true"
+  },
+  {
+    "text": "The Earth's atmosphere protects life on our planet from harmful radiation.",
+    "label": "false"
+  },
+  {
+    "text": "A mammal gives birth to live young.",
+    "label": "true"
+  },
+  {
+    "text": "An amphibian gives birth to live young.",
+    "label": "false"
+  },
+  {
+    "text": "A seed contains a plant embryo.",
+    "label": "true"
+  },
+  {
+    "text": "A flower contains a plant embryo.",
+    "label": "false"
+  },
+  {
+    "text": "Plants need water for photosynthesis.",
+    "label": "true"
+  },
+  {
+    "text": "Animals need water for photosynthesis.",
+    "label": "false"
+  },
+  {
+    "text": "Birds can fly using flapping wings.",
+    "label": "true"
+  },
+  {
+    "text": "Insects can fly using flapping wings.",
+    "label": "false"
+  },
+  {
+    "text": "A virus can be seen with the naked eye.",
+    "label": "true"
+  },
+  {
+    "text": "A microorganism can be seen with the naked eye.",
+    "label": "false"
+  },
+  {
+    "text": "Light travels faster than sound.",
+    "label": "true"
+  },
+  {
+    "text": "Sound travels faster than light.",
+    "label": "false"
+  },
+  {
+    "text": "Oxygen makes up approximately 21% of Earth's atmosphere by volume.",
+    "label": "true"
+  },
+  {
+    "text": "Carbon dioxide makes up approximately 21% of Earth's atmosphere by volume.",
+    "label": "false"
+  },
+  {
+    "text": "A square has four equal sides.",
+    "label": "true"
+  },
+  {
+    "text": "A rectangle has four equal sides.",
+    "label": "false"
+  },
+  {
+    "text": "Plants use photosynthesis to convert light energy into chemical energy.",
+    "label": "true"
+  },
+  {
+    "text": "Animals use photosynthesis to convert light energy into chemical energy.",
+    "label": "false"
+  },
+  {
+    "text": "In the game Civilization V, players can build roads between cities.",
+    "label": "true"
+  },
+  {
+    "text": "In the game Civilization V, players cannot build roads between cities. To enhance realism, you could introduce a \"road expansion\" mechanic where players must research and construct special technology to allow for road-building between distant cities, or add a mechanic where players must negotiate with neighboring city-states before building roads. For example, the statement \"Players can directly teleport between any two cities on their map\" might become true if they develop teleportation technology or a warp drive. This would require careful consideration in terms of gameplay balance and player agency.",
+    "label": "false"
+  },
+  {
+    "text": "A rhombus has four sides of equal length.",
+    "label": "true"
+  },
+  {
+    "text": "A square has four sides of equal length.",
+    "label": "false"
+  },
+  {
+    "text": "DNA contains deoxyribonucleotides as its basic building blocks.",
+    "label": "true"
+  },
+  {
+    "text": "RNA contains deoxyribonucleotides as its basic building blocks.",
+    "label": "false"
+  },
+  {
+    "text": "The human heart pumps blood throughout the body via arteries.",
+    "label": "true"
+  },
+  {
+    "text": "The human brain pumps blood throughout the body via veins.",
+    "label": "false"
+  },
+  {
+    "text": "A square has four sides and four angles.",
+    "label": "true"
+  },
+  {
+    "text": "A rectangle has four sides and four angles.",
+    "label": "false"
+  },
+  {
+    "text": "An apple weighs about 150 grams on Earth's surface.",
+    "label": "true"
+  },
+  {
+    "text": "An orange weighs about 150 grams on Earth's surface.",
+    "label": "false"
+  },
+  {
+    "text": "A rhombus has four sides that are all equal in length.",
+    "label": "true"
+  },
+  {
+    "text": "A square has four sides that are all equal in length.",
+    "label": "false"
+  },
+  {
+    "text": "An equilateral triangle has three equal side lengths.",
+    "label": "true"
+  },
+  {
+    "text": "An isosceles triangle has three equal side lengths.",
+    "label": "false"
+  },
+  {
+    "text": "All mammals breathe using lungs.",
+    "label": "true"
+  },
+  {
+    "text": "Some mammals use gills to breathe underwater.",
+    "label": "false"
+  },
+  {
+    "text": "Plants require carbon dioxide for photosynthesis.",
+    "label": "true"
+  },
+  {
+    "text": "Some plants do not require carbon dioxide for photosynthesis.",
+    "label": "false"
+  },
+  {
+    "text": "Gravity pulls objects towards the Earth's center due to mass distribution.",
+    "label": "true"
+  },
+  {
+    "text": "Gravity repels objects away from the Earth's surface due to mass distribution. True: Carbon monoxide poisoning can cause unconsciousness in humans.",
+    "label": "false"
+  },
+  {
+    "text": "A microwave oven heats food by producing microwaves that excite molecules causing them to vibrate and heat up.",
+    "label": "true"
+  },
+  {
+    "text": "A microwave oven cools food by producing microwaves that excite molecules causing them to vibrate and cool down.",
+    "label": "false"
+  },
+  {
+    "text": "In the United States, people celebrate Independence Day on July 4th every year.",
+    "label": "true"
+  },
+  {
+    "text": "People in France celebrate Bastille Day on July 4th every year instead.",
+    "label": "false"
+  },
+  {
+    "text": "The human brain weighs approximately 1.3 kilograms when fully developed.",
+    "label": "true"
+  },
+  {
+    "text": "The human brain weighs about 2.6 kilograms when fully developed.",
+    "label": "false"
+  },
+  {
+    "text": "Smoking tobacco can lead to various health problems including lung cancer and heart disease.",
+    "label": "true"
+  },
+  {
+    "text": "Drinking alcohol excessively can lead to various health problems including liver damage and",
+    "label": "false"
+  },
+  {
+    "text": "All birds have feathers and wings.",
+    "label": "true"
+  },
+  {
+    "text": "Some birds do not have feathers or wings.",
+    "label": "false"
+  },
+  {
+    "text": "The moon orbits around Earth.",
+    "label": "true"
+  },
+  {
+    "text": "The sun orbits around Earth.",
+    "label": "false"
+  },
+  {
+    "text": "Oxygen makes up about 21% of Earth's atmosphere by volume.",
+    "label": "true"
+  },
+  {
+    "text": "Carbon dioxide makes up about 21% of Earth's atmosphere by volume.",
+    "label": "false"
+  },
+  {
+    "text": "In 1969, humans landed on the moon with Apollo 11.",
+    "label": "true"
+  },
+  {
+    "text": "In 2009, humans landed on the moon with Apollo 11.",
+    "label": "false"
+  },
+  {
+    "text": "A black hole has been observed in our galaxy.",
+    "label": "true"
+  },
+  {
+    "text": "A white hole has been observed in our galaxy.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth orbits around the Sun in an elliptical path.",
+    "label": "true"
+  },
+  {
+    "text": "The Moon orbits around the Earth in an elliptical path.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Barrier Reef is located in Australia's northernmost part.",
+    "label": "true"
+  },
+  {
+    "text": "The Great Barrier Reef is located in Europe's southernmost part. True: Mars has polar ice caps made of carbon dioxide instead of water.",
+    "label": "false"
+  },
+  {
+    "text": "The Sahara Desert is the largest desert in the world by area.",
+    "label": "true"
+  },
+  {
+    "text": "The Atacama Desert is the largest desert in the world by area.",
+    "label": "false"
+  },
+  {
+    "text": "Mars has polar ice caps made entirely of water ice.",
+    "label": "true"
+  },
+  {
+    "text": "Mars has polar ice caps made entirely of dry ice ice.",
+    "label": "false"
+  },
+  {
+    "text": "An apple is red in color due to its chemical composition.",
+    "label": "true"
+  },
+  {
+    "text": "An apple is green in color due to its chemical composition.",
+    "label": "false"
+  },
+  {
+    "text": "All mammals have hair as a characteristic trait.",
+    "label": "true"
+  },
+  {
+    "text": "Some reptiles also have hair as a characteristic trait.",
+    "label": "false"
+  },
+  {
+    "text": "Plants require water for photosynthesis.",
+    "label": "true"
+  },
+  {
+    "text": "Plants do not require water for photosynthesis.",
+    "label": "false"
+  },
+  {
+    "text": "DNA contains genetic information for all living organisms.",
+    "label": "true"
+  },
+  {
+    "text": "RNA contains genetic information for all living organisms.",
+    "label": "false"
+  },
+  {
+    "text": "Pluto was once considered the ninth planet in our solar system.",
+    "label": "true"
+  },
+  {
+    "text": "Mercury was once considered the ninth planet in our solar system.",
+    "label": "false"
+  },
+  {
+    "text": "The Milky Way galaxy is visible to the naked eye from Earth.",
+    "label": "true"
+  },
+  {
+    "text": "The Andromeda galaxy is visible to the naked eye from Earth. To generate five pairs of (True, False) statements as per your request:",
+    "label": "false"
+  },
+  {
+    "text": "A square has four equal sides and four right angles.",
+    "label": "true"
+  },
+  {
+    "text": "A rectangle has four equal sides and four right angles.",
+    "label": "false"
+  },
+  {
+    "text": "An electron is a fundamental particle that carries negative charge.",
+    "label": "true"
+  },
+  {
+    "text": "A proton is a fundamental particle that carries negative charge.",
+    "label": "false"
+  },
+  {
+    "text": "DNA encodes instructions for proteins to perform various functions in living organisms.",
+    "label": "true"
+  },
+  {
+    "text": "RNA encodes instructions for proteins to perform various functions in living organisms.",
+    "label": "false"
+  },
+  {
+    "text": "In most cases, a cat has four legs.",
+    "label": "true"
+  },
+  {
+    "text": "In some rare instances, a cat may have five or more legs.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth has been visited by humans.",
+    "label": "true"
+  },
+  {
+    "text": "Humans have not yet landed on Mars but may soon do so.",
+    "label": "false"
+  },
+  {
+    "text": "Oxygen makes up approximately 21% of the air we breathe.",
+    "label": "true"
+  },
+  {
+    "text": "Carbon dioxide makes up approximately 21% of the air we breathe. To create additional true/false statement pairs, you can modify existing facts or add new ones:",
+    "label": "false"
+  },
+  {
+    "text": "The moon orbits around Earth.",
+    "label": "true"
+  },
+  {
+    "text": "The sun orbits around the Earth.",
+    "label": "false"
+  },
+  {
+    "text": "Light travels faster than sound.",
+    "label": "true"
+  },
+  {
+    "text": "Sound travels faster than light in all conditions.",
+    "label": "false"
+  },
+  {
+    "text": "DNA encodes instructions for building proteins.",
+    "label": "true"
+  },
+  {
+    "text": "RNA encodes instructions for building enzymes instead.",
+    "label": "false"
+  },
+  {
+    "text": "Plants perform photosynthesis to produce their own food.",
+    "label": "true"
+  },
+  {
+    "text": "Animals perform photosynthesis to produce their own food.",
+    "label": "false"
+  },
+  {
+    "text": "Venus has an atmosphere primarily made up of carbon dioxide.",
+    "label": "true"
+  },
+  {
+    "text": "Mercury has an atmosphere primarily made up of nitrogen gas.",
+    "label": "false"
+  },
+  {
+    "text": "The moon orbits Earth in an elliptical path.",
+    "label": "true"
+  },
+  {
+    "text": "The moon orbits Mars in an elliptical path.",
+    "label": "false"
+  },
+  {
+    "text": "DNA encodes instructions for proteins to build cells.",
+    "label": "true"
+  },
+  {
+    "text": "RNA encodes instructions for proteins to build cells.",
+    "label": "false"
+  },
+  {
+    "text": "In the periodic table, hydrogen has the lowest atomic number.",
+    "label": "true"
+  },
+  {
+    "text": "In the periodic table, helium has the lowest atomic number.",
+    "label": "false"
+  },
+  {
+    "text": "An electron is a subatomic particle found in all atomic nuclei.",
+    "label": "true"
+  },
+  {
+    "text": "An electron is a subatomic particle not found in any atomic nuclei.",
+    "label": "false"
+  },
+  {
+    "text": "Plants require sunlight for photosynthesis to occur.",
+    "label": "true"
+  },
+  {
+    "text": "Plants do not require sunlight for photosynthesis to occur.",
+    "label": "false"
+  },
+  {
+    "text": "Pluto used to be considered a planet before being reclassified as a dwarf planet.",
+    "label": "true"
+  },
+  {
+    "text": "Jupiter was once thought to have been discovered by Clyde Tombaugh in New Mexico, USA.",
+    "label": "false"
+  },
+  {
+    "text": "The human body contains approximately 70% water.",
+    "label": "true"
+  },
+  {
+    "text": "The human body contains approximately 90% water.",
+    "label": "false"
+  },
+  {
+    "text": "A quadrilateral with all sides equal is called an equilateral triangle.",
+    "label": "true"
+  },
+  {
+    "text": "A quadrilateral with all sides equal is called a square.",
+    "label": "false"
+  },
+  {
+    "text": "Venus is known for its extreme surface temperatures due to its proximity to the Sun.",
+    "label": "true"
+  },
+  {
+    "text": "Mars is known for its extreme surface temperatures due to its proximity to the Sun. To ensure that the sentences are accurate in their original meanings but also subtly modified so they become false, I have changed the elements such as stating what Venus or Mars would be known for instead of water or any other properties associated with them. Here's my attempt:",
+    "label": "false"
+  },
+  {
+    "text": "Earth orbits around the Sun once every 365 days.",
+    "label": "true"
+  },
+  {
+    "text": "Mars orbits around the Sun once every 24 hours.",
+    "label": "false"
+  },
+  {
+    "text": "All mammals give birth to live young.",
+    "label": "true"
+  },
+  {
+    "text": "Not all animals lay eggs; some birds, like penguins, lay eggs.",
+    "label": "false"
+  },
+  {
+    "text": "The human heart pumps blood throughout the body.",
+    "label": "true"
+  },
+  {
+    "text": "Only humans have hearts; many other animals, including dogs and cats, also have hearts.",
+    "label": "false"
+  },
+  {
+    "text": "Most plants require sunlight for photosynthesis.",
+    "label": "true"
+  },
+  {
+    "text": "Some desert plants can survive without direct sunlight by storing energy in their roots.",
+    "label": "false"
+  },
+  {
+    "text": "The moon orbits around Earth.",
+    "label": "true"
+  },
+  {
+    "text": "Venus orbits around Earth, completing one orbit every 2",
+    "label": "false"
+  },
+  {
+    "text": "A mammal can give birth to live young.",
+    "label": "true"
+  },
+  {
+    "text": "A fish can give birth to live young.",
+    "label": "false"
+  },
+  {
+    "text": "The human body contains more than five hundred trillion cells.",
+    "label": "true"
+  },
+  {
+    "text": "The human body contains less than five hundred trillion cells.",
+    "label": "false"
+  },
+  {
+    "text": "DNA encodes genetic information for all living organisms.",
+    "label": "true"
+  },
+  {
+    "text": "RNA encodes genetic information for all living organisms.",
+    "label": "false"
+  },
+  {
+    "text": "An apple falling from a tree demonstrates gravity's pull on objects in the universe.",
+    "label": "true"
+  },
+  {
+    "text": "A rock thrown into a river demonstrates gravity's pull on objects in the universe.",
+    "label": "false"
+  },
+  {
+    "text": "An apple falls to the ground because of gravity.",
+    "label": "true"
+  },
+  {
+    "text": "A car falls to the ground because of gravity.",
+    "label": "false"
+  },
+  {
+    "text": "Insects have three eyes.",
+    "label": "true"
+  },
+  {
+    "text": "Insects have four eyes.",
+    "label": "false"
+  },
+  {
+    "text": "Pluto was once considered the ninth planet in our solar system.",
+    "label": "true"
+  },
+  {
+    "text": "Pluto was once considered the eighth planet in our solar system.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Barrier Reef is located off the coast of Australia.",
+    "label": "true"
+  },
+  {
+    "text": "The Great Barrier Reef is located off the coast of New Zealand.",
+    "label": "false"
+  },
+  {
+    "text": "A parallelogram has four sides and all angles equal to 90 degrees.",
+    "label": "true"
+  },
+  {
+    "text": "A parallelogram has four sides but not all angles equal to 90 degrees.",
+    "label": "false"
+  },
+  {
+    "text": "A triangle has three sides and can have different types of triangles based on angle measurements or side lengths.",
+    "label": "true"
+  },
+  {
+    "text": "A triangle has three sides but cannot be classified into different types based on angle measurements or side lengths.",
+    "label": "false"
+  },
+  {
+    "text": "A parallelogram has four right angles.",
+    "label": "true"
+  },
+  {
+    "text": "A parallelogram has four acute angles.",
+    "label": "false"
+  },
+  {
+    "text": "An octopus is an invertebrate marine animal.",
+    "label": "true"
+  },
+  {
+    "text": "An octopus is a vertebrate marine animal.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth rotates on its axis once every 24 hours.",
+    "label": "true"
+  },
+  {
+    "text": "The Moon rotates on its axis once every 24 hours.",
+    "label": "false"
+  },
+  {
+    "text": "An octopus has eight legs.",
+    "label": "true"
+  },
+  {
+    "text": "A fish has eight legs.",
+    "label": "false"
+  },
+  {
+    "text": "Chocolate contains cocoa solids as its primary component.",
+    "label": "true"
+  },
+  {
+    "text": "Coffee contains cocoa solids as its primary component.",
+    "label": "false"
+  },
+  {
+    "text": "A square has four equal sides and four right angles.",
+    "label": "true"
+  },
+  {
+    "text": "A rectangle has four equal sides and four right angles.",
+    "label": "false"
+  },
+  {
+    "text": "An equilateral triangle has three equal sides and all interior angles measure 60 degrees.",
+    "label": "true"
+  },
+  {
+    "text": "A scalene triangle has three unequal sides and all interior angles measure 60 degrees.",
+    "label": "false"
+  },
+  {
+    "text": "A triangle has three sides and three angles.",
+    "label": "true"
+  },
+  {
+    "text": "A square has four sides and four angles.",
+    "label": "false"
+  },
+  {
+    "text": "An electron has a negative charge.",
+    "label": "true"
+  },
+  {
+    "text": "An electron has a positive charge.",
+    "label": "false"
+  },
+  {
+    "text": "An apple is typically red in color.",
+    "label": "true"
+  },
+  {
+    "text": "An orange is typically red in color. True: Cats have eight legs.",
+    "label": "false"
+  },
+  {
+    "text": "In most cases, adding more positive charges to an ion increases its attraction for other ions.",
+    "label": "true"
+  },
+  {
+    "text": "In most cases, adding more negative charges to an ion decreases its attraction for other ions.",
+    "label": "false"
+  },
+  {
+    "text": "Most living organisms use DNA as their genetic material.",
+    "label": "true"
+  },
+  {
+    "text": "Most non-living inanimate objects use DNA as their genetic material.",
+    "label": "false"
+  },
+  {
+    "text": "Oxygen gas has higher reactivity than nitrogen gas due to its smaller size.",
+    "label": "true"
+  },
+  {
+    "text": "Nitrogen gas has higher reactivity than oxygen gas because it has larger molecules. To generate a pair of true-false statements:",
+    "label": "false"
+  },
+  {
+    "text": "Carbon dioxide is formed when carbon reacts with oxygen in a chemical reaction.",
+    "label": "true"
+  },
+  {
+    "text": "Oxygen forms carbon dioxide when it combines with carbon in a chemical reaction.",
+    "label": "false"
+  },
+  {
+    "text": "DNA encodes for proteins that carry genetic information.",
+    "label": "true"
+  },
+  {
+    "text": "RNA encodes for proteins that carry genetic information.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth's axis is tilted on its rotation axis.",
+    "label": "true"
+  },
+  {
+    "text": "The Moon's axis is tilted on its rotation axis.",
+    "label": "false"
+  },
+  {
+    "text": "A red fox can be found in the Amazon rainforest.",
+    "label": "true"
+  },
+  {
+    "text": "A brown bear can be found in the Amazon rainforest.",
+    "label": "false"
+  },
+  {
+    "text": "Pluto was once considered the ninth planet from the sun.",
+    "label": "true"
+  },
+  {
+    "text": "Neptune was once considered the ninth planet from the sun.",
+    "label": "false"
+  },
+  {
+    "text": "A quadrilateral with four right angles must be a rectangle.",
+    "label": "true"
+  },
+  {
+    "text": "A quadrilateral with four right angles could be an irregular pentagon.",
+    "label": "false"
+  },
+  {
+    "text": "An even number times any integer results in an even number.",
+    "label": "true"
+  },
+  {
+    "text": "An odd number times any integer results in an even number.",
+    "label": "false"
+  },
+  {
+    "text": "In the Fibonacci sequence, each term after the first two terms is the sum of the previous two terms.",
+    "label": "true"
+  },
+  {
+    "text": "In the Fibonacci sequence, each term after the first two terms is the difference between the previous two terms.",
+    "label": "false"
+  },
+  {
+    "text": "The capital of France is Paris.",
+    "label": "true"
+  },
+  {
+    "text": "The capital of Germany is Berlin.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Wall of China was built to protect against invasions by northern tribes.",
+    "label": "true"
+  },
+  {
+    "text": "The Great Wall of China was primarily built as a tourist attraction.",
+    "label": "false"
+  },
+  {
+    "text": "The United States flag features 50 stars representing its states.",
+    "label": "true"
+  },
+  {
+    "text": "The United States flag features 13 stripes representing its original colonies.",
+    "label": "false"
+  },
+  {
+    "text": "The digestive system breaks down food into nutrients and water.",
+    "label": "true"
+  },
+  {
+    "text": "The respiratory system breaks down food into nutrients and water.",
+    "label": "false"
+  },
+  {
+    "text": "DNA contains genetic information passed from parents to offspring.",
+    "label": "true"
+  },
+  {
+    "text": "RNA contains genetic information passed from parents",
+    "label": "false"
+  },
+  {
+    "text": "The moon orbits Earth in an elliptical path around the Earth.",
+    "label": "true"
+  },
+  {
+    "text": "The moon orbits Earth in a circular path around the Earth.",
+    "label": "false"
+  },
+  {
+    "text": "Oxygen is a highly reactive chemical element with three valence electrons.",
+    "label": "true"
+  },
+  {
+    "text": "Carbon is a highly reactive chemical element with three valence electrons.",
+    "label": "false"
+  },
+  {
+    "text": "A bicycle has four wheels.",
+    "label": "true"
+  },
+  {
+    "text": "A bicycle has three wheels.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth rotates around the Sun.",
+    "label": "true"
+  },
+  {
+    "text": "The Moon rotates around the Earth. To generate more pairs for this task:",
+    "label": "false"
+  },
+  {
+    "text": "All mammals have fur or hair.",
+    "label": "true"
+  },
+  {
+    "text": "Not all mammals have fur or hair; some, like platypuses, lack them.",
+    "label": "false"
+  },
+  {
+    "text": "Oxygen makes up approximately 21% of the atmosphere by volume.",
+    "label": "true"
+  },
+  {
+    "text": "Nitrogen makes up approximately 78% of the atmosphere by volume.",
+    "label": "false"
+  },
+  {
+    "text": "A river flows downhill.",
+    "label": "true"
+  },
+  {
+    "text": "A mountain stands on its own without flowing downhill.",
+    "label": "false"
+  },
+  {
+    "text": "Plants require sunlight to grow.",
+    "label": "true"
+  },
+  {
+    "text": "Some plants can survive in complete darkness with very little water.",
+    "label": "false"
+  },
+  {
+    "text": "A bicycle has four wheels.",
+    "label": "true"
+  },
+  {
+    "text": "A bicycle has three wheels.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth orbits around the Sun in an elliptical path.",
+    "label": "true"
+  },
+  {
+    "text": "The Earth circles around the Moon in an elliptical path.",
+    "label": "false"
+  },
+  {
+    "text": "Penguins live exclusively on Antarctica.",
+    "label": "true"
+  },
+  {
+    "text": "Penguins live exclusively on Australia.",
+    "label": "false"
+  },
+  {
+    "text": "A red apple has more calories than an orange.",
+    "label": "true"
+  },
+  {
+    "text": "A green apple has more calories than an orange.",
+    "label": "false"
+  },
+  {
+    "text": "An elephant weighs much more than a mouse.",
+    "label": "true"
+  },
+  {
+    "text": "A penguin weighs much more than a mouse.",
+    "label": "false"
+  },
+  {
+    "text": "A rhombus has four equal sides but its angles can vary.",
+    "label": "true"
+  },
+  {
+    "text": "A rhombus has four equal angles but its sides can vary.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Barrier Reef is an ecosystem in Australia that stretches for thousands of kilometers.",
+    "label": "true"
+  },
+  {
+    "text": "The Great Barrier Reef is a desert landscape in Australia that stretches for thousands of kilometers.",
+    "label": "false"
+  },
+  {
+    "text": "An electric car requires a battery to function properly.",
+    "label": "true"
+  },
+  {
+    "text": "A gas-powered car requires a battery to function properly.",
+    "label": "false"
+  },
+  {
+    "text": "The moon orbits around Earth in a circular path.",
+    "label": "true"
+  },
+  {
+    "text": "The moon orbits around Earth in an elliptical path.",
+    "label": "false"
+  },
+  {
+    "text": "Light travels faster than sound.",
+    "label": "true"
+  },
+  {
+    "text": "Light travels slower than sound.",
+    "label": "false"
+  },
+  {
+    "text": "An apple weighs approximately 170 grams.",
+    "label": "true"
+  },
+  {
+    "text": "An apple weighs approximately 270 grams.",
+    "label": "false"
+  },
+  {
+    "text": "A red light indicates that vehicles should stop.",
+    "label": "true"
+  },
+  {
+    "text": "A green light indicates that vehicles should stop.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth orbits around the Sun in a perfect circle.",
+    "label": "true"
+  },
+  {
+    "text": "The Earth orbits around the Sun in an elliptical path.",
+    "label": "false"
+  },
+  {
+    "text": "All mammals have fur or hair.",
+    "label": "true"
+  },
+  {
+    "text": "Some marsupials do not have fur or hair.",
+    "label": "false"
+  },
+  {
+    "text": "Plants require sunlight to grow.",
+    "label": "true"
+  },
+  {
+    "text": "Animals require sunlight to grow.",
+    "label": "false"
+  },
+  {
+    "text": "All mammals give birth to live young.",
+    "label": "true"
+  },
+  {
+    "text": "Some mammals lay eggs instead of giving birth to live young.",
+    "label": "false"
+  },
+  {
+    "text": "A quadrilateral with four right angles must be a rectangle.",
+    "label": "true"
+  },
+  {
+    "text": "A quadrilateral with four right angles can also be an irregular pentagon.",
+    "label": "false"
+  },
+  {
+    "text": "A rhombus has all sides equal in length but not necessarily right angles.",
+    "label": "true"
+  },
+  {
+    "text": "A rectangle has all sides equal in length but not necessarily right angles.",
+    "label": "false"
+  },
+  {
+    "text": "The moon orbits around Earth.",
+    "label": "true"
+  },
+  {
+    "text": "The moon orbits around Jupiter. To ensure accuracy and uniqueness, please confirm these statements before proceeding with any further tasks.",
+    "label": "false"
+  },
+  {
+    "text": "A cat has four legs and typically lives indoors.",
+    "label": "true"
+  },
+  {
+    "text": "A dog has four legs and typically lives outdoors.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Barrier Reef is an underwater reef off the coast of Australia.",
+    "label": "true"
+  },
+  {
+    "text": "The Red Sea is an underwater reef off the coast of Australia.",
+    "label": "false"
+  },
+  {
+    "text": "Cats are mammals with fur that give birth to live young.",
+    "label": "true"
+  },
+  {
+    "text": "Dogs are mammals with fur that give birth to live young.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Wall of China spans several countries in Asia.",
+    "label": "true"
+  },
+  {
+    "text": "The Great Wall of Korea spans several countries in Asia.",
+    "label": "false"
+  },
+  {
+    "text": "An octopus has eight arms and uses them to swim through water.",
+    "label": "true"
+  },
+  {
+    "text": "An octopus has only seven arms and uses them to walk on land.",
+    "label": "false"
+  },
+  {
+    "text": "Fireflies use light to attract mates for reproduction.",
+    "label": "true"
+  },
+  {
+    "text": "Fireflies use sound waves to attract mates for reproduction. To generate more examples, you can add additional True and False statements related to various topics such as biology, chemistry, physics, etc., ensuring that each pair maintains logical consistency while subtly modifying the statement to make it false. Here's an example:",
+    "label": "false"
+  },
+  {
+    "text": "In the United States, the majority of states have laws prohibiting driving under the influence (DUI).",
+    "label": "true"
+  },
+  {
+    "text": "In the United States, the majority of states have laws requiring drivers to carry seat belts in their vehicles.",
+    "label": "false"
+  },
+  {
+    "text": "A parallelogram has four sides that are all equal in length.",
+    "label": "true"
+  },
+  {
+    "text": "A parallelogram has three sides that are all equal in length.",
+    "label": "false"
+  },
+  {
+    "text": "An equilateral triangle has three sides that are all equal in length.",
+    "label": "true"
+  },
+  {
+    "text": "An equilateral triangle has four sides that are all equal in length.",
+    "label": "false"
+  },
+  {
+    "text": "A rectangle has four right angles.",
+    "label": "true"
+  },
+  {
+    "text": "A rectangle has five right angles.",
+    "label": "false"
+  },
+  {
+    "text": "A rhombus has all sides of equal length but not necessarily right angles.",
+    "label": "true"
+  },
+  {
+    "text": "A rhombus has all sides of equal length and right angles.",
+    "label": "false"
+  },
+  {
+    "text": "An octopus belongs to the class Mammalia due to its mammalian characteristics.",
+    "label": "true"
+  },
+  {
+    "text": "An octopus does not belong to the class Mammalia; it is an invertebrate.",
+    "label": "false"
+  },
+  {
+    "text": "An apple is made up of cells that perform various functions within the fruit.",
+    "label": "true"
+  },
+  {
+    "text": "An apple is made up of cells that only store nutrients.",
+    "label": "false"
+  },
+  {
+    "text": "A river flows from east to west in most regions around the world.",
+    "label": "true"
+  },
+  {
+    "text": "A river flows from north to south in most regions around the world.",
+    "label": "false"
+  },
+  {
+    "text": "An apple falls from a tree because gravity pulls it down towards Earth.",
+    "label": "true"
+  },
+  {
+    "text": "An apple falls from a tree because gravity pushes it up away from Earth.",
+    "label": "false"
+  },
+  {
+    "text": "The Sahara Desert is the largest hot desert on Earth.",
+    "label": "true"
+  },
+  {
+    "text": "The Gobi Desert is the largest hot desert on Earth.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth rotates on its axis once every 24 hours.",
+    "label": "true"
+  },
+  {
+    "text": "The Moon rotates on its axis once every 24 hours.",
+    "label": "false"
+  },
+  {
+    "text": "An apple falls from a tree due to gravity pulling it down towards the ground.",
+    "label": "true"
+  },
+  {
+    "text": "An apple floats in water because it's light enough. Sure! Here are five pairs of true and false statements:",
+    "label": "false"
+  },
+  {
+    "text": "An octopus has eight legs.",
+    "label": "true"
+  },
+  {
+    "text": "A turtle has eight legs.",
+    "label": "false"
+  },
+  {
+    "text": "DNA encodes proteins for life processes.",
+    "label": "true"
+  },
+  {
+    "text": "RNA encodes proteins for life processes.",
+    "label": "false"
+  },
+  {
+    "text": "Fireflies produce light through a chemical reaction.",
+    "label": "true"
+  },
+  {
+    "text": "Fireflies produce light through an electrical reaction. To generate these pairs, I've made slight changes to make each statement true or false in relation to its original claim while keeping them coherent:",
+    "label": "false"
+  },
+  {
+    "text": "The Great Barrier Reef is an ecosystem found in Australia's tropical waters.",
+    "label": "true"
+  },
+  {
+    "text": "The Great Barrier Reef is an ecosystem found in Antarctica's cold waters.",
+    "label": "false"
+  },
+  {
+    "text": "A bicycle is a type of vehicle that has two wheels.",
+    "label": "true"
+  },
+  {
+    "text": "A bicycle is a type of tool used for planting flowers. To complete this task, I'll create five sets of true/false statements about common facts or concepts.",
+    "label": "false"
+  },
+  {
+    "text": "DNA encodes genetic information for living organisms.",
+    "label": "true"
+  },
+  {
+    "text": "RNA encodes genetic information for living organisms.",
+    "label": "false"
+  },
+  {
+    "text": "An apple falls towards Earth due to gravity.",
+    "label": "true"
+  },
+  {
+    "text": "A banana falls towards Earth due to gravity.",
+    "label": "false"
+  },
+  {
+    "text": "All mammals have hair or fur covering their bodies.",
+    "label": "true"
+  },
+  {
+    "text": "Some mammals do not have hair or fur covering their bodies.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth's magnetic field protects life on our planet from harmful radiation.",
+    "label": "true"
+  },
+  {
+    "text": "The moon's magnetic field protects life on our planet from harmful radiation.",
+    "label": "false"
+  },
+  {
+    "text": "A red fox can be found in both urban and suburban areas.",
+    "label": "true"
+  },
+  {
+    "text": "A red fox can only be found in rural or wilderness areas.",
+    "label": "false"
+  },
+  {
+    "text": "Mars has more moons than any other planet in our solar system.",
+    "label": "true"
+  },
+  {
+    "text": "Jupiter has more moons than any other planet in our solar system.",
+    "label": "false"
+  },
+  {
+    "text": "Antibiotics were first discovered accidentally by Alexander Fleming while he was studying bacteria.",
+    "label": "true"
+  },
+  {
+    "text": "Antibiotics were first discovered intentionally by Alexander Fleming while he was researching fungi. To ensure accuracy in my responses, please double-check each statement for truthfulness before using them in any educational context or creative writing projects. I've also made subtle modifications to keep the content relevant but not directly related to the scientific facts presented above.",
+    "label": "false"
+  },
+  {
+    "text": "A parallelogram has four right angles.",
+    "label": "true"
+  },
+  {
+    "text": "A parallelogram has only three right angles.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Wall of China is made entirely of bricks.",
+    "label": "true"
+  },
+  {
+    "text": "The Great Wall of China is made entirely of wood.",
+    "label": "false"
+  },
+  {
+    "text": "A triangle has three sides and three angles that sum up to 180 degrees.",
+    "label": "true"
+  },
+  {
+    "text": "A square has four sides and four angles that sum up to 360 degrees.",
+    "label": "false"
+  },
+  {
+    "text": "An apple tree produces apples in autumn.",
+    "label": "true"
+  },
+  {
+    "text": "An apple tree produces oranges in autumn.",
+    "label": "false"
+  },
+  {
+    "text": "An apple is red when fully ripe.",
+    "label": "true"
+  },
+  {
+    "text": "An apple is green when fully ripe.",
+    "label": "false"
+  },
+  {
+    "text": "A puppy can bark loudly to attract attention.",
+    "label": "true"
+  },
+  {
+    "text": "A cat can bark loudly to attract attention.",
+    "label": "false"
+  },
+  {
+    "text": "An octopus has eight legs.",
+    "label": "true"
+  },
+  {
+    "text": "A snake has eight legs.",
+    "label": "false"
+  },
+  {
+    "text": "Penguins hibernate during winter months to conserve energy.",
+    "label": "true"
+  },
+  {
+    "text": "Polar bears hibernate during winter months to conserve energy.",
+    "label": "false"
+  },
+  {
+    "text": "A parallelogram has four right angles.",
+    "label": "true"
+  },
+  {
+    "text": "A parallelogram has three right angles.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth's axis is tilted at an angle of approximately 23.5 degrees relative to its orbital plane around the Sun.",
+    "label": "true"
+  },
+  {
+    "text": "The Earth's axis is tilted at an angle of approximately -23.5 degrees relative to its orbital plane around the Sun. To generate five pairs of True and False statements:",
+    "label": "false"
+  },
+  {
+    "text": "A bicycle has two wheels and one pedal.",
+    "label": "true"
+  },
+  {
+    "text": "A bicycle has three wheels and one pedal.",
+    "label": "false"
+  },
+  {
+    "text": "The moon orbits around Earth.",
+    "label": "true"
+  },
+  {
+    "text": "The sun orbits around Earth.",
+    "label": "false"
+  },
+  {
+    "text": "An apple falling from a tree has gravitational potential energy when it's high up in the tree.",
+    "label": "true"
+  },
+  {
+    "text": "An apple falling from a tree has kinetic energy when it's high up in the tree.",
+    "label": "false"
+  },
+  {
+    "text": "A dog can run faster than a human.",
+    "label": "true"
+  },
+  {
+    "text": "A cat can run faster than a human.",
+    "label": "false"
+  },
+  {
+    "text": "All mammals have hair or fur.",
+    "label": "true"
+  },
+  {
+    "text": "Some mammals do not have hair or fur.",
+    "label": "false"
+  },
+  {
+    "text": "Jupiter is larger than any other planet in our solar system.",
+    "label": "true"
+  },
+  {
+    "text": "Saturn is larger than any other planet in our solar system.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth's core is primarily made up of iron and nickel.",
+    "label": "true"
+  },
+  {
+    "text": "The Moon's core is primarily made up of iron and nickel. Sure, here are five pairs of True/False statements:",
+    "label": "false"
+  },
+  {
+    "text": "Oxygen makes up approximately 21% of air by volume.",
+    "label": "true"
+  },
+  {
+    "text": "Nitrogen makes up approximately 78% of air by volume.",
+    "label": "false"
+  },
+  {
+    "text": "An apple falling from a tree to the ground follows an arc due to gravity.",
+    "label": "true"
+  },
+  {
+    "text": "A rocket following a straight trajectory would follow an elliptical path around the earth.",
+    "label": "false"
+  },
+  {
+    "text": "Insects have six legs because they evolved this number through natural selection.",
+    "label": "true"
+  },
+  {
+    "text": "Dinosaurs had more than six legs as their ancestors possessed four legs each.",
+    "label": "false"
+  },
+  {
+    "text": "Humans have thumbs that are opposable to allow them to grasp objects easily.",
+    "label": "true"
+  },
+  {
+    "text": "Chameleons can change color but cannot actually manipulate their limbs.",
+    "label": "false"
+  },
+  {
+    "text": "Most reptiles lay eggs on land rather than in water.",
+    "label": "true"
+  },
+  {
+    "text": "Many fish give birth to live young instead of laying eggs.",
+    "label": "false"
+  },
+  {
+    "text": "DNA encodes genetic information for all living organisms.",
+    "label": "true"
+  },
+  {
+    "text": "RNA encodes genetic information for all living organisms.",
+    "label": "false"
+  },
+  {
+    "text": "Jupiter has four largest moons called Io, Europa, Ganymede, and Callisto.",
+    "label": "true"
+  },
+  {
+    "text": "Saturn has four largest moons called Io, Europa, Ganymede, and Callisto.",
+    "label": "false"
+  },
+  {
+    "text": "A bicycle is an example of renewable energy source.",
+    "label": "true"
+  },
+  {
+    "text": "A car is an example of renewable energy source.",
+    "label": "false"
+  },
+  {
+    "text": "Jupiter has more moons than any other planet in our solar system.",
+    "label": "true"
+  },
+  {
+    "text": "Saturn has more moons than any other planet in our solar system.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth orbits around the Sun in an elliptical path.",
+    "label": "true"
+  },
+  {
+    "text": "The Moon orbits around the Earth in an elliptical path.",
+    "label": "false"
+  },
+  {
+    "text": "A butterfly has three hearts inside its body.",
+    "label": "true"
+  },
+  {
+    "text": "A butterfly has only two hearts inside its body. To generate more pairs of True/False statements:",
+    "label": "false"
+  },
+  {
+    "text": "The Milky Way galaxy contains billions of stars.",
+    "label": "true"
+  },
+  {
+    "text": "The Milky Way galaxy contains just thousands of stars.",
+    "label": "false"
+  },
+  {
+    "text": "All living organisms require energy for survival.",
+    "label": "true"
+  },
+  {
+    "text": "Plants can survive without consuming any external energy.",
+    "label": "false"
+  },
+  {
+    "text": "Jupiter's Great Red Spot is larger than Earth.",
+    "label": "true"
+  },
+  {
+    "text": "Saturn's rings are made up of dust and rock particles rather than ice crystals.",
+    "label": "false"
+  },
+  {
+    "text": "The human brain weighs approximately 1.4 kilograms.",
+    "label": "true"
+  },
+  {
+    "text": "The human brain weighs about half that much due to its water content.",
+    "label": "false"
+  },
+  {
+    "text": "Pluto was once considered the ninth planet in our solar system.",
+    "label": "true"
+  },
+  {
+    "text": "Pluto was once considered the eighth planet in our solar system.",
+    "label": "false"
+  },
+  {
+    "text": "A bicycle has two wheels and one pedal.",
+    "label": "true"
+  },
+  {
+    "text": "A car has two wheels and one pedal.",
+    "label": "false"
+  },
+  {
+    "text": "An apple is red in color when ripe.",
+    "label": "true"
+  },
+  {
+    "text": "An apple is green in color when ripe.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Barrier Reef is located in Australia.",
+    "label": "true"
+  },
+  {
+    "text": "The Great Barrier Reef is located in China.",
+    "label": "false"
+  },
+  {
+    "text": "Mars has no natural satellites.",
+    "label": "true"
+  },
+  {
+    "text": "Mars has five natural satellites orbiting around it.",
+    "label": "false"
+  },
+  {
+    "text": "A cheetah is an animal that can run faster than any other land animal on Earth.",
+    "label": "true"
+  },
+  {
+    "text": "A kangaroo is an animal that can run faster than any other land animal on Earth.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Barrier Reef is located in Australia.",
+    "label": "true"
+  },
+  {
+    "text": "The Great Barrier Reef is located in New Zealand.",
+    "label": "false"
+  },
+  {
+    "text": "The Sun is the closest star to the Earth.",
+    "label": "true"
+  },
+  {
+    "text": "The Moon is the closest star to the Earth.",
+    "label": "false"
+  },
+  {
+    "text": "Carbon dioxide is one of the gases responsible for greenhouse effect.",
+    "label": "true"
+  },
+  {
+    "text": "Oxygen is one of the gases responsible for greenhouse effect.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth's atmosphere contains mostly nitrogen and oxygen gases.",
+    "label": "true"
+  },
+  {
+    "text": "The Earth's atmosphere contains mostly helium and carbon dioxide gases.",
+    "label": "false"
+  },
+  {
+    "text": "DNA encodes genetic information for all living organisms.",
+    "label": "true"
+  },
+  {
+    "text": "RNA encodes genetic information for all living organisms.",
+    "label": "false"
+  },
+  {
+    "text": "The human eye can see only colors that exist in nature.",
+    "label": "true"
+  },
+  {
+    "text": "The human eye can see only colors that do not exist in nature.",
+    "label": "false"
+  },
+  {
+    "text": "A virus is an organism that cannot reproduce on its own but relies on host cells to replicate.",
+    "label": "true"
+  },
+  {
+    "text": "A virus is an organism that can reproduce independently but requires host cells to survive.",
+    "label": "false"
+  },
+  {
+    "text": "An earthquake is caused by the movement of tectonic plates beneath the Earth's surface.",
+    "label": "true"
+  },
+  {
+    "text": "An earthquake is caused by the gravitational pull between celestial bodies.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth rotates on its axis while also orbiting around the Sun.",
+    "label": "true"
+  },
+  {
+    "text": "The Moon rotates on its axis while also orbiting around the Earth.",
+    "label": "false"
+  },
+  {
+    "text": "A parallelogram has four sides with opposite sides being parallel and equal in length.",
+    "label": "true"
+  },
+  {
+    "text": "A rhombus has four sides with opposite sides being parallel and equal in length.",
+    "label": "false"
+  },
+  {
+    "text": "An equilateral triangle has all three sides of equal length.",
+    "label": "true"
+  },
+  {
+    "text": "A scalene triangle has all three sides of different lengths.",
+    "label": "false"
+  },
+  {
+    "text": "An electron has a negative electrical charge.",
+    "label": "true"
+  },
+  {
+    "text": "A proton has a negative electrical charge.",
+    "label": "false"
+  },
+  {
+    "text": "Plants use sunlight to produce their own food through photosynthesis.",
+    "label": "true"
+  },
+  {
+    "text": "Animals use sunlight to produce their own food through photosynthesis.",
+    "label": "false"
+  },
+  {
+    "text": "A redwood tree can grow up to 379 feet tall.",
+    "label": "true"
+  },
+  {
+    "text": "A redwood tree can grow up to 200 feet tall.",
+    "label": "false"
+  },
+  {
+    "text": "Mars has polar ice caps made entirely of frozen water.",
+    "label": "true"
+  },
+  {
+    "text": "Mars has polar ice caps made entirely of frozen iron.",
+    "label": "false"
+  },
+  {
+    "text": "A bicycle has four wheels.",
+    "label": "true"
+  },
+  {
+    "text": "A bicycle has five wheels.",
+    "label": "false"
+  },
+  {
+    "text": "Plants need water to survive.",
+    "label": "true"
+  },
+  {
+    "text": "Animals need water to survive.",
+    "label": "false"
+  },
+  {
+    "text": "A cat has four legs and typically lives in homes.",
+    "label": "true"
+  },
+  {
+    "text": "A dog has four legs and typically lives in homes.",
+    "label": "false"
+  },
+  {
+    "text": "An apple falls to Earth due to gravity, not air resistance.",
+    "label": "true"
+  },
+  {
+    "text": "An apple floats on water due to gravity, not air resistance. True: Plants need sunlight for photosynthesis.",
+    "label": "false"
+  },
+  {
+    "text": "A parallelogram has four right angles.",
+    "label": "true"
+  },
+  {
+    "text": "A parallelogram has three right angles.",
+    "label": "false"
+  },
+  {
+    "text": "All even numbers greater than 2 can be expressed as the sum of two prime numbers.",
+    "label": "true"
+  },
+  {
+    "text": "Some odd numbers greater than 3 cannot be expressed as the sum of two prime numbers. True: The capital of France is Paris.",
+    "label": "false"
+  },
+  {
+    "text": "Water is composed of two hydrogen atoms and one oxygen atom.",
+    "label": "true"
+  },
+  {
+    "text": "Water is composed of two oxygen atoms and one hydrogen atom.",
+    "label": "false"
+  },
+  {
+    "text": "A parallelogram has four right angles.",
+    "label": "true"
+  },
+  {
+    "text": "A parallelogram has three right angles.",
+    "label": "false"
+  },
+  {
+    "text": "All even numbers greater than 2 can be expressed as the sum of two prime numbers.",
+    "label": "true"
+  },
+  {
+    "text": "Some odd numbers greater than 3 cannot be expressed as the sum of two prime numbers.",
+    "label": "false"
+  },
+  {
+    "text": "The moon orbits around Earth.",
+    "label": "true"
+  },
+  {
+    "text": "The moon revolves around Jupiter.",
+    "label": "false"
+  },
+  {
+    "text": "A square has four equal sides and four right angles.",
+    "label": "true"
+  },
+  {
+    "text": "A rectangle has four equal sides and four right angles.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Wall of China is the longest wall in the world.",
+    "label": "true"
+  },
+  {
+    "text": "The Great Wall of Mexico is the longest wall in the world. Sure! Here are five pairs of true and false statements:",
+    "label": "false"
+  },
+  {
+    "text": "A rhombus has all sides of equal length.",
+    "label": "true"
+  },
+  {
+    "text": "A parallelogram has all sides of equal length.",
+    "label": "false"
+  },
+  {
+    "text": "An octopus is an animal that belongs to the class of cephalopods.",
+    "label": "true"
+  },
+  {
+    "text": "A turtle is an animal that belongs to the class of cephalopods.",
+    "label": "false"
+  },
+  {
+    "text": "An apple tree produces apples that can be eaten.",
+    "label": "true"
+  },
+  {
+    "text": "An orange tree produces oranges that can be eaten.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Wall of China is visible from space.",
+    "label": "true"
+  },
+  {
+    "text": "The Amazon River is visible from space.",
+    "label": "false"
+  },
+  {
+    "text": "The capital city of Australia is Canberra.",
+    "label": "true"
+  },
+  {
+    "text": "The capital city of Canada is Ottawa.",
+    "label": "false"
+  },
+  {
+    "text": "A quadrilateral has four sides that intersect to form right angles.",
+    "label": "true"
+  },
+  {
+    "text": "A triangle has three sides that intersect to form right angles.",
+    "label": "false"
+  },
+  {
+    "text": "An apple tree can grow in a tropical climate.",
+    "label": "true"
+  },
+  {
+    "text": "An apple tree can only grow in a temperate climate.",
+    "label": "false"
+  },
+  {
+    "text": "A lion belongs to the cat family.",
+    "label": "true"
+  },
+  {
+    "text": "A tiger belongs to the cat family.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Wall of China is an actual physical structure that can be visited.",
+    "label": "true"
+  },
+  {
+    "text": "The Great Wall of China is a fictional structure from ancient mythology.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth has a diameter of approximately 12,742 kilometers.",
+    "label": "true"
+  },
+  {
+    "text": "The Earth's diameter is actually much smaller than this figure, around 12,000 kilometers.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Wall of China is the longest man-made structure in the world.",
+    "label": "true"
+  },
+  {
+    "text": "The Berlin Wall was the longest man-made structure in the world.",
+    "label": "false"
+  },
+  {
+    "text": "Venus has more moons than any other planet in our solar system.",
+    "label": "true"
+  },
+  {
+    "text": "Mars has more moons than any other planet in our solar system.",
+    "label": "false"
+  },
+  {
+    "text": "An apple falling from a tree has gravitational force acting upon it.",
+    "label": "true"
+  },
+  {
+    "text": "A banana falling from a tree has gravitational force acting upon it.",
+    "label": "false"
+  },
+  {
+    "text": "In a circle, the radius is equal to half the diameter.",
+    "label": "true"
+  },
+  {
+    "text": "In a square, the side length is equal to half the diagonal. True: The moon orbits around Earth.",
+    "label": "false"
+  },
+  {
+    "text": "A triangle with all sides of equal length is an equilateral triangle.",
+    "label": "true"
+  },
+  {
+    "text": "A triangle with two sides of equal length is an isosceles triangle.",
+    "label": "false"
+  },
+  {
+    "text": "The sum of the interior angles of any triangle is always 180 degrees.",
+    "label": "true"
+  },
+  {
+    "text": "The sum of the interior angles of any triangle is always 270 degrees.",
+    "label": "false"
+  },
+  {
+    "text": "An angle bisector divides an angle into two congruent angles.",
+    "label": "true"
+  },
+  {
+    "text": "An angle bisector divides an angle into two supplementary angles.",
+    "label": "false"
+  },
+  {
+    "text": "Water freezes at 32 degrees Fahrenheit.",
+    "label": "true"
+  },
+  {
+    "text": "Water boils at 212 degrees Fahrenheit.",
+    "label": "false"
+  },
+  {
+    "text": "Plants use photosynthesis to convert light energy into chemical energy in glucose.",
+    "label": "true"
+  },
+  {
+    "text": "Animals use photosynthesis to convert light energy into chemical energy in glucose.",
+    "label": "false"
+  },
+  {
+    "text": "DNA contains genetic information that determines traits.",
+    "label": "true"
+  },
+  {
+    "text": "RNA contains genetic information that determines",
+    "label": "false"
+  },
+  {
+    "text": "A parallelogram has four right angles.",
+    "label": "true"
+  },
+  {
+    "text": "A parallelogram has only three right angles.",
+    "label": "false"
+  },
+  {
+    "text": "Plants can perform photosynthesis using chlorophyll in their leaves.",
+    "label": "true"
+  },
+  {
+    "text": "Plants cannot perform photosynthesis without chlorophyll in their leaves.",
+    "label": "false"
+  },
+  {
+    "text": "All mammals breathe with lungs.",
+    "label": "true"
+  },
+  {
+    "text": "Not all mammals breathe with lungs.",
+    "label": "false"
+  },
+  {
+    "text": "Rain falls from clouds.",
+    "label": "true"
+  },
+  {
+    "text": "It does not rain every day.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth orbits around the Sun.",
+    "label": "true"
+  },
+  {
+    "text": "Mars orbits around the Sun instead of the Earth.",
+    "label": "false"
+  },
+  {
+    "text": "An octopus belongs to the animal kingdom.",
+    "label": "true"
+  },
+  {
+    "text": "A penguin belongs to the animal kingdom.",
+    "label": "false"
+  },
+  {
+    "text": "The Sahara Desert receives very little rainfall annually.",
+    "label": "true"
+  },
+  {
+    "text": "The Sahara Desert receives a lot of rainfall annually.",
+    "label": "false"
+  },
+  {
+    "text": "DNA contains both deoxyribose and phosphate groups.",
+    "label": "true"
+  },
+  {
+    "text": "DNA contains only phosphorus and nitrogen groups.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Barrier Reef is found in Australia's tropical waters.",
+    "label": "true"
+  },
+  {
+    "text": "The Great Barrier Reef is found in Antarctica's cold waters.",
+    "label": "false"
+  },
+  {
+    "text": "A tree needs sunlight to grow and thrive in its environment.",
+    "label": "true"
+  },
+  {
+    "text": "A tree can survive without any sunlight regardless of its environment.",
+    "label": "false"
+  },
+  {
+    "text": "In a democratic society, all citizens have an equal say in government decisions.",
+    "label": "true"
+  },
+  {
+    "text": "In some dictatorships, only a select few citizens have the right to vote on important matters.",
+    "label": "false"
+  },
+  {
+    "text": "In the United States, California has more land area than any other state.",
+    "label": "true"
+  },
+  {
+    "text": "In the United States, Texas has more land area than any other state.",
+    "label": "false"
+  },
+  {
+    "text": "An apple tree produces apples year-round.",
+    "label": "true"
+  },
+  {
+    "text": "A lemon tree produces apples year-round.",
+    "label": "false"
+  },
+  {
+    "text": "The human body requires iron to produce hemoglobin for oxygen transport in blood.",
+    "label": "true"
+  },
+  {
+    "text": "The human body requires copper to produce hemoglobin for oxygen transport in blood.",
+    "label": "false"
+  },
+  {
+    "text": "Venus is known as the \"Morning Star\" or \"Evening Star\" due to its brightness.",
+    "label": "true"
+  },
+  {
+    "text": "Mars is known as the \"Morning Star\" or \"Evening Star\" due to its brightness.",
+    "label": "false"
+  },
+  {
+    "text": "Plants require sunlight for photosynthesis.",
+    "label": "true"
+  },
+  {
+    "text": "Plants can survive without sunlight entirely.",
+    "label": "false"
+  },
+  {
+    "text": "All living organisms need water to survive.",
+    "label": "true"
+  },
+  {
+    "text": "Some invertebrates like earthworms do not need water for survival.",
+    "label": "false"
+  },
+  {
+    "text": "A quadrilateral has four sides and can be either convex or concave.",
+    "label": "true"
+  },
+  {
+    "text": "A quadrilateral only has three sides and cannot be concave.",
+    "label": "false"
+  },
+  {
+    "text": "Venus rotates on its axis in the opposite direction compared to Earth's rotation.",
+    "label": "true"
+  },
+  {
+    "text": "Mars rotates on its axis in the opposite direction compared to Earth's rotation.",
+    "label": "false"
+  },
+  {
+    "text": "The moon orbits around Earth once every 27.3 days.",
+    "label": "true"
+  },
+  {
+    "text": "The moon orbits around the Sun once every 27.3 days.",
+    "label": "false"
+  },
+  {
+    "text": "A square has four equal sides.",
+    "label": "true"
+  },
+  {
+    "text": "A rhombus has four equal sides.",
+    "label": "false"
+  },
+  {
+    "text": "An apple weighs about 150 grams.",
+    "label": "true"
+  },
+  {
+    "text": "A banana weighs about 150 grams.",
+    "label": "false"
+  },
+  {
+    "text": "In a triangle, the sum of any two sides must be greater than the third side.",
+    "label": "true"
+  },
+  {
+    "text": "In a triangle, the sum of any three sides must be greater than zero.",
+    "label": "false"
+  },
+  {
+    "text": "A parallelogram has four right angles.",
+    "label": "true"
+  },
+  {
+    "text": "A parallelogram has only two right angles.",
+    "label": "false"
+  },
+  {
+    "text": "A rectangle is always a type of quadrilateral.",
+    "label": "true"
+  },
+  {
+    "text": "A rectangle is not always a type of quadrilateral as it depends on its orientation. Let's generate five more sets:",
+    "label": "false"
+  },
+  {
+    "text": "The Earth rotates around the Sun once every 24 hours.",
+    "label": "true"
+  },
+  {
+    "text": "The Moon rotates around the Earth once every 24 hours.",
+    "label": "false"
+  },
+  {
+    "text": "All dogs have fur or feathers.",
+    "label": "true"
+  },
+  {
+    "text": "Some cats have fur or feathers.",
+    "label": "false"
+  },
+  {
+    "text": "A circle has infinitely many lines of symmetry.",
+    "label": "true"
+  },
+  {
+    "text": "An ellipse has infinitely many lines of symmetry.",
+    "label": "false"
+  },
+  {
+    "text": "Light travels in straight lines through transparent materials.",
+    "label": "true"
+  },
+  {
+    "text": "Light can refract when passing from one medium to another.",
+    "label": "false"
+  },
+  {
+    "text": "Every even number is divisible by 6.",
+    "label": "true"
+  },
+  {
+    "text": "Some even numbers are not divisible by 6 because they may leave a remainder when divided by 3. These remainders could be 1 or 2 which do not divide evenly by 6.",
+    "label": "false"
+  },
+  {
+    "text": "An electron is a subatomic particle that carries a negative charge.",
+    "label": "true"
+  },
+  {
+    "text": "An electron is a subatomic particle that carries a positive charge.",
+    "label": "false"
+  },
+  {
+    "text": "A parallelogram has four right angles.",
+    "label": "true"
+  },
+  {
+    "text": "A parallelogram has three right angles.",
+    "label": "false"
+  },
+  {
+    "text": "All mammals have hair or fur.",
+    "label": "true"
+  },
+  {
+    "text": "Not all mammals have hair or fur.",
+    "label": "false"
+  },
+  {
+    "text": "A square has four sides and four right angles.",
+    "label": "true"
+  },
+  {
+    "text": "A triangle has three sides and three right angles.",
+    "label": "false"
+  },
+  {
+    "text": "An apple tree produces apples.",
+    "label": "true"
+  },
+  {
+    "text": "A cherry tree produces apples.",
+    "label": "false"
+  },
+  {
+    "text": "Plants can survive in waterlogged soil conditions.",
+    "label": "true"
+  },
+  {
+    "text": "Plants cannot survive in waterlogged soil conditions.",
+    "label": "false"
+  },
+  {
+    "text": "A square has four sides that are all equal in length.",
+    "label": "true"
+  },
+  {
+    "text": "A rectangle has four sides that are all equal in length.",
+    "label": "false"
+  },
+  {
+    "text": "An equilateral triangle has three equal side lengths.",
+    "label": "true"
+  },
+  {
+    "text": "A scalene triangle has three equal side lengths.",
+    "label": "false"
+  },
+  {
+    "text": "A parallelogram has four sides and opposite sides that are equal in length.",
+    "label": "true"
+  },
+  {
+    "text": "A parallelogram has only three sides.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth rotates on its axis once every 24 hours, completing one full rotation.",
+    "label": "true"
+  },
+  {
+    "text": "The Moon rotates on its axis once every 24 hours, completing one full rotation. True: Plants require carbon dioxide for photosynthesis to occur.",
+    "label": "false"
+  },
+  {
+    "text": "An equilateral triangle has all sides of equal length.",
+    "label": "true"
+  },
+  {
+    "text": "A scalene triangle has all sides of equal length.",
+    "label": "false"
+  },
+  {
+    "text": "All even numbers greater than 2 can be expressed as the sum of two prime numbers.",
+    "label": "true"
+  },
+  {
+    "text": "Not all even numbers greater than 2 can be expressed as the sum of two prime numbers.",
+    "label": "false"
+  },
+  {
+    "text": "A square has four sides of equal length.",
+    "label": "true"
+  },
+  {
+    "text": "A rectangle has four sides of equal length.",
+    "label": "false"
+  },
+  {
+    "text": "Oxygen gas is highly reactive in nature.",
+    "label": "true"
+  },
+  {
+    "text": "Helium gas is highly reactive in nature.",
+    "label": "false"
+  },
+  {
+    "text": "Cats are known to purr when they are happy or content.",
+    "label": "true"
+  },
+  {
+    "text": "Dogs are known to purr when they are happy or content. To generate more examples, we can modify existing true statements by changing small details that don't fundamentally alter their meaning:",
+    "label": "false"
+  },
+  {
+    "text": "All humans share a common ancestor.",
+    "label": "true"
+  },
+  {
+    "text": "Not all humans share a common ancestor.",
+    "label": "false"
+  },
+  {
+    "text": "The moon orbits Earth.",
+    "label": "true"
+  },
+  {
+    "text": "The sun orbits Earth.",
+    "label": "false"
+  },
+  {
+    "text": "An apple falls towards the ground due to gravity.",
+    "label": "true"
+  },
+  {
+    "text": "A banana falls towards the sky due to gravity. True: The Earth has been visited by humans in space missions.",
+    "label": "false"
+  },
+  {
+    "text": "The United States flag flies on every American warship at sea.",
+    "label": "true"
+  },
+  {
+    "text": "The British flag flies on every British warship at sea.",
+    "label": "false"
+  },
+  {
+    "text": "All birds can fly through the air.",
+    "label": "true"
+  },
+  {
+    "text": "Penguins cannot fly, but they swim through water.",
+    "label": "false"
+  },
+  {
+    "text": "Plants produce their own food using photosynthesis.",
+    "label": "true"
+  },
+  {
+    "text": "Animals produce their own food using photosynthesis.",
+    "label": "false"
+  },
+  {
+    "text": "Mars has frozen water deposits that were likely formed by liquid water long ago.",
+    "label": "true"
+  },
+  {
+    "text": "Venus has frozen water deposits that were likely formed by liquid water long ago.",
+    "label": "false"
+  },
+  {
+    "text": "Humans have explored only a small part of our galaxy.",
+    "label": "true"
+  },
+  {
+    "text": "Aliens have explored only a small part of our galaxy.",
+    "label": "false"
+  },
+  {
+    "text": "Every person's DNA contains the same genes.",
+    "label": "true"
+  },
+  {
+    "text": "Different people may have different versions or variations of the same gene.",
+    "label": "false"
+  },
+  {
+    "text": "All dogs are mammals.",
+    "label": "true"
+  },
+  {
+    "text": "Some animals classified as \"dogs\" are actually not closely related to wolves.",
+    "label": "false"
+  },
+  {
+    "text": "Pluto was once considered to be a planet in our solar system.",
+    "label": "true"
+  },
+  {
+    "text": "Mercury was once considered to be a planet in our solar system.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth orbits around the Sun in an elliptical path.",
+    "label": "true"
+  },
+  {
+    "text": "The Moon orbits around the Earth in an elliptical path.",
+    "label": "false"
+  },
+  {
+    "text": "A triangle with all angles equal to 60 degrees is an equilateral triangle.",
+    "label": "true"
+  },
+  {
+    "text": "A triangle with all angles equal to 90 degrees is an equilateral triangle.",
+    "label": "false"
+  },
+  {
+    "text": "In a geometric sequence, each term after the first is found by multiplying the previous one by a fixed, non-zero number called the common ratio.",
+    "label": "true"
+  },
+  {
+    "text": "In a geometric sequence, each term after the first is found by adding the previous one to a constant value. To generate these pairs, I've made subtle modifications that change one aspect of each statement while keeping the core idea intact:",
+    "label": "false"
+  },
+  {
+    "text": "A triangle has three sides.",
+    "label": "true"
+  },
+  {
+    "text": "A triangle has four sides.",
+    "label": "false"
+  },
+  {
+    "text": "The capital of France is Paris.",
+    "label": "true"
+  },
+  {
+    "text": "The capital of Germany is Berlin.",
+    "label": "false"
+  },
+  {
+    "text": "Light travels faster than sound in most situations.",
+    "label": "true"
+  },
+  {
+    "text": "Light travels slower than sound in most situations.",
+    "label": "false"
+  },
+  {
+    "text": "All mammals have fur or hair.",
+    "label": "true"
+  },
+  {
+    "text": "Not all mammals have fur or hair.",
+    "label": "false"
+  },
+  {
+    "text": "A bicycle has wheels attached to its frame.",
+    "label": "true"
+  },
+  {
+    "text": "A bicycle does not have wheels attached to its frame.",
+    "label": "false"
+  },
+  {
+    "text": "Cats have fur and breathe through lungs.",
+    "label": "true"
+  },
+  {
+    "text": "Dogs have fur and breathe through lungs.",
+    "label": "false"
+  },
+  {
+    "text": "Butterflies undergo complete metamorphosis in their life cycle.",
+    "label": "true"
+  },
+  {
+    "text": "Bees undergo complete metamorphosis in their life cycle.",
+    "label": "false"
+  },
+  {
+    "text": "An apple falls to the ground due to gravity.",
+    "label": "true"
+  },
+  {
+    "text": "A car falls to the ground due to gravity.",
+    "label": "false"
+  },
+  {
+    "text": "Light travels in straight lines through transparent materials.",
+    "label": "true"
+  },
+  {
+    "text": "Light bends around corners when traveling from air into glass. True: The moon orbits Earth.",
+    "label": "false"
+  },
+  {
+    "text": "Carbon dioxide traps heat in the atmosphere.",
+    "label": "true"
+  },
+  {
+    "text": "Oxygen gas traps heat in the atmosphere.",
+    "label": "false"
+  },
+  {
+    "text": "A seed grows into a plant.",
+    "label": "true"
+  },
+  {
+    "text": "A flower blooms on its own without a seed.",
+    "label": "false"
+  },
+  {
+    "text": "Gravity pulls objects towards each other.",
+    "label": "true"
+  },
+  {
+    "text": "Friction between surfaces prevents movement.",
+    "label": "false"
+  },
+  {
+    "text": "Trees provide shade by blocking sunlight.",
+    "label": "true"
+  },
+  {
+    "text": "Plants use photosynthesis to produce their food.",
+    "label": "false"
+  },
+  {
+    "text": "Sound waves travel through solids, liquids, and gases.",
+    "label": "true"
+  },
+  {
+    "text": "Electromagnetic waves travel only through space.",
+    "label": "false"
+  },
+  {
+    "text": "The human body temperature drops during sleep.",
+    "label": "true"
+  },
+  {
+    "text": "The human body temperature increases during sleep.",
+    "label": "false"
+  },
+  {
+    "text": "Plants need water for photosynthesis.",
+    "label": "true"
+  },
+  {
+    "text": "Animals can perform photosynthesis using chlorophyll.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth rotates on its axis once every day.",
+    "label": "true"
+  },
+  {
+    "text": "The Moon causes tides because it is pulled toward the Earth by gravity.",
+    "label": "false"
+  },
+  {
+    "text": "An octopus has three hearts.",
+    "label": "true"
+  },
+  {
+    "text": "A dolphin has three hearts.",
+    "label": "false"
+  },
+  {
+    "text": "Fireflies glow through a chemical reaction that produces light.",
+    "label": "true"
+  },
+  {
+    "text": "Fireflies glow by using sound waves to produce light.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth orbits around the Sun in a perfectly circular path.",
+    "label": "true"
+  },
+  {
+    "text": "The Earth orbits around the Moon in a perfectly circular path. True: Jupiter is larger than any other planet in our solar system.",
+    "label": "false"
+  },
+  {
+    "text": "Venus is known for its thick atmosphere which contains clouds made up of carbon dioxide and sulfuric acid.",
+    "label": "true"
+  },
+  {
+    "text": "Mercury is known for its thick atmosphere which contains clouds made up of carbon dioxide and sulfuric acid.",
+    "label": "false"
+  },
+  {
+    "text": "Elephants have been domesticated since ancient times for various purposes such as transportation and labor.",
+    "label": "true"
+  },
+  {
+    "text": "Penguins have been domesticated since ancient times for various purposes such as transportation and labor.",
+    "label": "false"
+  },
+  {
+    "text": "Bats use echolocation to navigate and catch prey.",
+    "label": "true"
+  },
+  {
+    "text": "Dolphins use echolocation to navigate and catch prey.",
+    "label": "false"
+  },
+  {
+    "text": "Bees play an important role in pollinating plants and helping them reproduce.",
+    "label": "true"
+  },
+  {
+    "text": "Flies play an important role in pollinating plants and helping them reproduce.",
+    "label": "false"
+  },
+  {
+    "text": "A tree falls in a forest with no one around, does it make a sound?",
+    "label": "true"
+  },
+  {
+    "text": "A rock falls in a desert with no one around, does it make a sound?",
+    "label": "false"
+  },
+  {
+    "text": "Humans have four limbs for movement and balance.",
+    "label": "true"
+  },
+  {
+    "text": "Animals have four limbs for movement and balance.",
+    "label": "false"
+  },
+  {
+    "text": "The Great Barrier Reef is the largest living structure on Earth.",
+    "label": "true"
+  },
+  {
+    "text": "The Great Wall of China is the largest living structure on Earth.",
+    "label": "false"
+  },
+  {
+    "text": "All mammals have fur or hair as their primary covering.",
+    "label": "true"
+  },
+  {
+    "text": "Some mammals do not have fur or hair as their primary covering.",
+    "label": "false"
+  },
+  {
+    "text": "The Earth orbits around the Sun in an elliptical path with the Sun at one focus.",
+    "label": "true"
+  },
+  {
+    "text": "The Earth moves along its orbit in a perfect circle without any eccentricity.",
+    "label": "false"
+  },
+  {
+    "text": "A rhombus has all sides equal in length but may vary in angles.",
+    "label": "true"
+  },
+  {
+    "text": "A square is a special case of a rhombus where all angles are also equal. True: The moon orbits around the Earth in a circular motion.",
+    "label": "false"
+  },
+  {
+    "text": "In Java programming language, \"null\" represents an absence of value or object reference.",
+    "label": "true"
+  },
+  {
+    "text": "In Java programming language, \"null\" represents the highest level of abstraction.",
+    "label": "false"
+  },
+  {
+    "text": "A bicycle wheel has three points in contact with the ground.",
+    "label": "true"
+  },
+  {
+    "text": "A bicycle wheel has only two points in contact with the ground.",
+    "label": "false"
+  },
+  {
+    "text": "DNA contains the genetic information for all living organisms on Earth.",
+    "label": "true"
+  },
+  {
+    "text": "DNA contains the genetic information for all living organisms in the universe.",
+    "label": "false"
+  },
+  {
+    "text": "An apple falling from a tree has acceleration due to gravity acting upon it.",
+    "label": "true"
+  },
+  {
+    "text": "A car driving down the road has acceleration due to gravity acting upon it.",
+    "label": "false"
+  },
+  {
+    "text": "Plants can perform photosynthesis to produce their own food.",
+    "label": "true"
+  },
+  {
+    "text": "Animals can perform photosynthesis to produce their own food.",
+    "label": "false"
+  },
+  {
+    "text": "A bicycle wheel can rotate freely without any resistance.",
+    "label": "true"
+  },
+  {
+    "text": "A bicycle wheel requires friction to maintain its rotation.",
+    "label": "false"
+  },
+  {
+    "text": "An antelope's heart beats approximately once every 30 seconds.",
+    "label": "true"
+  },
+  {
+    "text": "An antelope's heart beats approximately once every five minutes. True: All planets orbit around the sun in nearly circular paths.",
+    "label": "false"
+  },
+  {
+    "text": "Humans need water to survive for about three days without drinking any liquid.",
+    "label": "true"
+  },
+  {
+    "text": "Humans only need to drink water occasionally to stay hydrated throughout their lives.",
+    "label": "false"
+  },
+  {
+    "text": "Light travels faster than sound through air at normal temperatures.",
+    "label": "true"
+  },
+  {
+    "text": "Sound travels faster than light through air under certain conditions, such as high temperature or humidity.",
+    "label": "false"
+  },
+  {
+    "text": "Most animals have a circadian rhythm, which regulates their sleep-wake cycles.",
+    "label": "true"
+  },
+  {
+    "text": "Some animals do not exhibit a circadian rhythm because they evolved in environments with no natural day-night cycle.",
+    "label": "false"
+  }
+]

@@ -33,7 +33,31 @@ class LLMInstrumenter:
         self.attention_data = {}
         self.activation_data = {}
         self.hooks = []
-        
+        # Hook for head masking (Ablation)
+        self.head_mask = None
+
+    def ablate_head(self, layer_idx: int, head_idx: int):
+        """
+        Ablate a specific attention head by masking it during forward pass.
+        This modifies the 'head_mask' passed to the model.
+        """
+        if self.head_mask is None:
+            # Initialize mask with 1s: [num_layers, num_heads]
+            cfg = self.model.config
+            num_layers = self.config.num_layers_analyze or getattr(cfg, 'num_hidden_layers', getattr(cfg, 'n_layer', 32))
+            num_heads = getattr(cfg, 'num_attention_heads', getattr(cfg, 'n_head', 12))
+            
+            self.head_mask = torch.ones((num_layers, num_heads), device=self.config.device)
+            
+        # Set mask to 0 for specific head
+        self.head_mask[layer_idx, head_idx] = 0.0
+        logger.info(f"Ablated Head L{layer_idx}H{head_idx}")
+
+    def reset_ablations(self):
+        """Reset all head ablations"""
+        self.head_mask = None
+        logger.info("Reset all ablations")
+
     def load_model(self, model_name: str):
         """Load HuggingFace model and tokenizer with support for custom code"""
         logger.info(f"Loading model: {model_name}")
@@ -72,6 +96,7 @@ class LLMInstrumenter:
                 model_name,
                 torch_dtype=dtype,
                 device_map=device_map,
+                attn_implementation="eager",
                 trust_remote_code=getattr(self.config, "trust_remote_code", False),
                 local_files_only=getattr(self.config, "local_files_only", False),
                 **getattr(self.config, "model_kwargs", {})
@@ -83,6 +108,7 @@ class LLMInstrumenter:
                     model_name,
                     torch_dtype=dtype,
                     device_map=device_map,
+                    attn_implementation="eager",
                     trust_remote_code=getattr(self.config, "trust_remote_code", False),
                     local_files_only=getattr(self.config, "local_files_only", False),
                     **getattr(self.config, "model_kwargs", {})
@@ -96,6 +122,8 @@ class LLMInstrumenter:
              self.model.to(self.config.device)
         
         self.model.eval()
+        self.model.config.output_attentions = True
+        self.model.config.return_dict = True
         try:
             logger.info(f"Model loaded successfully. Device: {next(self.model.parameters()).device}")
         except:
@@ -164,13 +192,37 @@ class LLMInstrumenter:
         self.attention_data.clear()
         self.activation_data.clear()
         
+        # Prepare kwargs
+        model_kwargs = {
+            'output_attentions': True,
+            'output_hidden_states': True,
+            'return_dict': True 
+        }
+        
+        # Pass head_mask if active
+        if self.head_mask is not None:
+            # head_mask needs to be passed. 
+            model_kwargs['head_mask'] = self.head_mask
+        
         # Forward pass
         with torch.no_grad():
-            outputs = self.model(**inputs, output_attentions=True, output_hidden_states=True)
+            outputs = self.model(**inputs, **model_kwargs)
         
         # Extract attention patterns
-        attentions = outputs.attentions  # Tuple of [batch, heads, seq_len, seq_len]
-        hidden_states = outputs.hidden_states  # Tuple of [batch, seq_len, hidden_dim]
+        if hasattr(outputs, 'attentions'):
+             attentions = outputs.attentions
+             hidden_states = outputs.hidden_states
+        else:
+             # Fallback for tuple output
+             # GPT2 tuple: (loss, logits, past, hidden_states, attentions)
+             attentions = outputs[-1]
+             hidden_states = outputs[-2]
+             attentions = outputs[-1]
+             hidden_states = outputs[-2]
+             logger.warning("Accessed attentions via tuple index (fallback).")
+        
+        if attentions is None:
+             raise ValueError(f"Model returned None for attentions. Output type: {type(outputs)}. Keys: {outputs.keys() if hasattr(outputs, 'keys') else 'N/A'}")
         
         return {
             'inputs': inputs,

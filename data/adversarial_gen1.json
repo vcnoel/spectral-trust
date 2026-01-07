@@ -1,0 +1,102 @@
+[
+    {
+        "id": "recursive_1",
+        "active": "The rat the cat the dog chased bit ate the cheese.",
+        "passive": "The cheese was eaten by the rat the cat the dog chased bit."
+    },
+    {
+        "id": "recursive_2",
+        "active": "The analyst who the manager who the director hired scolded reported the error.",
+        "passive": "The error was reported by the analyst who the manager who the director hired scolded."
+    },
+    {
+        "id": "dimension_1",
+        "active": "The multidimensional manifold exhibits topological invariance under transformation.",
+        "passive": "Topological invariance is exhibited by the multidimensional manifold under transformation."
+    },
+    {
+        "id": "long_prepositional_1",
+        "active": "The cat sat on the mat in the house by the river under the tree near the road.",
+        "passive": "The mat was sat on by the cat in the house by the river under the tree near the road."
+    },
+    {
+        "id": "legalese_1",
+        "active": "The party of the first part hereby transfers all rights to the party of the second part.",
+        "passive": "All rights are hereby transferred by the party of the first part to the party of the second part."
+    },
+    {
+        "id": "garden_path_1",
+        "active": "The horse raced past the barn fell.",
+        "passive": "The horse that was raced past the barn fell."
+    },
+    {
+        "id": "abstract_corporate_1",
+        "active": "The overarching strategic initiative leverages synergistic cross-functional paradigms.",
+        "passive": "Synergistic cross-functional paradigms are leveraged by the overarching strategic initiative."
+    },
+    {
+        "id": "heavy_agent_1",
+        "active": "A masked stranger with a heavy limp and a dark coat opened the door.",
+        "passive": "The door was opened by a masked stranger with a heavy limp and a dark coat."
+    },
+    {
+        "id": "heavy_agent_2",
+        "active": "The relentless, unending, cacophonous noise from the construction site destroyed my concentration.",
+        "passive": "My concentration was destroyed by the relentless, unending, cacophonous noise from the construction site."
+    },
+    {
+        "id": "double_passive_1",
+        "active": "Someone said that someone made mistakes.",
+        "passive": "It was said that mistakes were made."
+    },
+    {
+        "id": "nonsense_chomsky",
+        "active": "Colorless green ideas sleep furiously.",
+        "passive": "Furiously sleep colorless green ideas."
+    },
+    {
+        "id": "archaic_inversion",
+        "active": "The jedi master wields the force.",
+        "passive": "By the jedi master, the force is wielded."
+    },
+    {
+        "id": "mixed_code_1",
+        "active": "The function executes the main loop.",
+        "passive": "The main loop is executed by the function."
+    },
+    {
+        "id": "conditional_nested",
+        "active": "If the system fails, the operator must intervene immediately.",
+        "passive": "Immediate intervention by the operator is required if the system fails."
+    },
+    {
+        "id": "relative_clause_stack",
+        "active": "The book that the girl who the boy liked read satisfied the teacher.",
+        "passive": "The teacher was satisfied by the book that the girl who the boy liked read."
+    },
+    {
+        "id": "agent_demotion_classic",
+        "active": "The committee reviewed the proposal.",
+        "passive": "The proposal was reviewed by the committee."
+    },
+    {
+        "id": "agent_demotion_long_object",
+        "active": "The committee reviewed the extremely long and detailed proposal about the new environmental regulations.",
+        "passive": "The extremely long and detailed proposal about the new environmental regulations was reviewed by the committee."
+    },
+    {
+        "id": "agent_demotion_long_agent",
+        "active": "The committee of senior experts from various international organizations reviewed the proposal.",
+        "passive": "The proposal was reviewed by the committee of senior experts from various international organizations."
+    },
+    {
+        "id": "imperative_mix",
+        "active": "Send the package to the receiver.",
+        "passive": "Let the package be sent to the receiver."
+    },
+    {
+        "id": "question_mix",
+        "active": "Did the dog eat the homework?",
+        "passive": "Was the homework eaten by the dog?"
+    }
+]

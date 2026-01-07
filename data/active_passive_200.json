@@ -1,0 +1,802 @@
+[
+  {
+    "active": "She completed her research project ahead of schedule.",
+    "passive": "Her research project was completed ahead of schedule by her."
+  },
+  {
+    "active": "They were honored with the prestigious award at the gala event.",
+    "passive": "The prestigious award was given to them at the gala event."
+  },
+  {
+    "active": "The students wrote an impressive essay on climate change.",
+    "passive": "An impressive essay on climate change was written by the students."
+  },
+  {
+    "active": "The company received positive feedback from its clients.",
+    "passive": "Positive feedback was received from its clients by the company."
+  },
+  {
+    "active": "The author published his novel into a book edition.",
+    "passive": "His novel was published into a book edition by the author."
+  },
+  {
+    "active": "The jury selected the winner based on their performance.",
+    "passive": "The winner was selected based on their performance by the jury."
+  },
+  {
+    "active": "He discovered the new technology that could revolutionize the industry.",
+    "passive": "The new technology that could revolutionize the industry was discovered by him."
+  },
+  {
+    "active": "The manager gave detailed instructions on how to improve efficiency.",
+    "passive": "Detailed instructions on how to improve efficiency were given by the manager."
+  },
+  {
+    "active": "The athlete ran fast across the finish line to win the race.",
+    "passive": "Fast across the finish line to win the race was run by the athlete by the runner."
+  },
+  {
+    "active": "She sang an exquisite aria during the opera's finale.",
+    "passive": "An exquisite aria was sung during the opera's finale by her."
+  },
+  {
+    "active": "He wrote a novel that had been on his mind since childhood.",
+    "passive": "A novel that had been on his mind since childhood was written by him."
+  },
+  {
+    "active": "The team completed their project ahead of schedule.",
+    "passive": "Their project was completed ahead of schedule by the team."
+  },
+  {
+    "active": "The artist painted a masterpiece at sunset.",
+    "passive": "A masterpiece was painted at sunset by the artist."
+  },
+  {
+    "active": "The children enjoyed ice cream on a hot summer day.",
+    "passive": "Ice cream was enjoyed on a hot summer day by the children."
+  },
+  {
+    "active": "The politician delivered a powerful speech at the convention.",
+    "passive": "A powerful speech was delivered at the convention by the politician."
+  },
+  {
+    "active": "The detective solved the mystery with clues found around town.",
+    "passive": "The mystery was solved with clues found around town by the detective."
+  },
+  {
+    "active": "The students studied diligently before the exam.",
+    "passive": "Diligently before the exam, the students studied."
+  },
+  {
+    "active": "She sang an emotional ballad at the graduation ceremony.",
+    "passive": "An emotional ballad was sung at the graduation ceremony by her."
+  },
+  {
+    "active": "They built a massive bridge across the river.",
+    "passive": "A massive bridge was built across the river by them."
+  },
+  {
+    "active": "He delivered the speech with confidence and eloquence.",
+    "passive": "A speech was delivered with confidence and eloquence by him."
+  },
+  {
+    "active": "I wrote a novel about my childhood experiences.",
+    "passive": "A novel about my childhood experiences was written by me."
+  },
+  {
+    "active": "The team won the championship game against their rivals.",
+    "passive": "The championship game against their rivals was won by the team."
+  },
+  {
+    "active": "She painted a beautiful portrait of herself.",
+    "passive": "A beautiful portrait of herself was painted by her."
+  },
+  {
+    "active": "We designed a logo for our new company.",
+    "passive": "A logo for our new company was designed by us."
+  },
+  {
+    "active": "The students studied hard all night before the exam.",
+    "passive": "Hardly had they studied all night before the exam than they were called upon.\n\nThis sentence should be rewritten as passive voice."
+  },
+  {
+    "active": "She read the challenging book at her desk while enjoying a cup of tea.",
+    "passive": "A challenging book was read by her while she enjoyed a cup of tea on her desk."
+  },
+  {
+    "active": "John gave his pet dog a bath using warm water.",
+    "passive": "His pet dog was given a bath by John with warm water."
+  },
+  {
+    "active": "They discussed their plans for the upcoming event during lunch.",
+    "passive": "Their plans for the upcoming event were discussed during lunch by them."
+  },
+  {
+    "active": "The team completed the construction project within three months.",
+    "passive": "The construction project was completed by the team within three months."
+  },
+  {
+    "active": "She received an award for her outstanding performance.",
+    "passive": "An award was received by her for her outstanding performance."
+  },
+  {
+    "active": "He wrote an article about climate change after researching extensively.",
+    "passive": "An article about climate change was written by him after extensive research."
+  },
+  {
+    "active": "The students solved the math problem correctly on the final exam.",
+    "passive": "The math problem was solved correctly by the students on the final exam."
+  },
+  {
+    "active": "The artist painted a beautiful landscape painting.",
+    "passive": "A beautiful landscape painting was painted by the artist."
+  },
+  {
+    "active": "I am studying hard to achieve my academic goals.",
+    "passive": "My academic goals are being achieved through hard study by me."
+  },
+  {
+    "active": "They built a sturdy bridge over the turbulent river.",
+    "passive": "A sturdy bridge was built over the turbulent river by them."
+  },
+  {
+    "active": "She wrote an excellent novel that won numerous awards.",
+    "passive": "An excellent novel that won numerous awards was written by her."
+  },
+  {
+    "active": "We installed solar panels on the roof of our home.",
+    "passive": "Solar panels were installed on the roof of our home by us."
+  },
+  {
+    "active": "He composed a beautiful melody for his song.",
+    "passive": "A beautiful melody was composed for his song by him."
+  },
+  {
+    "active": "The company launched its new product at the convention center.",
+    "passive": "Its new product was launched at the convention center by the company."
+  },
+  {
+    "active": "She studied diligently to pass the difficult exam.",
+    "passive": "To pass the difficult exam, she studied diligently."
+  },
+  {
+    "active": "The audience cheered loudly when the band performed their hit songs.",
+    "passive": "When the band performed their hit songs, the audience cheered loudly."
+  },
+  {
+    "active": "The team developed innovative software solutions for clients worldwide.",
+    "passive": "Innovative software solutions were developed for clients worldwide by the team."
+  },
+  {
+    "active": "The police arrested the criminal suspect without delay.",
+    "passive": "The criminal suspect was arrested without delay by the police."
+  },
+  {
+    "active": "I typed out the document on my computer's keyboard.",
+    "passive": "The document was typed out on my computer's keyboard by me."
+  },
+  {
+    "active": "She designed a unique logo for the company.",
+    "passive": "A unique logo was designed for the company by her."
+  },
+  {
+    "active": "She wrote an excellent essay on climate change.",
+    "passive": "An excellent essay on climate change was written by her."
+  },
+  {
+    "active": "They installed new solar panels on the roof of the building.",
+    "passive": "New solar panels were installed on the roof of the building by them."
+  },
+  {
+    "active": "He studied diligently to achieve high grades.",
+    "passive": "High grades were achieved by him through diligent study."
+  },
+  {
+    "active": "We cleaned the office thoroughly before starting work.",
+    "passive": "Thoroughly clean the office before starting work."
+  },
+  {
+    "active": "She organized a successful charity event.",
+    "passive": "A successful charity event was organized by her."
+  },
+  {
+    "active": "They designed a revolutionary product.",
+    "passive": "A revolutionary product was designed by them."
+  },
+  {
+    "active": "She received a well-deserved promotion at work.",
+    "passive": "A well-deserved promotion was received by her at work."
+  },
+  {
+    "active": "They planned the wedding with great care.",
+    "passive": "Great care was planned for the wedding by them."
+  },
+  {
+    "active": "She read the challenging novel with great enthusiasm.",
+    "passive": "The challenging novel was read with great enthusiasm by her."
+  },
+  {
+    "active": "The diligent student diligently studied for hours.",
+    "passive": "Hours were spent studying by the diligent student."
+  },
+  {
+    "active": "They built a sturdy bridge across the river.",
+    "passive": "A sturdy bridge was built across the river by them."
+  },
+  {
+    "active": "He wrote an impressive letter of recommendation.",
+    "passive": "An impressive letter of recommendation was written by him."
+  },
+  {
+    "active": "She carefully packaged the delicate flowers.",
+    "passive": "Delicate flowers were carefully packaged by her."
+  },
+  {
+    "active": "The skilled artist painted a beautiful landscape painting.",
+    "passive": "A beautiful landscape painting was painted by the skilled artist."
+  },
+  {
+    "active": "We completed our project ahead of schedule.",
+    "passive": "Our project was completed ahead of schedule by us."
+  },
+  {
+    "active": "The young girl learned to play the piano.",
+    "passive": "The piano was played by the young girl."
+  },
+  {
+    "active": "She wrote an inspiring article about environmental conservation.",
+    "passive": "An inspiring article about environmental conservation was written by her."
+  },
+  {
+    "active": "They analyzed the data meticulously to make an accurate prediction.",
+    "passive": "An accurate prediction was made by them after analyzing the data meticulously."
+  },
+  {
+    "active": "He designed the intricate machine with precision.",
+    "passive": "An intricate machine was designed with precision by him."
+  },
+  {
+    "active": "The students studied diligently to pass their exams successfully.",
+    "passive": "Their exams were passed successfully by the students through diligent studying."
+  },
+  {
+    "active": "We completed the project ahead of schedule with efficiency.",
+    "passive": "The project was completed ahead of schedule with efficiency by us."
+  },
+  {
+    "active": "The company launched a new product line that revolutionized the market.",
+    "passive": "A new product line that revolutionized the market was launched by the company."
+  },
+  {
+    "active": "She discovered a hidden treasure beneath the old tomb.",
+    "passive": "A hidden treasure was discovered beneath the old tomb by her."
+  },
+  {
+    "active": "He organized a grand ceremony attended by dignitaries from all over the world.",
+    "passive": "A grand ceremony attended by dignitaries from all over the world was organized by him."
+  },
+  {
+    "active": "I typed the essay carefully to ensure it was well-written.",
+    "passive": "A well-written essay was ensured by me to be typed carefully."
+  },
+  {
+    "active": "She completed her homework on time.",
+    "passive": "Her homework was completed on time by her."
+  },
+  {
+    "active": "They discussed the new marketing strategy at length.",
+    "passive": "The new marketing strategy was discussed at length by them."
+  },
+  {
+    "active": "The company launched its latest product with great success.",
+    "passive": "The latest product was launched with great success by the company."
+  },
+  {
+    "active": "He delivered the report promptly.",
+    "passive": "The report was delivered promptly by him."
+  },
+  {
+    "active": "She wrote an impressive essay.",
+    "passive": "An impressive essay was written by her."
+  },
+  {
+    "active": "They finished their project ahead of schedule.",
+    "passive": "Their project was finished ahead of schedule by them."
+  },
+  {
+    "active": "She painted the mural on the wall.",
+    "passive": "The mural on the wall was painted by her."
+  },
+  {
+    "active": "We set up the exhibition hall yesterday.",
+    "passive": "The exhibition hall was set up yesterday by us."
+  },
+  {
+    "active": "The children built a beautiful sandcastle on the beach.",
+    "passive": "The beautiful sandcastle was built on the beach by the children.\n\nThese examples demonstrate that changing from active voice to passive voice does not necessarily change the meaning of the sentence, but rather shifts emphasis from who did something (active) to what was done or by whom (passive). In some cases, it can also make the sentence sound more formal or impersonal. It's important to consider whether this shift is appropriate based on context and style requirements when using either voice. Remember, both voices have their uses and can be effective depending on the situation. Practice helps develop your ability to seamlessly switch between these two forms naturally! \n\nIn summary, the key difference lies in how verbs are used - active involves doing the action directly, while passive focuses on receiving the action without specifying who performed it. Both effectively convey information about actions and outcomes but emphasize different aspects of communication. Whether you use active or passive voice depends on what tone and intent you want to achieve within the text. Engaging with practice exercises will strengthen your skill in switching effortlessly between these styles, enhancing clarity and versatility in writing."
+  },
+  {
+    "active": "They discovered that the painting had been stolen.",
+    "passive": "It was discovered that the painting had been stolen by them."
+  },
+  {
+    "active": "She wrote an impressive report on climate change.",
+    "passive": "An impressive report on climate change was written by her."
+  },
+  {
+    "active": "He finished his homework before dinner.",
+    "passive": "Before dinner, he finished his homework."
+  },
+  {
+    "active": "The company received positive feedback from its customers.",
+    "passive": "Positive feedback was received from its customers by the company."
+  },
+  {
+    "active": "They found a solution to their communication problem.",
+    "passive": "A solution was found to their communication problem by them."
+  },
+  {
+    "active": "She designed the website with innovative features.",
+    "passive": "Innovative features were designed for the website by her."
+  },
+  {
+    "active": "I completed my assignment ahead of time.",
+    "passive": "My assignment was completed ahead of time by me."
+  },
+  {
+    "active": "The students discussed various topics in class.",
+    "passive": "Various topics were discussed in class by the students."
+  },
+  {
+    "active": "He cleaned the windows meticulously.",
+    "passive": "The windows were meticulously cleaned by him."
+  },
+  {
+    "active": "She wrote an essay about her summer vacation experiences.",
+    "passive": "An essay about her summer vacation experiences was written by her."
+  },
+  {
+    "active": "They completed their project on time.",
+    "passive": "Their project was completed on time."
+  },
+  {
+    "active": "The company donated money to support the local charity.",
+    "passive": "Money was donated to support the local charity by the company."
+  },
+  {
+    "active": "The team won the basketball game against the rival team.",
+    "passive": "The basketball game against the rival team was won by the team."
+  },
+  {
+    "active": "He finished his homework early today.",
+    "passive": "His homework was finished early today by him."
+  },
+  {
+    "active": "The children built a beautiful sandcastle at the beach.",
+    "passive": "A beautiful sandcastle was built at the beach by the children."
+  },
+  {
+    "active": "She received a call from her friend during her meeting with the client.",
+    "passive": "A call from her friend was received by her during her meeting with the client."
+  },
+  {
+    "active": "The author published her book after many years of hard work.",
+    "passive": "Her book was published after many years of hard work by the author."
+  },
+  {
+    "active": "They attended the concert last night.",
+    "passive": "Last night, they were attended by the concert."
+  },
+  {
+    "active": "She carefully polished the antique clock's surface until it shone with new life.",
+    "passive": "The antique clock's surface was polished until it shone with new life by her."
+  },
+  {
+    "active": "He diligently wrote a book on sustainable agriculture that changed public opinion about farming practices.",
+    "passive": "A book on sustainable agriculture that changed public opinion about farming practices was written by him."
+  },
+  {
+    "active": "The company hired a renowned marketing expert to create an innovative advertising campaign.",
+    "passive": "An innovative advertising campaign was created by a renowned marketing expert for the company."
+  },
+  {
+    "active": "They reviewed the project thoroughly before finalizing its implementation plan.",
+    "passive": "The project was thoroughly reviewed before its implementation plan was finalized."
+  },
+  {
+    "active": "The team worked tirelessly to overcome the technical difficulties encountered during the software development process.",
+    "passive": "Technical difficulties were overcome by the team during the software development process."
+  },
+  {
+    "active": "The author meticulously edited her manuscript several times before submitting it for publication.",
+    "passive": "Her manuscript was submitted for publication after being meticulously edited several times by the author."
+  },
+  {
+    "active": "The student excelled academically throughout their high school years through consistent hard work.",
+    "passive": "Consistent hard work by the student led to their academic excellence throughout their high school years."
+  },
+  {
+    "active": "The artist transformed his sketches into detailed paintings using vibrant colors.",
+    "passive": "Detailed paintings were created using vibrant colors from the artist's sketches."
+  },
+  {
+    "active": "The detective solved the mystery by piecing together clues left at the crime scene.",
+    "passive": "The mystery was solved by the detective who pieced together the clues left at the crime scene."
+  },
+  {
+    "active": "The athlete trained rigorously to achieve world-class athletic performance.",
+    "passive": "World-class athletic performance was achieved by the athlete who trained rigorously. \n\nEach sentence in active voice is followed by its equivalent passive voice version."
+  },
+  {
+    "active": "The children played happily at the park on Saturday afternoon.",
+    "passive": "Happily, the children played at the park on Saturday afternoon."
+  },
+  {
+    "active": "She finished her homework before dinner time yesterday evening.",
+    "passive": "Before dinner time yesterday evening, she finished her homework."
+  },
+  {
+    "active": "She wrote an essay on global climate change.",
+    "passive": "An essay on global climate change was written by her."
+  },
+  {
+    "active": "They installed new security systems at the office building.",
+    "passive": "New security systems were installed at the office building by them."
+  },
+  {
+    "active": "He completed his master's degree in computer science.",
+    "passive": "His master's degree in computer science was completed by him."
+  },
+  {
+    "active": "The children played with colorful balloons during the festival.",
+    "passive": "Colorful balloons were played with by the children during the festival."
+  },
+  {
+    "active": "I attended the important meeting held yesterday afternoon.",
+    "passive": "The important meeting held yesterday afternoon was attended by me."
+  },
+  {
+    "active": "The students read aloud the assigned reading material before class began.",
+    "passive": "The assigned reading material was read aloud by the students before class began."
+  },
+  {
+    "active": "The artist painted a masterpiece on canvas.",
+    "passive": "A masterpiece on canvas was painted by the artist."
+  },
+  {
+    "active": "The team won the championship game last night.",
+    "passive": "The championship game was won by the team last night."
+  },
+  {
+    "active": "The police arrested the suspect who had committed the crime.",
+    "passive": "The suspect who had committed the crime was arrested by the police."
+  },
+  {
+    "active": "She wrote an inspiring article about environmental issues.",
+    "passive": "An inspiring article about environmental issues was written by her."
+  },
+  {
+    "active": "The company hired the experienced programmer for their development team.",
+    "passive": "An experienced programmer was hired for the development team by the company."
+  },
+  {
+    "active": "John received his well-deserved promotion after meeting all the criteria.",
+    "passive": "His well-deserved promotion was received by John after he met all the criteria."
+  },
+  {
+    "active": "The museum exhibited the rare painting at the grand opening.",
+    "passive": "A rare painting was exhibited at the grand opening of the museum."
+  },
+  {
+    "active": "They discussed the project with great enthusiasm during lunch break.",
+    "passive": "Great enthusiasm was shown by them while discussing the project during lunch break."
+  },
+  {
+    "active": "The jury decided on the winner based on their votes.",
+    "passive": "The winner was decided upon by the jury based on their votes."
+  },
+  {
+    "active": "The author published her novel under the prestigious publishing house.",
+    "passive": "Her novel was published by the prestigious publishing house under the author's name."
+  },
+  {
+    "active": "The students studied diligently before the final exam.",
+    "passive": "Diligently, the students studied before the final exam."
+  },
+  {
+    "active": "She discovered a hidden treasure on her family's ancestral land.",
+    "passive": "A hidden treasure was discovered on her family's ancestral land by her."
+  },
+  {
+    "active": "The young child played with his favorite toy all afternoon long.",
+    "passive": "His favorite toy was played with by the young child all afternoon long."
+  },
+  {
+    "active": "The company launched its new product at the trade show this week.",
+    "passive": "Its new product was launched at the trade show this week by the company."
+  },
+  {
+    "active": "The artist painted a beautiful landscape painting that sold for thousands of dollars.",
+    "passive": "A beautiful landscape painting was painted by the artist that sold for thousands of dollars."
+  },
+  {
+    "active": "He composed an original piece of music for the concert.",
+    "passive": "An original piece of music was composed for the concert by him."
+  },
+  {
+    "active": "The team defeated their rivals in the championship game.",
+    "passive": "Their rivals were defeated in the championship game by the team."
+  },
+  {
+    "active": "The students wrote a research paper about global warming.",
+    "passive": "A research paper about global warming was written by the students."
+  },
+  {
+    "active": "The government announced plans for the development of renewable energy sources.",
+    "passive": "Plans for the development of renewable energy sources were announced by the government."
+  },
+  {
+    "active": "She gave a speech at the graduation ceremony.",
+    "passive": "A speech was given at the graduation ceremony by her."
+  },
+  {
+    "active": "They installed a new security system in the building.",
+    "passive": "A new security system was installed in the building by them."
+  },
+  {
+    "active": "The children were entertained by the lively band at the concert.",
+    "passive": "The lively band entertained the children at the concert."
+  },
+  {
+    "active": "She completed her research on climate change before she submitted it to the journal.",
+    "passive": "Before submitting her research on climate change, she completed it."
+  },
+  {
+    "active": "The engineer designed an efficient water filtration system that could purify polluted water.",
+    "passive": "An efficient water filtration system was designed by the engineer that could purify polluted water."
+  },
+  {
+    "active": "He studied hard for his upcoming exam, hoping to pass with flying colors.",
+    "passive": "He passed with flying colors after studying hard for his upcoming exam."
+  },
+  {
+    "active": "The team implemented the new software application smoothly during the project meeting.",
+    "passive": "Smoothly during the project meeting, the team implemented the new software application."
+  },
+  {
+    "active": "The students participated actively in the debate competition, showcasing their eloquence.",
+    "passive": "The students showcased their eloquence by participating actively in the debate competition."
+  },
+  {
+    "active": "The author wrote an intriguing novel based on historical events, captivating readers worldwide.",
+    "passive": "Captivating readers worldwide, an intriguing novel based on historical events was written by the author."
+  },
+  {
+    "active": "The jury deliberated carefully over several hours, ultimately deciding on the verdict.",
+    "passive": "The verdict was decided upon by the jury who deliberated carefully over several hours."
+  },
+  {
+    "active": "The company's marketing campaign generated significant interest among potential customers.",
+    "passive": "Significant interest among potential customers was generated by the company's marketing campaign."
+  },
+  {
+    "active": "She finished her homework on time.",
+    "passive": "Her homework was finished on time by her."
+  },
+  {
+    "active": "They completed the project with excellence.",
+    "passive": "The project was completed with excellence by them."
+  },
+  {
+    "active": "I bought a beautiful vase from the local boutique.",
+    "passive": "A beautiful vase was bought from the local boutique by me."
+  },
+  {
+    "active": "The bookshop sold copies of the best-selling novel.",
+    "passive": "Copies of the best-selling novel were sold by the bookshop."
+  },
+  {
+    "active": "The team won the championship title.",
+    "passive": "The championship title was won by the team."
+  },
+  {
+    "active": "He composed a poignant love letter to his girlfriend.",
+    "passive": "A poignant love letter was composed by him to his girlfriend."
+  },
+  {
+    "active": "The garden was planted with vibrant flowers.",
+    "passive": "Vibrant flowers were planted in the garden by the gardener."
+  },
+  {
+    "active": "They designed an innovative new product.",
+    "passive": "An innovative new product was designed by them."
+  },
+  {
+    "active": "The museum received many visitors on its reopening day.",
+    "passive": "Many visitors were received at the museum on its reopening day by the staff."
+  },
+  {
+    "active": "She completed her research before she submitted her thesis.",
+    "passive": "Her thesis was submitted after she had completed her research."
+  },
+  {
+    "active": "They reviewed the report critically to ensure accuracy.",
+    "passive": "The report was critically reviewed by them to ensure accuracy."
+  },
+  {
+    "active": "He delivered the presentation with confidence.",
+    "passive": "The presentation was delivered confidently by him."
+  },
+  {
+    "active": "We tested our new software thoroughly to find bugs.",
+    "passive": "Bugs were found in the new software through thorough testing by us."
+  },
+  {
+    "active": "The company donated money to help underprivileged children.",
+    "passive": "Money was donated by the company to help underprivileged children."
+  },
+  {
+    "active": "I typed my essay carefully on the keyboard.",
+    "passive": "My essay was typed carefully on the keyboard by me."
+  },
+  {
+    "active": "The author wrote an engaging story about love.",
+    "passive": "An engaging story about love was written by the author."
+  },
+  {
+    "active": "The police arrested the suspect without delay.",
+    "passive": "The suspect was arrested without delay by the police."
+  },
+  {
+    "active": "She gave birth to a healthy baby girl at home.",
+    "passive": "A healthy baby girl was born at home by her."
+  },
+  {
+    "active": "The government has introduced new policies to improve education.",
+    "passive": "New policies to improve education have been introduced by the government."
+  },
+  {
+    "active": "She quickly typed out her essay before submitting it to the professor.",
+    "passive": "Her essay was quickly typed out by her before being submitted to the professor."
+  },
+  {
+    "active": "The children played happily on the playground during recess.",
+    "passive": "The playground was enjoyed by the children during recess."
+  },
+  {
+    "active": "He wrote an impressive letter of recommendation for his friend's job application.",
+    "passive": "An impressive letter of recommendation was written for his friend's job application by him."
+  },
+  {
+    "active": "They discussed the plan at length during their team meeting.",
+    "passive": "The plan was discussed at length by them during their team meeting."
+  },
+  {
+    "active": "The cat chased the mouse around the garden.",
+    "passive": "The mouse was chased around the garden by the cat."
+  },
+  {
+    "active": "The artist painted a beautiful portrait of the famous painter.",
+    "passive": "A beautiful portrait of the famous painter was painted by the artist."
+  },
+  {
+    "active": "They argued vehemently over whose turn it was to clean the kitchen.",
+    "passive": "Their argument was vehemently over whose turn it was to clean the kitchen."
+  },
+  {
+    "active": "She carefully measured out all the ingredients for the recipe.",
+    "passive": "All the ingredients were carefully measured out by her for the recipe."
+  },
+  {
+    "active": "The dog barked loudly as it chased away the stray cat.",
+    "passive": "The stray cat was chased away loudly by the dog."
+  },
+  {
+    "active": "After he had finished his work, he went home.",
+    "passive": "He went home after having finished his work.\n\nOr, altering tense:\n\nActive: I am writing this blog post now."
+  },
+  {
+    "active": "The student diligently studied all night before the exam.",
+    "passive": "All night, the student diligently studied for the exam."
+  },
+  {
+    "active": "She composed an inspiring poem about her travels.",
+    "passive": "An inspiring poem was composed by her about her travels."
+  },
+  {
+    "active": "They designed an innovative website for the company's online presence.",
+    "passive": "An innovative website was designed for the company's online presence by them."
+  },
+  {
+    "active": "He wrote a thrilling novel that captivated readers worldwide.",
+    "passive": "A thrilling novel that captivated readers worldwide was written by him."
+  },
+  {
+    "active": "We organized a successful charity event to raise funds for the homeless.",
+    "passive": "A successful charity event to raise funds for the homeless was organized by us."
+  },
+  {
+    "active": "The jury deliberated on the case for several days before rendering their verdict.",
+    "passive": "The case was deliberated on by the jury for several days before being rendered their verdict."
+  },
+  {
+    "active": "She received an award for her outstanding contributions to science.",
+    "passive": "An award was received for her outstanding contributions to science by her."
+  },
+  {
+    "active": "The team developed a revolutionary new technology that transformed industry standards.",
+    "passive": "A revolutionary new technology that transformed industry standards was developed by the team."
+  },
+  {
+    "active": "She wrote an engaging article about renewable energy sources.",
+    "passive": "An engaging article about renewable energy sources was written by her."
+  },
+  {
+    "active": "They installed new security systems at their homes.",
+    "passive": "New security systems were installed at their homes by them."
+  },
+  {
+    "active": "I called the customer service hotline for assistance with my order.",
+    "passive": "Assistance with my order was provided by me on the customer service hotline."
+  },
+  {
+    "active": "The children played in the park until it got dark.",
+    "passive": "Until it got dark, the park was played in by the children."
+  },
+  {
+    "active": "He designed a sophisticated machine for efficient water filtration.",
+    "passive": "A sophisticated machine for efficient water filtration was designed by him."
+  },
+  {
+    "active": "She composed a beautiful melody for her upcoming concert.",
+    "passive": "A beautiful melody was composed for her upcoming concert by her."
+  },
+  {
+    "active": "We tested the software program before releasing it to the market.",
+    "passive": "Before being released to the market, the software program was tested by us."
+  },
+  {
+    "active": "The students studied hard for their final exams.",
+    "passive": "Hardly did the students study for their final exams, before they started preparing for them."
+  },
+  {
+    "active": "They celebrated their wedding anniversary with a grand party.",
+    "passive": "With a grand party, they celebrated their wedding anniversary."
+  },
+  {
+    "active": "The teacher corrected the mistakes in the student's homework.",
+    "passive": "Mistakes were corrected in the student's homework by the teacher."
+  },
+  {
+    "active": "The ambitious student worked tirelessly on his research project.",
+    "passive": "His research project was worked upon by the ambitious student with great effort."
+  },
+  {
+    "active": "The talented pianist performed a masterful recital at Carnegie Hall.",
+    "passive": "A masterful recital was performed at Carnegie Hall by the talented pianist."
+  },
+  {
+    "active": "The efficient manager organized an impressive company event.",
+    "passive": "An impressive company event was organized by the efficient manager."
+  },
+  {
+    "active": "The meticulous historian meticulously documented historical events.",
+    "passive": "Historical events were meticulously documented by the historian."
+  },
+  {
+    "active": "The diligent worker diligently maintained the machinery.",
+    "passive": "Machinery was maintained diligently by the worker."
+  },
+  {
+    "active": "The experienced athlete trained rigorously for months before competing.",
+    "passive": "Months of rigorous training were conducted by the experienced athlete before competition."
+  },
+  {
+    "active": "The innovative scientist invented a groundbreaking technology.",
+    "passive": "A groundbreaking technology was invented by the innovative scientist."
+  },
+  {
+    "active": "The successful entrepreneur launched a highly profitable business venture.",
+    "passive": "A highly profitable business venture was launched by the successful entrepreneur."
+  }
+]

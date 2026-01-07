@@ -1,0 +1,102 @@
+[
+    {
+        "id": "heavy_agent_gen2_1",
+        "active": "The extremely loud, irritating, high-pitched screeching from the rusty old brakes of the approaching train shattered the silence.",
+        "passive": "The silence was shattered by the extremely loud, irritating, high-pitched screeching from the rusty old brakes of the approaching train."
+    },
+    {
+        "id": "heavy_agent_gen2_2",
+        "active": "A mysterious, tall, dark figure wearing a long trench coat and holding a silver cane approached the gate.",
+        "passive": "The gate was approached by a mysterious, tall, dark figure wearing a long trench coat and holding a silver cane."
+    },
+    {
+        "id": "heavy_agent_gen2_3",
+        "active": "The chaotic, unplanned, and poorly executed migration of the legacy database system caused the outage.",
+        "passive": "The outage was caused by the chaotic, unplanned, and poorly executed migration of the legacy database system."
+    },
+    {
+        "id": "heavy_agent_gen2_4",
+        "active": "The old, weathered, hand-carved wooden statue that my grandfather brought back from his travels in the East adorns the hallway.",
+        "passive": "The hallway is adorned by the old, weathered, hand-carved wooden statue that my grandfather brought back from his travels in the East."
+    },
+    {
+        "id": "fronted_agent_1",
+        "active": "The committee made the decision.",
+        "passive": "By the committee, the decision was made."
+    },
+    {
+        "id": "fronted_agent_heavy",
+        "active": "The urgent regulations imposed by the new government changed the policy.",
+        "passive": "By the urgent regulations imposed by the new government, the policy was changed."
+    },
+    {
+        "id": "mid_agent_1",
+        "active": "The wolf ate the sheep.",
+        "passive": "The sheep was, by the wolf, eaten."
+    },
+    {
+        "id": "mid_agent_heavy",
+        "active": "The overwhelming evidence presented by the prosecution convicted the defendant.",
+        "passive": "The defendant was, by the overwhelming evidence presented by the prosecution, convicted."
+    },
+    {
+        "id": "separated_verb_1",
+        "active": "The storm completely and utterly destroyed the village.",
+        "passive": "The village was completely and utterly destroyed by the storm."
+    },
+    {
+        "id": "separated_verb_heavy_agent",
+        "active": "The massive, swirling, destructive hurricane completely and utterly destroyed the village.",
+        "passive": "The village was completely and utterly destroyed by the massive, swirling, destructive hurricane."
+    },
+    {
+        "id": "double_demotion",
+        "active": "The manager shouted at the employee who broke the machine.",
+        "passive": "The employee who was shouted at by the manager had broken the machine."
+    },
+    {
+        "id": "heavy_agent_abstract",
+        "active": "The intricate, multifaceted, and deeply philosophical implications of the quantum theory confused the students.",
+        "passive": "The students were confused by the intricate, multifaceted, and deeply philosophical implications of the quantum theory."
+    },
+    {
+        "id": "nested_heavy_1",
+        "active": "The realization that the plan which we had worked on for months was flawed hit me hard.",
+        "passive": "I was hit hard by the realization that the plan which we had worked on for months was flawed."
+    },
+    {
+        "id": "recursive_heavy",
+        "active": "The dog that the cat that the rat bit chased barked loudly.",
+        "passive": "Loud barking was done by the dog that the cat that the rat bit chased."
+    },
+    {
+        "id": "passive_question_heavy",
+        "active": "Did the sudden, unexpected, and violent thunderstrom frighten the children?",
+        "passive": "Were the children frightened by the sudden, unexpected, and violent thunderstorm?"
+    },
+    {
+        "id": "negated_heavy",
+        "active": "The failure of the main engine did not stop the mission.",
+        "passive": "The mission was not stopped by the failure of the main engine."
+    },
+    {
+        "id": "heavy_agent_2_mutation_A",
+        "active": "The constant, rhythmic, soothing sound of the waves crashing against the shore calmed my mind.",
+        "passive": "My mind was calmed by the constant, rhythmic, soothing sound of the waves crashing against the shore."
+    },
+    {
+        "id": "heavy_agent_2_mutation_B",
+        "active": "The abrupt, jarring, ear-splitting alarm from the fire station woke the neighborhood.",
+        "passive": "The neighborhood was woken by the abrupt, jarring, ear-splitting alarm from the fire station."
+    },
+    {
+        "id": "archaic_inversion_complex",
+        "active": "The supreme court justice interprets the constitution.",
+        "passive": "By the supreme court justice, the constitution is interpreted."
+    },
+    {
+        "id": "archaic_inversion_heavy",
+        "active": "The ancient, powerful, and mysterious wizard cast the spell.",
+        "passive": "By the ancient, powerful, and mysterious wizard, the spell was cast."
+    }
+]
