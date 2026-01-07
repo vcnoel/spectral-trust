@@ -32,3 +32,6 @@ debug_results/
 results/
 gsp_results/
 debug_log.txt
+experiments/*.csv
+experiments/*.pkl
+experiments/*.json

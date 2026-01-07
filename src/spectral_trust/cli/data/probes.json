@@ -1,0 +1,23 @@
+{
+    "impact_test": {
+        "active": "The boy hit the ball over the fence.",
+        "passive": "The ball was hit over the fence by the boy."
+    },
+    "calibration_test": {
+        "simple": "If it rains, the ground gets wet. It is raining, so the ground is wet.",
+        "complex": "If the moon is full and the tide is high, the werewolves howl. The tide is low, so the werewolves are silent."
+    },
+    "multilingual_test": {
+        "ja_simple": "猫は魚が好きです。",
+        "ja_complex": "憲法改正の議論は、国民の多角的な視点から慎重に行われるべきである。",
+        "zh_dense": "人工智能的发展将彻底改变人类社会的生产方式。",
+        "baseline_en": "Artificial intelligence development will thoroughly change human society's production methods."
+    },
+    "style_test": {
+        "natural": "The chef cooked a delicious meal for the guests.",
+        "technical": "The culinary technician executed a gastronomic protocol for the consumers."
+    },
+    "baseline_test": {
+        "standard_english": "The quick brown fox jumps over the lazy dog."
+    }
+}

@@ -19,9 +19,9 @@ By treating the transformer's attention mechanism as a **graph** and the hidden 
 
 ## Structure
 - `src/spectral_trust/`: Core package source code.
-- `notebooks/`: Jupyter notebooks for demonstration.
-- `examples/`: Minimal example scripts.
-- `dist/`: Wheel and source distributions.
+- `notebooks/`: Tutorials and demos.
+- `experiments/`: Reproduction scripts for paper findings (Super Scar, etc.).
+- `examples/`: Minimal usage examples.
 
 ## Installation
 
@@ -33,8 +33,17 @@ pip install -e .
 
 ## Usage
 
-### CLI Power Tool
+### Automated Diagnosis (New!)
+Run a full medical report on your model to detect known pathologies (like the "Super Scar"):
 
+```bash
+gsp-cli diagnose --model microsoft/phi-4 --verbose
+```
+*   **scans** for structural anomalies (graph disconnection).
+*   **probes** with adversarial inputs (Active vs Passive).
+*   **reports** signature matches (e.g., "Synthetic Scar Detected").
+
+### Single-Shot Analysis
 **Analyze a sentence** (uses `cuda` if available):
 ```bash
 gsp-cli analyze --text "The capital of France is Paris." --model llama-3.1-8b
@@ -92,6 +101,37 @@ For rigorous spectral graph analysis, you may want to exclude self-attention loo
 ```bash
 gsp-cli analyze --text "..." --remove_self_loops
 ```
+
+## Scientific Validation
+
+This framework implements the methodologies described in **[Noël, 2026]**.
+
+### Case Study: The Phi-4 "Super Scar"
+We used `spectral_trust` to discover a critical vulnerability in the Phi-4 model:
+*   **Pathology**: Complete structural attention collapse (Fiedler $\to$ 0.0) when processing "Heavy Agent" passive sentences.
+*   **Cause**: Interaction between passive voice syntax and high-complexity noun phrases.
+*   **Reproduction**:
+    ```bash
+    python experiments/reproduce_super_scar.py
+    ```
+    *(Generates comparative plots for Phi vs. Qwen/Llama baselines)*
+
+It provides the reference implementation for measuring:
+*   **Fiedler Drop**: The loss of algebraic connectivity in hallucinating models.
+*   **Energy Spikes**: High-frequency noise indicating semantic conflict.
+
+## Model Compatibility & Benchmarks
+
+| Model Family | Status | Tested Version | Precision |
+| :--- | :---: | :--- | :---: |
+| **Llama-3** | ✅ Passed | `meta-llama/Llama-3.2-1B` | FP16 |
+| **Phi-3** | ✅ Passed | `microsoft/Phi-3-mini-4k-instruct` | BF16 |
+| **Inference Time** | ⚡ Fast | ~45ms / 128 tokens | Exact Eig |
+
+## Research Tools included
+*   `examples/detect_hallucination.py`: Differential spectral analysis of counter-factuals.
+*   `examples/ablation_study.py`: Causal intervention via head masking to verify structural load-bearing.
+*   `benchmarks/`: Latency and precision scaling scripts.
 
 ## License
 MIT
