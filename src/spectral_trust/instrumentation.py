@@ -21,17 +21,18 @@ from .config import GSPConfig
 
 logger = logging.getLogger(__name__)
 
-# --- Monkey Patch for Phi-3 / Transformers Compatibility ---
-# The remote code for Phi-3 uses 'get_usable_length' which was removed/missing in newer DynamicCache
 try:
     from transformers.cache_utils import DynamicCache
     if not hasattr(DynamicCache, 'get_usable_length'):
         def get_usable_length(self, input_length, layer_idx=None):
-            # For this analysis tool, we always do full forward pass with no past cache.
-            # Returning 0 ensures the model treats all inputs as new, preventing shape mismatches.
             return 0
         DynamicCache.get_usable_length = get_usable_length
-        logger.info("Applied monkey-patch to DynamicCache for Phi-3 compatibility.")
+    if not hasattr(DynamicCache, 'from_legacy_cache'):
+        @classmethod
+        def from_legacy_cache(cls, past_key_values, *args, **kwargs):
+            return cls()
+        DynamicCache.from_legacy_cache = from_legacy_cache
+        logger.info("Applied full DynamicCache compatibility patch.")
 except ImportError:
     pass
 # -----------------------------------------------------------

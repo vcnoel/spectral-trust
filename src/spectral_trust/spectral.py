@@ -226,8 +226,8 @@ class SpectralAnalyzer:
             Complete spectral diagnostics
         """
         # Convert to numpy for numerical computations
-        signals_np = signals.detach().cpu().numpy()
-        laplacian_np = laplacian.detach().cpu().numpy().squeeze()
+        signals_np = signals.to(torch.float32).detach().cpu().numpy()
+        laplacian_np = laplacian.to(torch.float32).detach().cpu().numpy().squeeze()
         
         # Check connectivity
         connectivity = self._check_connectivity(laplacian_np)

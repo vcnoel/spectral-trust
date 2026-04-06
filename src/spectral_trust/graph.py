@@ -107,8 +107,8 @@ class GraphConstructor:
         Returns:
             Graph Laplacian matrix
         """
-        # Ensure non-negative weights
-        adjacency = torch.clamp(adjacency, min=0)
+        # Ensure non-negative weights and promote to Float32 to avoid BFloat16-CPU issues
+        adjacency = torch.clamp(adjacency, min=0).to(torch.float32)
         
         # Remove self-loops if configured
         if self.config.remove_self_loops:
