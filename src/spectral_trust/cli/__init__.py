@@ -353,9 +353,13 @@ def create_model_config(model_key: str, args) -> GSPConfig:
         local_files_only=getattr(args, 'offline', False),
         runs=getattr(args, 'runs', 1),
         temperature=getattr(args, 'temperature', 1.0),
+        temperature=getattr(args, 'temperature', 1.0),
         plot_metrics=getattr(args, 'plot', None),
         latex_export=getattr(args, 'latex', False),
-        model_kwargs=model_kwargs
+        model_kwargs=model_kwargs,
+        directed=getattr(args, 'directed', False),
+        calc_velocity=getattr(args, 'calc_velocity', False),
+        subgraph_indices=parse_subgraph_indices(getattr(args, 'subgraph_indices', None))
     )
 
 def cmd_analyze(args):
@@ -405,19 +409,35 @@ def cmd_analyze(args):
                 mean_metrics = {}
                 num_layers = len(all_run_results[0]['layer_diagnostics'])
                 
-                headers = f"{'Layer':>5} {'Energy':>10} {'HFER':>10} {'Entropy':>10} {'Fiedler':>10} {'Smoothness':>10}"
+                metrics_to_show = ['energy', 'hfer', 'spectral_entropy', 'fiedler_value', 'smoothness_index']
+                header_labels = ['Energy', 'HFER', 'Entropy', 'Fiedler', 'Smoothness']
+                
+                if config.directed:
+                    metrics_to_show.extend(['max_imaginary', 'spectral_radius'])
+                    header_labels.extend(['MaxImag', 'SpecRad'])
+                
+                headers = f"{'Layer':>5} " + " ".join([f"{h:>10}" for h in header_labels])
                 print(headers)
                 print("-" * len(headers))
                 
                 for l in range(num_layers):
-                    metrics = {'energy': [], 'hfer': [], 'spectral_entropy': [], 'fiedler_value': [], 'smoothness_index': []}
+                    metrics = {k: [] for k in metrics_to_show}
                     for res in all_run_results:
                         d = res['layer_diagnostics'][l]
                         for k in metrics:
-                            metrics[k].append(getattr(d, k))
+                            val = getattr(d, k, 0.0)
+                            metrics[k].append(val if val is not None else 0.0)
                     
                     means = {k: np.mean(v) for k, v in metrics.items()}
-                    print(f"{l:5d} {means['energy']:10.4f} {means['hfer']:10.4f} {means['spectral_entropy']:10.4f} {means['fiedler_value']:10.4f} {means['smoothness_index']:10.4f}")
+                    row = f"{l:5d} " + " ".join([f"{means[k]:10.4f}" for k in metrics_to_show])
+                    print(row)
+                
+                # Print velocity if enabled (from last run)
+                last_res = all_run_results[-1]
+                if config.calc_velocity and last_res.get('velocity_metrics'):
+                    vm = last_res['velocity_metrics']
+                    print(f"\nSPECTRAL VELOCITY (Fiedler):")
+                    print(f"  Max Velocity: {vm['max_velocity_value']:.4f} at Layer {vm['max_velocity_layer_index']}")
                 
                 # Visualize multiple runs
                 if config.save_plots and len(all_run_results) > 0:
@@ -533,6 +553,9 @@ def main():
     p_analyze.add_argument('--temperature', type=float, default=1.0, help='Temperature for generation/sampling')
     p_analyze.add_argument('--plot', nargs='+', default=['all'], help='Metrics to plot: all, energy, hfer, entropy, fiedler, smoothness')
     p_analyze.add_argument('--latex', action='store_true', help='Export metrics to LaTeX-friendly .dat files')
+    p_analyze.add_argument('--directed', action='store_true', help='Enable directed (asymmetric) Laplacian analysis')
+    p_analyze.add_argument('--calc_velocity', action='store_true', help='Compute spectral velocity across layers')
+    p_analyze.add_argument('--subgraph_indices', type=str, help='Isolate subgraph via indices (e.g. "0,1,2" or "0-5")')
     
     # Compare
     p_compare = subparsers.add_parser('compare')
@@ -575,6 +598,23 @@ def main():
         run_diagnosis(args.model)
     else:
         parser.print_help()
+
+def parse_subgraph_indices(spec: Optional[str]) -> Optional[List[int]]:
+    if not spec: return None
+    idxs = []
+    try:
+        for tok in spec.split(","):
+            tok = tok.strip()
+            if not tok: continue
+            if "-" in tok and not tok.startswith("-"): # range format
+                a, b = tok.split("-"); a, b = int(a), int(b)
+                idxs.extend(range(a, b + 1))
+            else:
+                idxs.append(int(tok))
+        return sorted(list(set(idxs)))
+    except Exception as e:
+        logger.error(f"Failed to parse subgraph indices '{spec}': {e}")
+        return None
 
 if __name__ == "__main__":
     main()

@@ -36,10 +36,13 @@ class SpectralDiagnostics:
     spectral_masses: np.ndarray
     fiedler_value: float
     connectivity: bool
+    # New in v0.2.0: Directed metrics
+    max_imaginary: Optional[float] = None
+    spectral_radius: Optional[float] = None
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization"""
-        return {
+        d = {
             'layer': int(self.layer),
             'energy': float(self.energy),
             'smoothness_index': float(self.smoothness_index),
@@ -50,6 +53,11 @@ class SpectralDiagnostics:
             'fiedler_value': float(self.fiedler_value),
             'connectivity': bool(self.connectivity)
         }
+        if self.max_imaginary is not None:
+            d['max_imaginary'] = float(self.max_imaginary)
+        if self.spectral_radius is not None:
+            d['spectral_radius'] = float(self.spectral_radius)
+        return d
 
 
 class SpectralAnalyzer:
@@ -260,3 +268,28 @@ class SpectralAnalyzer:
         # Graph is connected if there's exactly one zero eigenvalue
         zero_eigenvals = np.sum(eigenvals < 1e-6)
         return zero_eigenvals == 1
+
+def calculate_spectral_velocity(metric_array: torch.Tensor) -> Tuple[torch.Tensor, float, int]:
+    """
+    Compute discrete derivative of metrics across layers: Delta_m = m_n - m_{n-1}
+    Uses vectorized GPU tensor operations.
+    Returns:
+        velocity_tensor: [num_layers - 1]
+        max_velocity: Maximum absolute change
+        max_velocity_layer: Index of the layer where max change occurred (n)
+    """
+    # Ensure tensor
+    if not isinstance(metric_array, torch.Tensor):
+        metric_array = torch.tensor(metric_array)
+    
+    # Vectorized discrete derivative (velocity)
+    # torch.diff(x) computes x[i+1] - x[i]
+    velocity = torch.diff(metric_array)
+    
+    # Calculate max velocity and its location
+    abs_velocity = torch.abs(velocity)
+    max_val, max_idx = torch.max(abs_velocity, dim=0)
+    
+    # The index in the velocity tensor corresponds to the jump from layer i to i+1
+    # We return the layer index i+1 as the "max_velocity_layer"
+    return velocity, float(max_val), int(max_idx.item()) + 1

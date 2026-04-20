@@ -139,3 +139,20 @@ class GraphConstructor:
             raise ValueError(f"Unknown normalization method: {self.config.normalization}")
         
         return laplacian
+
+    def subgraph_laplacian(self, full_adjacency: torch.Tensor, target_indices: list) -> torch.Tensor:
+        """
+        Extract a subgraph based on target_indices and construct its Laplacian.
+        full_adjacency: [B, N, N]
+        target_indices: list of indices to isolate
+        """
+        if not target_indices:
+            return self.construct_laplacian(full_adjacency)
+            
+        # Slice the adjacency matrix: [B, len(indices), len(indices)]
+        # We use advanced indexing to pick both rows and columns
+        indices = torch.tensor(target_indices, device=full_adjacency.device)
+        sub_adj = full_adjacency.index_select(-2, indices).index_select(-1, indices)
+        
+        # Construct a fresh Laplacian for this localized signal
+        return self.construct_laplacian(sub_adj)

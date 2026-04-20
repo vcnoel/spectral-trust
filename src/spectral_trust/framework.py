@@ -25,7 +25,8 @@ import torch
 from .config import GSPConfig
 from .instrumentation import LLMInstrumenter
 from .graph import GraphConstructor
-from .spectral import SpectralAnalyzer
+from .spectral import SpectralAnalyzer, calculate_spectral_velocity
+from .directed_topology import DirectedTopologist
 
 logger = logging.getLogger(__name__)
 
@@ -52,18 +53,25 @@ class GSPDiagnosticsFramework:
         if hasattr(self, 'instrumenter'):
             self.instrumenter.cleanup_hooks()
     
-    def analyze_text(self, text: str, save_results: bool = True) -> Dict[str, Any]:
+    def analyze_text(self, text: str, save_results: bool = True, subgraph_indices: Optional[List[int]] = None) -> Dict[str, Any]:
         """
         Perform complete GSP analysis on input text
         Args:
             text: Input text to analyze
             save_results: Whether to save intermediate results
+            subgraph_indices: Optional list of indices to isolate a specific subgraph
         Returns:
             Complete analysis results
         """
         logger.info(f"Analyzing text: {text[:100]}...")
         
-        # Process text through model
+        # Use config indices if none provided
+        target_indices = subgraph_indices or self.config.subgraph_indices
+        
+        # Initialize directed topologist if needed
+        directed_topologist = None
+        if self.config.directed:
+            directed_topologist = DirectedTopologist(device=self.config.device)
         model_outputs = self.instrumenter.process_text(text)
         attentions = model_outputs['attentions']
         hidden_states = model_outputs['hidden_states']
@@ -98,28 +106,61 @@ class GSPDiagnosticsFramework:
                 attn_mask=inputs_mask              # [1, Q] or None
             ).squeeze(0)                           # [Q, K]
 
-            laplacian = self.graph_constructor.construct_laplacian(
-                adjacency.unsqueeze(0)
-            ).squeeze(0)  # [seq_len, seq_len]
+            if target_indices:
+                laplacian = self.graph_constructor.subgraph_laplacian(
+                    adjacency.unsqueeze(0), target_indices
+                ).squeeze(0)
+            else:
+                laplacian = self.graph_constructor.construct_laplacian(
+                    adjacency.unsqueeze(0)
+                ).squeeze(0)  # [seq_len, seq_len]
             
             # Perform spectral analysis
             diagnostics = self.spectral_analyzer.analyze_layer(
                 signals, laplacian, layer_idx
             )
             
+            # New in v0.2.0: Directed Analysis
+            if directed_topologist:
+                # Compute directed laplacian
+                L_dir = directed_topologist.compute_directed_laplacian(adjacency)
+                dir_metrics = directed_topologist.get_directed_metrics(L_dir, k=6)
+                diagnostics.max_imaginary = dir_metrics['max_imaginary']
+                diagnostics.spectral_radius = dir_metrics['spectral_radius']
+            
             layer_diagnostics.append(diagnostics)
             
             if self.config.verbose:
-                logger.info(f"Layer {layer_idx}: Energy={diagnostics.energy:.4f}, "
-                          f"SMI={diagnostics.smoothness_index:.4f}, "
-                          f"SE={diagnostics.spectral_entropy:.4f}, "
-                          f"HFER={diagnostics.hfer:.4f}")
+                msg = (f"Layer {layer_idx}: Energy={diagnostics.energy:.4f}, "
+                       f"SMI={diagnostics.smoothness_index:.4f}, "
+                       f"SE={diagnostics.spectral_entropy:.4f}, "
+                       f"HFER={diagnostics.hfer:.4f}")
+                if directed_topologist:
+                    msg += f", MaxImag={diagnostics.max_imaginary:.4f}, SpecRad={diagnostics.spectral_radius:.4f}"
+                logger.info(msg)
+        
+        # New in v0.2.0: Spectral Velocity
+        velocity_results = {}
+        if self.config.calc_velocity:
+            # We compute velocity for Fiedler as the primary indicator
+            fiedler_values = torch.tensor([d.fiedler_value for d in layer_diagnostics])
+            if self.config.device != "cpu" and torch.cuda.is_available():
+                fiedler_values = fiedler_values.cuda()
+            
+            vel_tensor, max_vel, max_idx = calculate_spectral_velocity(fiedler_values)
+            velocity_results = {
+                'fiedler_velocity': vel_tensor.cpu().tolist(),
+                'max_velocity_value': max_vel,
+                'max_velocity_layer_index': max_idx
+            }
+            logger.info(f"Spectral Velocity: Max={max_vel:.4f} at Layer {max_idx}")
         
         # Compile results
         results = {
             'text': text,
             'tokens': model_outputs['tokens'],
             'layer_diagnostics': layer_diagnostics,
+            'velocity_metrics': velocity_results,
             'config': asdict(self.config),
             'model_outputs': model_outputs if save_results else None
         }
