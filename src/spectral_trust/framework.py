@@ -53,6 +53,7 @@ class GSPDiagnosticsFramework:
         if hasattr(self, 'instrumenter'):
             self.instrumenter.cleanup_hooks()
     
+    @torch.no_grad()
     def analyze_text(self, text: str, save_results: bool = True, subgraph_indices: Optional[List[int]] = None) -> Dict[str, Any]:
         """
         Perform complete GSP analysis on input text
@@ -116,9 +117,17 @@ class GSPDiagnosticsFramework:
                 ).squeeze(0)  # [seq_len, seq_len]
             
             # Perform spectral analysis
-            diagnostics = self.spectral_analyzer.analyze_layer(
-                signals, laplacian, layer_idx
-            )
+            if target_indices:
+                device = signals.device
+                idx_tensor = torch.tensor(target_indices, device=device)
+                signals_sub = signals.index_select(0, idx_tensor)
+                diagnostics = self.spectral_analyzer.analyze_layer(
+                    signals_sub, laplacian, layer_idx
+                )
+            else:
+                diagnostics = self.spectral_analyzer.analyze_layer(
+                    signals, laplacian, layer_idx
+                )
             
             # New in v0.2.0: Directed Analysis
             if directed_topologist:
@@ -167,8 +176,9 @@ class GSPDiagnosticsFramework:
         
         if save_results:
             self._save_results(results)
-            if self.config.save_plots:
-                self.create_visualizations(results)
+        
+        if self.config.save_plots or self.config.display_plots:
+            self.create_visualizations(results)
         
         return results
     
@@ -235,12 +245,18 @@ class GSPDiagnosticsFramework:
             diagnostics_data.append(diag.to_dict())
         
         json_path = Path(self.config.output_dir) / f"diagnostics_{timestamp}.json"
+        
+        output_dict = {
+            'text': results['text'],
+            'tokens': results['tokens'],
+            'diagnostics': diagnostics_data
+        }
+        
+        if 'velocity_metrics' in results:
+            output_dict['velocity_metrics'] = results['velocity_metrics']
+        
         with open(json_path, "w") as f:
-            json.dump({
-                'text': results['text'],
-                'tokens': results['tokens'],
-                'diagnostics': diagnostics_data
-            }, f, indent=2)
+            json.dump(output_dict, f, indent=2)
         
         logger.info(f"Results saved to {results_path} and {json_path}")
         
@@ -293,8 +309,8 @@ class GSPDiagnosticsFramework:
         print(f"\n[LaTeX Data] Saved to: {output_path}")
     
     def create_visualizations(self, results: Dict[str, Any]):
-        """Create diagnostic visualizations"""
-        if not self.config.save_plots:
+        """Create legacy symmetric diagnostic visualizations (2x2 grid)"""
+        if not self.config.save_plots and not self.config.display_plots:
             return
         
         diagnostics = results['layer_diagnostics']
@@ -302,50 +318,57 @@ class GSPDiagnosticsFramework:
         
         # Extract metrics for plotting
         layers = list(range(num_layers))
-        energies = [d.energy for d in diagnostics]
+        fiedlers = [d.fiedler_value for d in diagnostics]
         smoothness_indices = [d.smoothness_index for d in diagnostics]
-        spectral_entropies = [d.spectral_entropy for d in diagnostics]
+        energies = [d.energy for d in diagnostics]
         hfers = [d.hfer for d in diagnostics]
         
         # Create subplot figure
         fig, axes = plt.subplots(2, 2, figsize=(15, 12))
         model_name = self.config.model_name.split('/')[-1]
-        fig.suptitle(f"GSP Diagnostics: {model_name} - {results['text'][:40]}...", fontsize=14)
+        fig.suptitle(f"Legacy Symmetric Proof: {model_name}\n{results['text'][:50]}...", fontsize=14)
         
-        # Energy plot
-        axes[0, 0].plot(layers, energies, 'b-o', linewidth=2, markersize=6)
-        axes[0, 0].set_title('Dirichlet Energy by Layer')
+        # Top-Left: Fiedler Value
+        axes[0, 0].plot(layers, fiedlers, 'orange', marker='o', linewidth=2, markersize=6)
+        axes[0, 0].set_title('Fiedler Value ($\lambda_2$)')
         axes[0, 0].set_xlabel('Layer')
-        axes[0, 0].set_ylabel('Energy')
+        axes[0, 0].set_ylabel('Spectral Gap')
         axes[0, 0].grid(True, alpha=0.3)
         
-        # Smoothness Index plot
-        axes[0, 1].plot(layers, smoothness_indices, 'r-o', linewidth=2, markersize=6)
-        axes[0, 1].set_title('Smoothness Index by Layer')
+        # Top-Right: Smoothness Index
+        axes[0, 1].plot(layers, smoothness_indices, 'red', marker='o', linewidth=2, markersize=6)
+        axes[0, 1].set_title('Smoothness Index')
         axes[0, 1].set_xlabel('Layer')
-        axes[0, 1].set_ylabel('Smoothness Index')
+        axes[0, 1].set_ylabel('Index')
         axes[0, 1].grid(True, alpha=0.3)
         
-        # Spectral Entropy plot
-        axes[1, 0].plot(layers, spectral_entropies, 'g-o', linewidth=2, markersize=6)
-        axes[1, 0].set_title('Spectral Entropy by Layer')
+        # Bottom-Left: Dirichlet Energy
+        axes[1, 0].plot(layers, energies, 'blue', marker='o', linewidth=2, markersize=6)
+        axes[1, 0].set_title('Dirichlet Energy')
         axes[1, 0].set_xlabel('Layer')
-        axes[1, 0].set_ylabel('Spectral Entropy')
+        axes[1, 0].set_ylabel('Energy')
         axes[1, 0].grid(True, alpha=0.3)
         
-        # HFER plot
-        axes[1, 1].plot(layers, hfers, 'm-o', linewidth=2, markersize=6)
-        axes[1, 1].set_title('High-Frequency Energy Ratio by Layer')
+        # Bottom-Right: HFER
+        axes[1, 1].plot(layers, hfers, 'magenta', marker='o', linewidth=2, markersize=6)
+        axes[1, 1].set_title('HFER (High-Frequency Energy Ratio)')
         axes[1, 1].set_xlabel('Layer')
-        axes[1, 1].set_ylabel('HFER')
+        axes[1, 1].set_ylabel('Ratio')
         axes[1, 1].grid(True, alpha=0.3)
         
-        plt.tight_layout()
+        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
         
         # Save plot
-        timestamp = pd.Timestamp.now().strftime("%Y%m%d_%H%M%S")
-        plot_path = Path(self.config.output_dir) / f"diagnostics_plot_{timestamp}.png"
-        plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+        if self.config.save_plots:
+            timestamp = pd.Timestamp.now().strftime("%Y%m%d_%H%M%S")
+            plot_path = Path(self.config.output_dir) / f"legacy_proof_{timestamp}.png"
+            plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+            logger.info(f"Visual Proof saved to {plot_path}")
+        
+        # Display plot
+        if self.config.display_plots:
+            plt.show()
+            
         plt.close()
 
     def visualize_multi_run(self, run_results_list: List[Dict[str, Any]]):

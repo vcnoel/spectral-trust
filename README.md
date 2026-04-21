@@ -11,11 +11,12 @@ By treating the transformer's attention mechanism as a **graph** and the hidden 
 *   **Fiedler Value**: Algebraic connectivity of the attention graph.
 *   **HFER (High-Frequency Energy Ratio)**: Energy concentration in high-frequency spectral components.
 
-## Features
 - **Plug-and-Play**: Works out-of-the-box with `Llama-3`, `Mistral`, `Qwen`, `Gemma`, and `Phi`.
+- **Directed Topology (v0.2.0)**: Support for Directed Laplacian spectral radius and imaginary components.
+- **Spectral Velocity (v0.2.0)**: Cross-layer differential diagnostics to isolate the "Topological Shockwave."
+- **Sparse Solver Optimization**: High-performance $O(kN^2)$ solver for large-scale exhaustive sweeps.
+- **Interactive Visualization**: New `--plots` CLI flag and 2x2 diagnostic dashboards.
 - **Offline Ready**: `--offline` mode to use cached models without internet access.
-- **Spectral Metrics**: Automatically computes Energy, Entropy, Fiedler Value, HFER, and Smoothness.
-- **Robustness Tools**: Includes hooks for head ablation and residual patching.
 
 ## Structure
 - `src/spectral_trust/`: Core package source code.

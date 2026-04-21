@@ -353,9 +353,9 @@ def create_model_config(model_key: str, args) -> GSPConfig:
         local_files_only=getattr(args, 'offline', False),
         runs=getattr(args, 'runs', 1),
         temperature=getattr(args, 'temperature', 1.0),
-        temperature=getattr(args, 'temperature', 1.0),
         plot_metrics=getattr(args, 'plot', None),
         latex_export=getattr(args, 'latex', False),
+        display_plots=getattr(args, 'plots', False),
         model_kwargs=model_kwargs,
         directed=getattr(args, 'directed', False),
         calc_velocity=getattr(args, 'calc_velocity', False),
@@ -526,6 +526,7 @@ def cmd_list_models(args):
         print(f"  {k:20} -> {v['name']}")
 
 def main():
+    print("DEBUG: [spectral-trust v0.2.0-RC1] CLI Main Initialized")
     parser = argparse.ArgumentParser(description="Spectral Trust CLI")
     subparsers = parser.add_subparsers(dest='command', required=True)
     
@@ -537,6 +538,7 @@ def main():
     p_analyze.add_argument('--device', type=str, default='auto')
     p_analyze.add_argument('--output_dir', type=str, default='./results')
     p_analyze.add_argument('--no-plots', action='store_false', dest='save_plots', help='Disable plotting')
+    p_analyze.add_argument('--plots', action='store_true', help='Pop up interactive plots on screen')
     p_analyze.set_defaults(save_plots=True)
     p_analyze.add_argument('--verbose', action='store_true')
     p_analyze.add_argument('--emit_text', action='store_true')
@@ -566,6 +568,7 @@ def main():
     p_compare.add_argument('--device', type=str, default='auto')
     p_compare.add_argument('--output_dir', type=str, default='./results')
     p_compare.add_argument('--no-plots', action='store_false', dest='save_plots', help='Disable plotting')
+    p_compare.add_argument('--plots', action='store_true', help='Pop up interactive plots on screen')
     p_compare.set_defaults(save_plots=True)
     p_compare.add_argument('--verbose', action='store_true')
     # GSP params for compare

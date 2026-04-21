@@ -43,6 +43,7 @@ class GSPConfig:
     # Output parameters
     output_dir: str = "./gsp_results"
     save_plots: bool = True
+    display_plots: bool = False
     save_intermediate: bool = True
     verbose: bool = True
 

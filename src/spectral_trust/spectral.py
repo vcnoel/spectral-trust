@@ -226,8 +226,8 @@ class SpectralAnalyzer:
             Complete spectral diagnostics
         """
         # Convert to numpy for numerical computations
-        signals_np = signals.detach().cpu().numpy().astype(np.float32)
-        laplacian_np = laplacian.detach().cpu().numpy().squeeze().astype(np.float32)
+        signals_np = signals.detach().cpu().numpy()
+        laplacian_np = laplacian.detach().cpu().numpy().squeeze()
         
         # Check connectivity
         connectivity = self._check_connectivity(laplacian_np)
@@ -249,6 +249,9 @@ class SpectralAnalyzer:
         # Fiedler value (second smallest eigenvalue)
         fiedler_value = eigenvalues[1] if len(eigenvalues) > 1 else 0.0
         
+        # Spectral radius (max eigenvalue)
+        spectral_radius = eigenvalues[-1] if len(eigenvalues) > 0 else 0.0
+        
         return SpectralDiagnostics(
             layer=layer_idx,
             energy=energy,
@@ -259,7 +262,8 @@ class SpectralAnalyzer:
             eigenvectors=eigenvectors if self.config.save_intermediate else None,
             spectral_masses=spectral_masses,
             fiedler_value=fiedler_value,
-            connectivity=connectivity
+            connectivity=connectivity,
+            spectral_radius=spectral_radius
         )
     
     def _check_connectivity(self, laplacian: np.ndarray) -> bool:

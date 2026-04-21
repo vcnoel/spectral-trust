@@ -27,11 +27,13 @@ venv.bak/
 .idea/
 .vscode/
 
-# Local results (optional, but good practice)
-debug_results/
+# Local results
 results/
 gsp_results/
+data/pilot/
 debug_log.txt
+*.log
+*.csv
 experiments/*.csv
 experiments/*.pkl
 experiments/*.json

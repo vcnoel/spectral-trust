@@ -27,17 +27,19 @@ def sparse_arnoldi_iteration(A: torch.Tensor, k_steps: int = 20, tol: float = 1e
     N = A.shape[0]
     k_steps = min(k_steps, N)
     
-    Q = torch.zeros((N, k_steps + 1), device=device, dtype=A.dtype)
-    H = torch.zeros((k_steps + 1, k_steps), device=device, dtype=A.dtype)
+    # Cast to float32 for numerical stability on GPU
+    A_f32 = A.to(torch.float32)
+    Q = torch.zeros((N, k_steps + 1), device=device, dtype=torch.float32)
+    H = torch.zeros((k_steps + 1, k_steps), device=device, dtype=torch.float32)
     
     # Random start vector
-    q = torch.randn(N, device=device, dtype=A.dtype)
+    q = torch.randn(N, device=device, dtype=torch.float32)
     q = q / torch.norm(q)
     Q[:, 0] = q
     
     for j in range(k_steps):
         # Sparse-friendly matrix-vector product
-        v = torch.matmul(A, Q[:, j])
+        v = torch.matmul(A_f32, Q[:, j])
         
         # Modified Gram-Schmidt with re-orthogonalization
         for i in range(j + 1):
@@ -111,6 +113,9 @@ class DirectedTopologist:
         Compute Directed Random Walk Laplacian: L = I - D^-1 A
         Adjacency A is assumed to be asymmetric.
         """
+        if torch.isnan(adjacency).any() or torch.isinf(adjacency).any():
+            raise ValueError("Input adjacency matrix contains NaN or Inf values.")
+            
         A = adjacency.to(self.device)
         N = A.shape[-1]
         
@@ -135,11 +140,10 @@ class DirectedTopologist:
         # Use Arnoldi to get eigenvalues of the Hessenberg matrix
         # k_steps should be larger than k to improve convergence
         n_iter = min(L.shape[0], k * 3 + 10)
-        H, _ = sparse_arnoldi_iteration(L, k_steps=n_iter)
         
-        # Find eigenvalues of the small Hessenberg matrix H
-        # Since H is small, we use dense eigvals
         try:
+            H, _ = sparse_arnoldi_iteration(L, k_steps=n_iter)
+            # H is already float32 from sparse_arnoldi_iteration
             eigvals = torch.linalg.eigvals(H)
             
             # Max Imaginary Component

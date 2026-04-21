@@ -122,12 +122,16 @@ class GraphConstructor:
         
         if self.config.normalization == "rw":
             # Random walk Laplacian: L = I - D^{-1}W
-            deg_inv = torch.where(degrees > 1e-8, 1.0 / degrees, torch.zeros_like(degrees))
+            deg_inv = torch.zeros_like(degrees)
+            mask = degrees > 1e-8
+            deg_inv[mask] = 1.0 / degrees[mask].clamp(min=1e-8)
             deg_inv_diag = torch.diag_embed(deg_inv)
             laplacian = torch.eye(adjacency.shape[-1], device=adjacency.device).unsqueeze(0) - torch.matmul(deg_inv_diag, adjacency)
         elif self.config.normalization == "sym":
             # Symmetric normalized Laplacian: L = I - D^{-1/2}WD^{-1/2}
-            deg_sqrt_inv = torch.where(degrees > 1e-8, 1.0 / torch.sqrt(degrees), torch.zeros_like(degrees))
+            deg_sqrt_inv = torch.zeros_like(degrees)
+            mask = degrees > 1e-8
+            deg_sqrt_inv[mask] = 1.0 / torch.sqrt(degrees[mask].clamp(min=1e-8))
             deg_sqrt_inv_diag = torch.diag_embed(deg_sqrt_inv)
             normalized_adj = torch.matmul(torch.matmul(deg_sqrt_inv_diag, adjacency), deg_sqrt_inv_diag)
             laplacian = torch.eye(adjacency.shape[-1], device=adjacency.device).unsqueeze(0) - normalized_adj
