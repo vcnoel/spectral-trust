@@ -37,11 +37,10 @@ class SpectralDiagnostics:
     fiedler_value: float
     connectivity: bool
     # New in v0.2.0: Directed metrics
-    max_imaginary: Optional[float] = None
     spectral_radius: Optional[float] = None
-    
+    max_imaginary: Optional[float] = None
+
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for serialization"""
         d = {
             'layer': int(self.layer),
             'energy': float(self.energy),
@@ -51,12 +50,12 @@ class SpectralDiagnostics:
             'eigenvalues': self.eigenvalues.tolist(),
             'spectral_masses': self.spectral_masses.tolist(),
             'fiedler_value': float(self.fiedler_value),
-            'connectivity': bool(self.connectivity)
+            'connectivity': bool(self.connectivity),
         }
-        if self.max_imaginary is not None:
-            d['max_imaginary'] = float(self.max_imaginary)
         if self.spectral_radius is not None:
             d['spectral_radius'] = float(self.spectral_radius)
+        if self.max_imaginary is not None:
+            d['max_imaginary'] = float(self.max_imaginary)
         return d
 
 
@@ -229,29 +228,25 @@ class SpectralAnalyzer:
         signals_np = signals.to(torch.float32).detach().cpu().numpy()
         laplacian_np = laplacian.to(torch.float32).detach().cpu().numpy().squeeze()
         
-        # Check connectivity
-        connectivity = self._check_connectivity(laplacian_np)
-        
-        # Compute eigendecomposition
+        # Single eigendecomposition (was previously called twice — once here, once inside _check_connectivity)
         eigenvalues, eigenvectors = self.compute_eigendecomposition(laplacian_np)
-        
+        connectivity = bool(np.sum(eigenvalues < 1e-6) == 1)
+
         # Compute diagnostics
         energy = self.compute_dirichlet_energy(signals_np, laplacian_np)
         smoothness_index = self.compute_smoothness_index(signals_np, laplacian_np)
         spectral_entropy = self.compute_spectral_entropy(signals_np, eigenvectors)
-        hfer = self.compute_hfer(signals_np, eigenvectors, eigenvalues, 
+        hfer = self.compute_hfer(signals_np, eigenvectors, eigenvalues,
                                self.config.hfer_cutoff_ratio)
-        
+
         # Compute spectral masses
         signal_hat = np.dot(eigenvectors.T, signals_np)
         spectral_masses = np.sum(signal_hat**2, axis=1)
-        
-        # Fiedler value (second smallest eigenvalue)
+
         fiedler_value = eigenvalues[1] if len(eigenvalues) > 1 else 0.0
-        
-        # Spectral radius (max eigenvalue)
         spectral_radius = eigenvalues[-1] if len(eigenvalues) > 0 else 0.0
-        
+
+
         return SpectralDiagnostics(
             layer=layer_idx,
             energy=energy,
@@ -263,37 +258,23 @@ class SpectralAnalyzer:
             spectral_masses=spectral_masses,
             fiedler_value=fiedler_value,
             connectivity=connectivity,
-            spectral_radius=spectral_radius
+            spectral_radius=spectral_radius,
         )
-    
+
     def _check_connectivity(self, laplacian: np.ndarray) -> bool:
-        """Check if the graph is connected by examining the null space of Laplacian"""
+        """Retained for external callers. analyze_layer no longer calls this."""
         eigenvals, _ = self.compute_eigendecomposition(laplacian)
-        # Graph is connected if there's exactly one zero eigenvalue
-        zero_eigenvals = np.sum(eigenvals < 1e-6)
-        return zero_eigenvals == 1
+        return np.sum(eigenvals < 1e-6) == 1
+
 
 def calculate_spectral_velocity(metric_array: torch.Tensor) -> Tuple[torch.Tensor, float, int]:
     """
-    Compute discrete derivative of metrics across layers: Delta_m = m_n - m_{n-1}
-    Uses vectorized GPU tensor operations.
-    Returns:
-        velocity_tensor: [num_layers - 1]
-        max_velocity: Maximum absolute change
-        max_velocity_layer: Index of the layer where max change occurred (n)
+    Vectorized GPU discrete derivative across layers: Δm = m_{n+1} − m_n.
+    Returns (velocity_tensor, max_abs_velocity, layer_index_of_max).
     """
-    # Ensure tensor
     if not isinstance(metric_array, torch.Tensor):
         metric_array = torch.tensor(metric_array)
-    
-    # Vectorized discrete derivative (velocity)
-    # torch.diff(x) computes x[i+1] - x[i]
     velocity = torch.diff(metric_array)
-    
-    # Calculate max velocity and its location
     abs_velocity = torch.abs(velocity)
     max_val, max_idx = torch.max(abs_velocity, dim=0)
-    
-    # The index in the velocity tensor corresponds to the jump from layer i to i+1
-    # We return the layer index i+1 as the "max_velocity_layer"
     return velocity, float(max_val), int(max_idx.item()) + 1

@@ -13,15 +13,18 @@
 
 from .config import GSPConfig
 from .framework import GSPDiagnosticsFramework
-from .spectral import SpectralDiagnostics, SpectralAnalyzer
+from .spectral import SpectralDiagnostics, SpectralAnalyzer, calculate_spectral_velocity
 from .graph import GraphConstructor
 from .instrumentation import LLMInstrumenter
+from .directed_topology import DirectedTopologist
 
 __all__ = [
     "GSPConfig",
     "GSPDiagnosticsFramework",
     "SpectralDiagnostics",
     "SpectralAnalyzer",
+    "calculate_spectral_velocity",
     "GraphConstructor",
-    "LLMInstrumenter"
+    "LLMInstrumenter",
+    "DirectedTopologist",
 ]

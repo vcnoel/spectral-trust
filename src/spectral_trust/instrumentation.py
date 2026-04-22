@@ -156,7 +156,7 @@ class LLMInstrumenter:
                 else:
                     hidden_states = output
                 
-                self.activation_data[layer_name] = hidden_states.detach()
+                self.activation_data[layer_name] = hidden_states.detach().to(torch.float32).cpu()
             return hook
         
         # Register hooks for transformer layers
@@ -237,6 +237,10 @@ class LLMInstrumenter:
         
         if attentions is None:
              raise ValueError(f"Model returned None for attentions. Output type: {type(outputs)}. Keys: {outputs.keys() if hasattr(outputs, 'keys') else 'N/A'}")
+        
+        # Explicitly ensure float32 for all spectral inputs
+        attentions = [a.to(torch.float32).cpu() for a in attentions] if attentions else []
+        hidden_states = [h.to(torch.float32).cpu() for h in hidden_states] if hidden_states else []
         
         return {
             'inputs': inputs,
