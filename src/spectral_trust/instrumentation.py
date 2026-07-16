@@ -21,6 +21,21 @@ from .config import GSPConfig
 
 logger = logging.getLogger(__name__)
 
+
+def _dtype_kwarg() -> str:
+    """`from_pretrained(torch_dtype=...)` was renamed to `dtype=` in Transformers
+    4.56; passing the old name emits a deprecation warning (and is slated for
+    removal). Pick the right keyword for the installed version."""
+    try:
+        import transformers as _tf
+        major, minor = (int(p) for p in _tf.__version__.split(".")[:2])
+        return "dtype" if (major, minor) >= (4, 56) else "torch_dtype"
+    except Exception:  # unparsable/dev version: keep the historical keyword
+        return "torch_dtype"
+
+
+_DTYPE_KW = _dtype_kwarg()
+
 try:
     from transformers.cache_utils import DynamicCache
     if not hasattr(DynamicCache, 'get_usable_length'):
@@ -108,11 +123,11 @@ class LLMInstrumenter:
         try:
             self.model = AutoModelForCausalLM.from_pretrained(
                 model_name,
-                torch_dtype=dtype,
                 device_map=device_map,
                 attn_implementation="eager",
                 trust_remote_code=getattr(self.config, "trust_remote_code", False),
                 local_files_only=getattr(self.config, "local_files_only", False),
+                **{_DTYPE_KW: dtype},
                 **getattr(self.config, "model_kwargs", {})
             )
         except Exception as e1:
@@ -120,11 +135,11 @@ class LLMInstrumenter:
             try:
                 self.model = AutoModel.from_pretrained(
                     model_name,
-                    torch_dtype=dtype,
                     device_map=device_map,
                     attn_implementation="eager",
                     trust_remote_code=getattr(self.config, "trust_remote_code", False),
                     local_files_only=getattr(self.config, "local_files_only", False),
+                    **{_DTYPE_KW: dtype},
                     **getattr(self.config, "model_kwargs", {})
                 )
             except Exception as e2:
