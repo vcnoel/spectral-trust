@@ -74,8 +74,10 @@ class GSPDiagnosticsFramework:
         if self.config.directed:
             directed_topologist = DirectedTopologist(device=self.config.device)
         model_outputs = self.instrumenter.process_text(text)
-        attentions = model_outputs['attentions']
-        hidden_states = model_outputs['hidden_states']
+        
+        # Defensive cast for spectral analysis
+        attentions = [a.to(torch.float32).cpu() for a in model_outputs['attentions']]
+        hidden_states = [h.to(torch.float32).cpu() for h in model_outputs['hidden_states']]
         
         # Analyze each layer
         layer_diagnostics = []
@@ -171,7 +173,7 @@ class GSPDiagnosticsFramework:
             'layer_diagnostics': layer_diagnostics,
             'velocity_metrics': velocity_results,
             'config': asdict(self.config),
-            'model_outputs': model_outputs if save_results else None
+            'model_outputs': model_outputs
         }
         
         if save_results:

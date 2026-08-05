@@ -62,8 +62,10 @@ class GSPConfig:
     # Advanced
     model_kwargs: Dict[str, Any] = field(default_factory=dict)
     remove_self_loops: bool = False
-    
+
+
     # New in v0.2.0
+    display_plots: bool = False
     directed: bool = False
     calc_velocity: bool = False
     subgraph_indices: Optional[list] = None

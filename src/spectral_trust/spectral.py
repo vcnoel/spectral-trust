@@ -17,7 +17,7 @@ import numpy as np
 import torch
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import eigsh, ArpackNoConvergence
-from scipy.linalg import eigh
+from scipy.linalg import eigh, eig
 import logging
 from .config import GSPConfig
 
@@ -37,11 +37,10 @@ class SpectralDiagnostics:
     fiedler_value: float
     connectivity: bool
     # New in v0.2.0: Directed metrics
-    max_imaginary: Optional[float] = None
     spectral_radius: Optional[float] = None
-    
+    max_imaginary: Optional[float] = None
+
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary for serialization"""
         d = {
             'layer': int(self.layer),
             'energy': float(self.energy),
@@ -51,12 +50,12 @@ class SpectralDiagnostics:
             'eigenvalues': self.eigenvalues.tolist(),
             'spectral_masses': self.spectral_masses.tolist(),
             'fiedler_value': float(self.fiedler_value),
-            'connectivity': bool(self.connectivity)
+            'connectivity': bool(self.connectivity),
         }
-        if self.max_imaginary is not None:
-            d['max_imaginary'] = float(self.max_imaginary)
         if self.spectral_radius is not None:
             d['spectral_radius'] = float(self.spectral_radius)
+        if self.max_imaginary is not None:
+            d['max_imaginary'] = float(self.max_imaginary)
         return d
 
 
@@ -66,16 +65,55 @@ class SpectralAnalyzer:
     def __init__(self, config: GSPConfig):
         self.config = config
     
+    @staticmethod
+    def _is_symmetric(matrix: np.ndarray, tol: float = 1e-6) -> bool:
+        """True if the operator is symmetric to within `tol` (so eigh/eigsh are valid)."""
+        return bool(np.allclose(matrix, matrix.T, atol=tol, rtol=0.0))
+
+    def _eig_nonsymmetric(self, laplacian: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Eigendecomposition of a NON-symmetric operator, e.g. the random-walk
+        Laplacian L_rw = I - D^{-1} W selected by normalization="rw".
+
+        L_rw is similar to the symmetric normalized Laplacian
+        (L_rw = D^{-1/2} L_sym D^{1/2}), so its eigenvalues are real; its
+        eigenvectors exist but are NOT orthogonal. A symmetric solver (eigh/eigsh)
+        would silently diagonalize a symmetrized surrogate instead, which is why
+        this path exists.
+        """
+        eigenvals, eigenvecs = eig(laplacian)
+        max_imag = float(np.max(np.abs(eigenvals.imag))) if eigenvals.size else 0.0
+        if max_imag > 1e-6:
+            logger.warning(
+                "Non-symmetric operator has complex eigenvalues (max|Im|=%.2e); "
+                "taking real parts. Diagnostics assume a real spectrum.", max_imag
+            )
+        eigenvals = eigenvals.real
+        eigenvecs = eigenvecs.real
+        sort_idx = np.argsort(eigenvals)
+        return eigenvals[sort_idx], eigenvecs[:, sort_idx]
+
     def compute_eigendecomposition(self, laplacian: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Compute eigendecomposition of graph Laplacian
+        Compute eigendecomposition of graph Laplacian.
+
+        Dispatches on the operator: symmetric Laplacians (normalization="sym" or
+        "none") use a symmetric solver; non-symmetric ones (normalization="rw")
+        use a general solver, since eigh/eigsh read only the lower triangle and
+        would otherwise diagonalize a different, symmetrized matrix.
+
         Args:
             laplacian: [seq_len, seq_len] Laplacian matrix
         Returns:
-            eigenvalues, eigenvectors
+            eigenvalues, eigenvectors (eigenvectors are orthonormal only for
+            symmetric operators)
         """
         seq_len = laplacian.shape[0]
-        
+
+        if not self._is_symmetric(laplacian):
+            eigenvals, eigenvecs = self._eig_nonsymmetric(laplacian)
+            return np.maximum(eigenvals, 0), eigenvecs
+
         if self.config.eigen_solver == "sparse" and seq_len > 50:
             # Use sparse eigenvalue solver for large matrices
             try:
@@ -120,7 +158,17 @@ class SpectralAnalyzer:
         
         # Ensure eigenvalues are non-negative (numerical precision)
         eigenvals = np.maximum(eigenvals, 0)
-        
+
+        if eigenvecs.shape[1] < seq_len:
+            logger.warning(
+                "Truncated eigenbasis: %d of %d modes (eigen_solver='sparse', "
+                "num_eigenvalues=%d). Energy-ratio diagnostics (HFER, spectral "
+                "entropy, spectral_masses) are normalized over the retained modes "
+                "only and are NOT comparable to a full-spectrum computation. Use "
+                "eigen_solver='dense' for exact energy fractions.",
+                eigenvecs.shape[1], seq_len, self.config.num_eigenvalues
+            )
+
         return eigenvals, eigenvecs
     
     def compute_dirichlet_energy(self, signals: np.ndarray, laplacian: np.ndarray) -> float:
@@ -226,32 +274,28 @@ class SpectralAnalyzer:
             Complete spectral diagnostics
         """
         # Convert to numpy for numerical computations
-        signals_np = signals.detach().cpu().numpy()
-        laplacian_np = laplacian.detach().cpu().numpy().squeeze()
+        signals_np = signals.to(torch.float32).detach().cpu().numpy()
+        laplacian_np = laplacian.to(torch.float32).detach().cpu().numpy().squeeze()
         
-        # Check connectivity
-        connectivity = self._check_connectivity(laplacian_np)
-        
-        # Compute eigendecomposition
+        # Single eigendecomposition (was previously called twice — once here, once inside _check_connectivity)
         eigenvalues, eigenvectors = self.compute_eigendecomposition(laplacian_np)
-        
+        connectivity = bool(np.sum(eigenvalues < 1e-6) == 1)
+
         # Compute diagnostics
         energy = self.compute_dirichlet_energy(signals_np, laplacian_np)
         smoothness_index = self.compute_smoothness_index(signals_np, laplacian_np)
         spectral_entropy = self.compute_spectral_entropy(signals_np, eigenvectors)
-        hfer = self.compute_hfer(signals_np, eigenvectors, eigenvalues, 
+        hfer = self.compute_hfer(signals_np, eigenvectors, eigenvalues,
                                self.config.hfer_cutoff_ratio)
-        
+
         # Compute spectral masses
         signal_hat = np.dot(eigenvectors.T, signals_np)
         spectral_masses = np.sum(signal_hat**2, axis=1)
-        
-        # Fiedler value (second smallest eigenvalue)
+
         fiedler_value = eigenvalues[1] if len(eigenvalues) > 1 else 0.0
-        
-        # Spectral radius (max eigenvalue)
         spectral_radius = eigenvalues[-1] if len(eigenvalues) > 0 else 0.0
-        
+
+
         return SpectralDiagnostics(
             layer=layer_idx,
             energy=energy,
@@ -263,37 +307,23 @@ class SpectralAnalyzer:
             spectral_masses=spectral_masses,
             fiedler_value=fiedler_value,
             connectivity=connectivity,
-            spectral_radius=spectral_radius
+            spectral_radius=spectral_radius,
         )
-    
+
     def _check_connectivity(self, laplacian: np.ndarray) -> bool:
-        """Check if the graph is connected by examining the null space of Laplacian"""
+        """Retained for external callers. analyze_layer no longer calls this."""
         eigenvals, _ = self.compute_eigendecomposition(laplacian)
-        # Graph is connected if there's exactly one zero eigenvalue
-        zero_eigenvals = np.sum(eigenvals < 1e-6)
-        return zero_eigenvals == 1
+        return np.sum(eigenvals < 1e-6) == 1
+
 
 def calculate_spectral_velocity(metric_array: torch.Tensor) -> Tuple[torch.Tensor, float, int]:
     """
-    Compute discrete derivative of metrics across layers: Delta_m = m_n - m_{n-1}
-    Uses vectorized GPU tensor operations.
-    Returns:
-        velocity_tensor: [num_layers - 1]
-        max_velocity: Maximum absolute change
-        max_velocity_layer: Index of the layer where max change occurred (n)
+    Vectorized GPU discrete derivative across layers: Δm = m_{n+1} − m_n.
+    Returns (velocity_tensor, max_abs_velocity, layer_index_of_max).
     """
-    # Ensure tensor
     if not isinstance(metric_array, torch.Tensor):
         metric_array = torch.tensor(metric_array)
-    
-    # Vectorized discrete derivative (velocity)
-    # torch.diff(x) computes x[i+1] - x[i]
     velocity = torch.diff(metric_array)
-    
-    # Calculate max velocity and its location
     abs_velocity = torch.abs(velocity)
     max_val, max_idx = torch.max(abs_velocity, dim=0)
-    
-    # The index in the velocity tensor corresponds to the jump from layer i to i+1
-    # We return the layer index i+1 as the "max_velocity_layer"
     return velocity, float(max_val), int(max_idx.item()) + 1

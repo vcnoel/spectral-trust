@@ -13,15 +13,25 @@
 
 from .config import GSPConfig
 from .framework import GSPDiagnosticsFramework
-from .spectral import SpectralDiagnostics, SpectralAnalyzer
+from .spectral import SpectralDiagnostics, SpectralAnalyzer, calculate_spectral_velocity
 from .graph import GraphConstructor
-from .instrumentation import LLMInstrumenter
+from .instrumentation import (
+    LLMInstrumenter, NonFiniteAttentionError, assert_finite_attention,
+)
+from .directed_topology import DirectedTopologist
+
+__version__ = "0.2.3"
 
 __all__ = [
     "GSPConfig",
     "GSPDiagnosticsFramework",
     "SpectralDiagnostics",
     "SpectralAnalyzer",
+    "calculate_spectral_velocity",
     "GraphConstructor",
-    "LLMInstrumenter"
+    "LLMInstrumenter",
+    "NonFiniteAttentionError",
+    "assert_finite_attention",
+    "DirectedTopologist",
+    "__version__",
 ]

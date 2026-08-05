@@ -21,17 +21,78 @@ from .config import GSPConfig
 
 logger = logging.getLogger(__name__)
 
-# --- Monkey Patch for Phi-3 / Transformers Compatibility ---
-# The remote code for Phi-3 uses 'get_usable_length' which was removed/missing in newer DynamicCache
+
+class NonFiniteAttentionError(ValueError):
+    """Raised when a model emits NaN/Inf attention weights.
+
+    A hard failure by design. Non-finite attention propagates into the
+    adjacency, the Laplacian and the eigendecomposition, where it surfaces as
+    an opaque LinAlgError ("array must not contain infs or NaNs") -- or, far
+    worse, does not surface at all: a caller that catches spectral failures
+    per item contributes no rows for that model while every summary still
+    looks healthy.
+
+    Observed in practice: Qwen2.5-1.5B under float16 overflows to inf inside
+    attention. Its spectral analysis failed on 100% of items *and* its verdict
+    logits were corrupted, so it presented as a degenerate model where under
+    bfloat16 it is competent. The two dtypes agreed on 36.5% of its outputs,
+    and the bug was on its way into a write-up as a finding about model scale.
+
+    Fix at the call site: load in bfloat16 (same memory as float16, far wider
+    exponent range), and keep precision uniform across a model panel -- neither
+    spectral metrics nor logits are comparable across dtypes.
+    """
+
+
+def assert_finite_attention(attentions, model_name=None, dtype=None) -> None:
+    """Fail loudly on the first layer of non-finite attention.
+
+    Cheap relative to the forward pass that produced it: one reduction per
+    layer, stopping at the first offender.
+    """
+    for layer_idx, attn in enumerate(attentions):
+        if attn is None or not torch.is_tensor(attn):
+            continue
+        if torch.isfinite(attn).all():
+            continue
+        n_nan = int(torch.isnan(attn).sum())
+        n_inf = int(torch.isinf(attn).sum())
+        raise NonFiniteAttentionError(
+            f"Non-finite attention at layer {layer_idx} "
+            f"(model={model_name or 'unknown'}, dtype={dtype or 'unknown'}): "
+            f"{n_nan} NaN and {n_inf} Inf of {attn.numel()} weights. "
+            f"Every downstream spectral metric for this input is invalid. "
+            f"This is almost always float16 overflow -- reload the model in "
+            f"bfloat16 and keep the dtype uniform across the panel."
+        )
+
+
+def _dtype_kwarg() -> str:
+    """`from_pretrained(torch_dtype=...)` was renamed to `dtype=` in Transformers
+    4.56; passing the old name emits a deprecation warning (and is slated for
+    removal). Pick the right keyword for the installed version."""
+    try:
+        import transformers as _tf
+        major, minor = (int(p) for p in _tf.__version__.split(".")[:2])
+        return "dtype" if (major, minor) >= (4, 56) else "torch_dtype"
+    except Exception:  # unparsable/dev version: keep the historical keyword
+        return "torch_dtype"
+
+
+_DTYPE_KW = _dtype_kwarg()
+
 try:
     from transformers.cache_utils import DynamicCache
     if not hasattr(DynamicCache, 'get_usable_length'):
         def get_usable_length(self, input_length, layer_idx=None):
-            # For this analysis tool, we always do full forward pass with no past cache.
-            # Returning 0 ensures the model treats all inputs as new, preventing shape mismatches.
             return 0
         DynamicCache.get_usable_length = get_usable_length
-        logger.info("Applied monkey-patch to DynamicCache for Phi-3 compatibility.")
+    if not hasattr(DynamicCache, 'from_legacy_cache'):
+        @classmethod
+        def from_legacy_cache(cls, past_key_values, *args, **kwargs):
+            return cls()
+        DynamicCache.from_legacy_cache = from_legacy_cache
+        logger.info("Applied full DynamicCache compatibility patch.")
 except ImportError:
     pass
 # -----------------------------------------------------------
@@ -107,11 +168,11 @@ class LLMInstrumenter:
         try:
             self.model = AutoModelForCausalLM.from_pretrained(
                 model_name,
-                torch_dtype=dtype,
                 device_map=device_map,
                 attn_implementation="eager",
                 trust_remote_code=getattr(self.config, "trust_remote_code", False),
                 local_files_only=getattr(self.config, "local_files_only", False),
+                **{_DTYPE_KW: dtype},
                 **getattr(self.config, "model_kwargs", {})
             )
         except Exception as e1:
@@ -119,11 +180,11 @@ class LLMInstrumenter:
             try:
                 self.model = AutoModel.from_pretrained(
                     model_name,
-                    torch_dtype=dtype,
                     device_map=device_map,
                     attn_implementation="eager",
                     trust_remote_code=getattr(self.config, "trust_remote_code", False),
                     local_files_only=getattr(self.config, "local_files_only", False),
+                    **{_DTYPE_KW: dtype},
                     **getattr(self.config, "model_kwargs", {})
                 )
             except Exception as e2:
@@ -155,7 +216,7 @@ class LLMInstrumenter:
                 else:
                     hidden_states = output
                 
-                self.activation_data[layer_name] = hidden_states.detach()
+                self.activation_data[layer_name] = hidden_states.detach().to(torch.float32).cpu()
             return hook
         
         # Register hooks for transformer layers
@@ -236,6 +297,16 @@ class LLMInstrumenter:
         
         if attentions is None:
              raise ValueError(f"Model returned None for attentions. Output type: {type(outputs)}. Keys: {outputs.keys() if hasattr(outputs, 'keys') else 'N/A'}")
+
+        # Check BEFORE the float32 cast: casting inf/NaN to float32 preserves them
+        # but moves the failure further from its cause.
+        assert_finite_attention(attentions,
+                                model_name=getattr(self.config, "model_name", None),
+                                dtype=str(getattr(self.model, "dtype", "unknown")))
+
+        # Explicitly ensure float32 for all spectral inputs
+        attentions = [a.to(torch.float32).cpu() for a in attentions] if attentions else []
+        hidden_states = [h.to(torch.float32).cpu() for h in hidden_states] if hidden_states else []
         
         return {
             'inputs': inputs,
