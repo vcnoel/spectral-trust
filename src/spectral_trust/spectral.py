@@ -17,7 +17,7 @@ import numpy as np
 import torch
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import eigsh, ArpackNoConvergence
-from scipy.linalg import eigh
+from scipy.linalg import eigh, eig
 import logging
 from .config import GSPConfig
 
@@ -39,6 +39,8 @@ class SpectralDiagnostics:
     # New in v0.2.0: Directed metrics
     max_imaginary: Optional[float] = None
     spectral_radius: Optional[float] = None
+    gini_sparsity: Optional[float] = None
+    attention_gini: Optional[float] = None
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization"""
@@ -51,12 +53,12 @@ class SpectralDiagnostics:
             'eigenvalues': self.eigenvalues.tolist(),
             'spectral_masses': self.spectral_masses.tolist(),
             'fiedler_value': float(self.fiedler_value),
-            'connectivity': bool(self.connectivity)
+            'connectivity': bool(self.connectivity),
+            'spectral_radius': float(self.spectral_radius) if self.spectral_radius is not None else None,
+            'max_imaginary': float(self.max_imaginary) if self.max_imaginary is not None else None,
+            'gini_sparsity': float(self.gini_sparsity) if self.gini_sparsity is not None else None,
+            'attention_gini': float(self.attention_gini) if self.attention_gini is not None else None
         }
-        if self.max_imaginary is not None:
-            d['max_imaginary'] = float(self.max_imaginary)
-        if self.spectral_radius is not None:
-            d['spectral_radius'] = float(self.spectral_radius)
         return d
 
 
@@ -66,16 +68,61 @@ class SpectralAnalyzer:
     def __init__(self, config: GSPConfig):
         self.config = config
     
+    @staticmethod
+    def _is_symmetric(matrix: np.ndarray, tol: float = 1e-6) -> bool:
+        """True if the operator is symmetric to within `tol` (so eigh/eigsh are valid)."""
+        return bool(np.allclose(matrix, matrix.T, atol=tol, rtol=0.0))
+
+    def _eig_nonsymmetric(self, laplacian: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Eigendecomposition of a NON-symmetric operator, e.g. the random-walk
+        Laplacian L_rw = I - D^{-1} W selected by normalization="rw".
+
+        L_rw is similar to the symmetric normalized Laplacian
+        (L_rw = D^{-1/2} L_sym D^{1/2}), so its eigenvalues are real; its
+        eigenvectors exist but are NOT orthogonal. A symmetric solver
+        (eigh/eigsh) reads only one triangle and would silently diagonalize a
+        symmetrized surrogate instead — a wrong answer with no error raised,
+        which is why this path exists.
+
+        Basis-dependent diagnostics (HFER, spectral entropy, and any Parseval
+        accounting) assume an orthonormal basis and remain invalid under "rw"
+        even with the correct solver; use normalization="sym" for those.
+        """
+        eigenvals, eigenvecs = eig(laplacian)
+        max_imag = float(np.max(np.abs(eigenvals.imag))) if eigenvals.size else 0.0
+        if max_imag > 1e-6:
+            logger.warning(
+                "Non-symmetric operator has complex eigenvalues (max|Im|=%.2e); "
+                "taking real parts. Diagnostics assume a real spectrum.", max_imag
+            )
+        eigenvals = eigenvals.real
+        eigenvecs = eigenvecs.real
+        sort_idx = np.argsort(eigenvals)
+        return eigenvals[sort_idx], eigenvecs[:, sort_idx]
+
     def compute_eigendecomposition(self, laplacian: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Compute eigendecomposition of graph Laplacian
+        Compute eigendecomposition of graph Laplacian.
+
+        Dispatches on the operator: symmetric Laplacians (normalization="sym"
+        or "none") use a symmetric solver; non-symmetric ones
+        (normalization="rw") use a general solver, since eigh/eigsh read only
+        the lower triangle and would otherwise diagonalize a different,
+        symmetrized matrix.
+
         Args:
             laplacian: [seq_len, seq_len] Laplacian matrix
         Returns:
-            eigenvalues, eigenvectors
+            eigenvalues, eigenvectors (eigenvectors are orthonormal only for
+            symmetric operators)
         """
         seq_len = laplacian.shape[0]
-        
+
+        if not self._is_symmetric(laplacian):
+            eigenvals, eigenvecs = self._eig_nonsymmetric(laplacian)
+            return np.maximum(eigenvals, 0), eigenvecs
+
         if self.config.eigen_solver == "sparse" and seq_len > 50:
             # Use sparse eigenvalue solver for large matrices
             try:
@@ -181,6 +228,38 @@ class SpectralAnalyzer:
         entropy = -np.sum(spectral_probs * np.log(spectral_probs))
         
         return float(entropy)
+
+    def compute_gini_sparsity(self, signals: np.ndarray) -> float:
+        """
+        Compute Gini coefficient of signal magnitudes to measure focus/sparsity.
+        High Gini = signal concentrated on few eigenvalues/tokens.
+        """
+        # We look at the magnitude of the signal on the tokens (norm across embedding dim)
+        s = np.linalg.norm(signals, axis=1)
+        return self._gini(s)
+
+    def compute_attention_gini(self, adjacency: np.ndarray) -> float:
+        """
+        Compute Gini coefficient of attention weights to measure sparsity.
+        High Gini = attention concentrated on few tokens.
+        """
+        # Flatten adjacency and compute Gini on non-zero weights
+        weights = adjacency.flatten()
+        weights = weights[weights > 1e-12]
+        if len(weights) == 0:
+            return 0.0
+        return self._gini(weights)
+
+    def _gini(self, x: np.ndarray) -> float:
+        """Standard Gini coefficient calculation"""
+        n = len(x)
+        if n == 0 or np.sum(x) == 0:
+            return 0.0
+        
+        sorted_x = np.sort(x)
+        index = np.arange(1, n + 1)
+        gini = (np.sum((2 * index - n - 1) * sorted_x)) / (n * np.sum(sorted_x))
+        return float(gini)
     
     def compute_hfer(self, signals: np.ndarray, eigenvectors: np.ndarray, 
                     eigenvalues: np.ndarray, cutoff_ratio: float) -> float:
@@ -194,6 +273,17 @@ class SpectralAnalyzer:
         Returns:
             HFER value
         """
+        seq_len = signals.shape[0]
+        if eigenvectors.shape[1] < seq_len:
+            logger.warning(
+                "Truncated eigenbasis: %d of %d modes (eigen_solver='sparse', "
+                "num_eigenvalues=%d). Energy-ratio diagnostics (HFER, spectral "
+                "entropy) are normalized over the retained modes only and are "
+                "NOT comparable to a full-spectrum computation. Use "
+                "eigen_solver='dense' for exact energy fractions.",
+                eigenvectors.shape[1], seq_len, self.config.num_eigenvalues
+            )
+
         # Project signals onto eigenbasis
         signal_hat = np.dot(eigenvectors.T, signals)  # [num_eigenvectors, embedding_dim]
         
@@ -215,19 +305,33 @@ class SpectralAnalyzer:
         return float(hfer)
     
     def analyze_layer(self, signals: torch.Tensor, laplacian: torch.Tensor, 
-                     layer_idx: int) -> SpectralDiagnostics:
+                     layer_idx: int, adjacency: Optional[torch.Tensor] = None) -> SpectralDiagnostics:
         """
         Perform complete spectral analysis for a single layer
         Args:
             signals: [seq_len, embedding_dim] activation tensor
             laplacian: [seq_len, seq_len] Laplacian tensor
             layer_idx: Layer index
+            adjacency: [seq_len, seq_len] Adjacency/Attention tensor
         Returns:
             Complete spectral diagnostics
         """
-        # Convert to numpy for numerical computations
-        signals_np = signals.detach().cpu().numpy()
-        laplacian_np = laplacian.detach().cpu().numpy().squeeze()
+        # Convert to numpy for numerical computations.
+        # Upcast to float32 first: NumPy has no bfloat16 dtype, so a bf16 model
+        # would otherwise raise "Got unsupported ScalarType BFloat16" here. .float()
+        # is a no-op for float32 and losslessly widens float16/bfloat16.
+        signals_np = signals.detach().cpu().float().numpy()
+        laplacian_np = laplacian.detach().cpu().float().numpy().squeeze()
+
+        # Determine adjacency for Gini (if not provided, we just use laplacian diagonal/non-diagonal info if needed,
+        # but better to have the actual adjacency)
+        if adjacency is not None:
+            adjacency_np = adjacency.detach().cpu().float().numpy().squeeze()
+        else:
+            # Fallback: estimate from laplacian (L = D - A)
+            adjacency_np = -laplacian_np
+            np.fill_diagonal(adjacency_np, 0)
+            adjacency_np = np.maximum(adjacency_np, 0)
         
         # Check connectivity
         connectivity = self._check_connectivity(laplacian_np)
@@ -241,6 +345,8 @@ class SpectralAnalyzer:
         spectral_entropy = self.compute_spectral_entropy(signals_np, eigenvectors)
         hfer = self.compute_hfer(signals_np, eigenvectors, eigenvalues, 
                                self.config.hfer_cutoff_ratio)
+        gini_sparsity = self.compute_gini_sparsity(signals_np)
+        attention_gini = self.compute_attention_gini(adjacency_np)
         
         # Compute spectral masses
         signal_hat = np.dot(eigenvectors.T, signals_np)
@@ -263,7 +369,9 @@ class SpectralAnalyzer:
             spectral_masses=spectral_masses,
             fiedler_value=fiedler_value,
             connectivity=connectivity,
-            spectral_radius=spectral_radius
+            spectral_radius=spectral_radius,
+            gini_sparsity=gini_sparsity,
+            attention_gini=attention_gini
         )
     
     def _check_connectivity(self, laplacian: np.ndarray) -> bool:
@@ -272,6 +380,45 @@ class SpectralAnalyzer:
         # Graph is connected if there's exactly one zero eigenvalue
         zero_eigenvals = np.sum(eigenvals < 1e-6)
         return zero_eigenvals == 1
+
+def weight_snr(W: torch.Tensor, k: int = 1) -> float:
+    """
+    Fast SNR estimate for a weight matrix using Lanczos-based randomized SVD.
+
+    SNR = σ₁ / median(σ).  For large matrices, estimating σ₁ with top-k
+    Lanczos is O(k·m·n) vs O(min(m,n)²·max(m,n)) for full SVD.
+
+    Args:
+        W:  2-D weight tensor, e.g. mlp.down_proj
+        k:  number of singular vectors to compute (default 1 for σ₁ only;
+            use ≥ 16 for a reliable median estimate)
+    Returns:
+        SNR as a Python float
+    """
+    W_fp = W.float()
+    # torch.svd_lowrank uses a block-Krylov / randomized Lanczos algorithm
+    niter = max(4, k // 4)
+    _, S, _ = torch.svd_lowrank(W_fp, q=max(k, 16), niter=niter)
+    sigma_1 = S[0].item()
+    sigma_median = S[len(S) // 2].item()
+    return sigma_1 / sigma_median if sigma_median > 1e-12 else 0.0
+
+
+def weight_svd_full(W: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """
+    Full thin SVD of a weight matrix (W = U Σ Vᴴ).
+
+    Uses torch.linalg.svd which internally picks the fastest LAPACK driver for
+    the given shape.  Required when all singular values are needed (e.g. for
+    variance-normalised spectral sharpening).
+
+    Args:
+        W:  2-D weight tensor
+    Returns:
+        (U, S, Vh) in float32
+    """
+    return torch.linalg.svd(W.float(), full_matrices=False)
+
 
 def calculate_spectral_velocity(metric_array: torch.Tensor) -> Tuple[torch.Tensor, float, int]:
     """

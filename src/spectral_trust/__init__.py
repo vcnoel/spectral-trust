@@ -13,9 +13,13 @@
 
 from .config import GSPConfig
 from .framework import GSPDiagnosticsFramework
-from .spectral import SpectralDiagnostics, SpectralAnalyzer
+from .spectral import SpectralDiagnostics, SpectralAnalyzer, weight_snr, weight_svd_full
 from .graph import GraphConstructor
-from .instrumentation import LLMInstrumenter
+from .instrumentation import (
+    LLMInstrumenter, NonFiniteAttentionError, assert_finite_attention,
+)
+
+__version__ = "0.2.3"
 
 __all__ = [
     "GSPConfig",
@@ -23,5 +27,10 @@ __all__ = [
     "SpectralDiagnostics",
     "SpectralAnalyzer",
     "GraphConstructor",
-    "LLMInstrumenter"
+    "LLMInstrumenter",
+    "NonFiniteAttentionError",
+    "assert_finite_attention",
+    "weight_snr",
+    "weight_svd_full",
+    "__version__",
 ]

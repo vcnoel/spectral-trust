@@ -122,11 +122,11 @@ class GSPDiagnosticsFramework:
                 idx_tensor = torch.tensor(target_indices, device=device)
                 signals_sub = signals.index_select(0, idx_tensor)
                 diagnostics = self.spectral_analyzer.analyze_layer(
-                    signals_sub, laplacian, layer_idx
+                    signals_sub, laplacian, layer_idx, adjacency=adjacency
                 )
             else:
                 diagnostics = self.spectral_analyzer.analyze_layer(
-                    signals, laplacian, layer_idx
+                    signals, laplacian, layer_idx, adjacency=adjacency
                 )
             
             # New in v0.2.0: Directed Analysis
@@ -209,7 +209,9 @@ class GSPDiagnosticsFramework:
                         'hfer': diag.hfer,
                         'fiedler_value': diag.fiedler_value,
                         'connectivity': diag.connectivity,
-                        'num_tokens': len(result['tokens'])
+                        'num_tokens': len(result['tokens']),
+                        'gini_sparsity': diag.gini_sparsity,
+                        'attention_gini': diag.attention_gini
                     }
                     
                     if labels is not None:
@@ -275,11 +277,11 @@ class GSPDiagnosticsFramework:
         
         with open(output_path, 'w') as f:
             # Header
-            f.write("Layer Energy HFER Entropy Fiedler Smoothness\n")
+            f.write("Layer Energy HFER Entropy Fiedler Smoothness AttnGini\n")
             
             # Rows
             for i, d in enumerate(diagnostics):
-                f.write(f"{i} {d.energy:.6f} {d.hfer:.6f} {d.spectral_entropy:.6f} {d.fiedler_value:.6f} {d.smoothness_index:.6f}\n")
+                f.write(f"{i} {d.energy:.6f} {d.hfer:.6f} {d.spectral_entropy:.6f} {d.fiedler_value:.6f} {d.smoothness_index:.6f} {d.attention_gini:.6f}\n")
         
         logger.info(f"LaTeX data saved to {output_path}")
         print(f"\n[LaTeX Data] Saved to: {output_path}")

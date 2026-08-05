@@ -116,7 +116,9 @@ class DirectedTopologist:
         if torch.isnan(adjacency).any() or torch.isinf(adjacency).any():
             raise ValueError("Input adjacency matrix contains NaN or Inf values.")
             
-        A = adjacency.to(self.device)
+        # Upcast to float32: downstream eigensolvers (and any NumPy conversion)
+        # do not support float16/bfloat16.
+        A = adjacency.to(self.device).float()
         N = A.shape[-1]
         
         # Row sums for out-degree

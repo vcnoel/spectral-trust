@@ -11,6 +11,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from __future__ import annotations
+
 import logging
 import torch
 from transformers import (
@@ -20,6 +22,53 @@ from typing import Dict, Any, List
 from .config import GSPConfig
 
 logger = logging.getLogger(__name__)
+
+
+class NonFiniteAttentionError(ValueError):
+    """Raised when a model emits NaN/Inf attention weights.
+
+    This is a *hard* failure by design. Non-finite attention propagates into
+    the adjacency, the Laplacian and the eigendecomposition, where it surfaces
+    as an opaque LinAlgError ("array must not contain infs or NaNs") — or, far
+    worse, does not surface at all and the run silently contributes no rows
+    for that model while every summary still looks healthy.
+
+    Observed in practice: Qwen2.5-1.5B under float16 overflows to inf inside
+    attention. Its spectral analysis failed on 100% of items *and* its verdict
+    logits were corrupted, so it presented as a degenerate model where under
+    bfloat16 it is competent. The two dtypes agreed on 36.5% of its outputs.
+    A numerical bug was on its way into a write-up as a finding about model
+    scale.
+
+    Fix at the call site: load in bfloat16 (same memory as float16, far wider
+    exponent range), and keep precision uniform across a model panel — neither
+    spectral metrics nor logits are comparable across dtypes.
+    """
+
+
+def assert_finite_attention(attentions, model_name: str | None = None,
+                            dtype: str | None = None) -> None:
+    """Fail loudly on the first layer of non-finite attention.
+
+    Cheap relative to the forward pass that produced it: one reduction per
+    layer, and it stops at the first offender.
+    """
+    for layer_idx, attn in enumerate(attentions):
+        if attn is None or not torch.is_tensor(attn):
+            continue
+        if torch.isfinite(attn).all():
+            continue
+        n_nan = int(torch.isnan(attn).sum())
+        n_inf = int(torch.isinf(attn).sum())
+        raise NonFiniteAttentionError(
+            f"Non-finite attention at layer {layer_idx} "
+            f"(model={model_name or 'unknown'}, dtype={dtype or 'unknown'}): "
+            f"{n_nan} NaN and {n_inf} Inf of {attn.numel()} weights. "
+            f"Every downstream spectral metric for this input is invalid. "
+            f"This is almost always float16 overflow — reload the model in "
+            f"bfloat16 and keep the dtype uniform across the panel."
+        )
+
 
 # --- Monkey Patch for Phi-3 / Transformers Compatibility ---
 # The remote code for Phi-3 uses 'get_usable_length' which was removed/missing in newer DynamicCache
@@ -236,7 +285,10 @@ class LLMInstrumenter:
         
         if attentions is None:
              raise ValueError(f"Model returned None for attentions. Output type: {type(outputs)}. Keys: {outputs.keys() if hasattr(outputs, 'keys') else 'N/A'}")
-        
+
+        assert_finite_attention(attentions, model_name=getattr(self.config, "model_name", None),
+                                dtype=str(getattr(self.model, "dtype", "unknown")))
+
         return {
             'inputs': inputs,
             'attentions': attentions,
