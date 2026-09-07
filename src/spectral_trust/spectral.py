@@ -17,7 +17,7 @@ import numpy as np
 import torch
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import eigsh, ArpackNoConvergence
-from scipy.linalg import eigh
+from scipy.linalg import eigh, eig
 import logging
 from .config import GSPConfig
 
@@ -65,16 +65,55 @@ class SpectralAnalyzer:
     def __init__(self, config: GSPConfig):
         self.config = config
     
+    @staticmethod
+    def _is_symmetric(matrix: np.ndarray, tol: float = 1e-6) -> bool:
+        """True if the operator is symmetric to within `tol` (so eigh/eigsh are valid)."""
+        return bool(np.allclose(matrix, matrix.T, atol=tol, rtol=0.0))
+
+    def _eig_nonsymmetric(self, laplacian: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Eigendecomposition of a NON-symmetric operator, e.g. the random-walk
+        Laplacian L_rw = I - D^{-1} W selected by normalization="rw".
+
+        L_rw is similar to the symmetric normalized Laplacian
+        (L_rw = D^{-1/2} L_sym D^{1/2}), so its eigenvalues are real; its
+        eigenvectors exist but are NOT orthogonal. A symmetric solver (eigh/eigsh)
+        would silently diagonalize a symmetrized surrogate instead, which is why
+        this path exists.
+        """
+        eigenvals, eigenvecs = eig(laplacian)
+        max_imag = float(np.max(np.abs(eigenvals.imag))) if eigenvals.size else 0.0
+        if max_imag > 1e-6:
+            logger.warning(
+                "Non-symmetric operator has complex eigenvalues (max|Im|=%.2e); "
+                "taking real parts. Diagnostics assume a real spectrum.", max_imag
+            )
+        eigenvals = eigenvals.real
+        eigenvecs = eigenvecs.real
+        sort_idx = np.argsort(eigenvals)
+        return eigenvals[sort_idx], eigenvecs[:, sort_idx]
+
     def compute_eigendecomposition(self, laplacian: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Compute eigendecomposition of graph Laplacian
+        Compute eigendecomposition of graph Laplacian.
+
+        Dispatches on the operator: symmetric Laplacians (normalization="sym" or
+        "none") use a symmetric solver; non-symmetric ones (normalization="rw")
+        use a general solver, since eigh/eigsh read only the lower triangle and
+        would otherwise diagonalize a different, symmetrized matrix.
+
         Args:
             laplacian: [seq_len, seq_len] Laplacian matrix
         Returns:
-            eigenvalues, eigenvectors
+            eigenvalues, eigenvectors (eigenvectors are orthonormal only for
+            symmetric operators)
         """
         seq_len = laplacian.shape[0]
-        
+
+        if not self._is_symmetric(laplacian):
+            eigenvals, eigenvecs = self._eig_nonsymmetric(laplacian)
+            return np.maximum(eigenvals, 0), eigenvecs
+
         if self.config.eigen_solver == "sparse" and seq_len > 50:
             # Use sparse eigenvalue solver for large matrices
             try:
@@ -119,7 +158,17 @@ class SpectralAnalyzer:
         
         # Ensure eigenvalues are non-negative (numerical precision)
         eigenvals = np.maximum(eigenvals, 0)
-        
+
+        if eigenvecs.shape[1] < seq_len:
+            logger.warning(
+                "Truncated eigenbasis: %d of %d modes (eigen_solver='sparse', "
+                "num_eigenvalues=%d). Energy-ratio diagnostics (HFER, spectral "
+                "entropy, spectral_masses) are normalized over the retained modes "
+                "only and are NOT comparable to a full-spectrum computation. Use "
+                "eigen_solver='dense' for exact energy fractions.",
+                eigenvecs.shape[1], seq_len, self.config.num_eigenvalues
+            )
+
         return eigenvals, eigenvecs
     
     def compute_dirichlet_energy(self, signals: np.ndarray, laplacian: np.ndarray) -> float:
