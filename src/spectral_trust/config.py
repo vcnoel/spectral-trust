@@ -26,7 +26,12 @@ class GSPConfig:
     # GSP parameters
     head_aggregation: str = "uniform"  # uniform, attention_weighted, learnable
     symmetrization: str = "symmetric"  # symmetric, row_norm, col_norm
-    normalization: str = "rw"  # rw (random walk), sym (symmetric), none
+    # Default changed rw -> sym in v0.3.0: the symmetric normalized Laplacian
+    # has spectrum in [0, 2] independent of sequence length, so metrics are
+    # comparable across inputs of different length (the combinatorial and
+    # random-walk variants scale with T, a length confound); it is also a
+    # symmetric operator, so the deterministic eigh/eigsh path is always used.
+    normalization: str = "sym"  # sym (symmetric), rw (random walk), none
     hfer_cutoff_ratio: float = 0.1  # High frequency cutoff as ratio of total eigenvectors
     
     # Spectral computation

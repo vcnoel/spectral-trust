@@ -1,143 +1,160 @@
-# Spectral Trust Framework
+# spectral-trust
 
-**A Graph Signal Processing (GSP) framework for measuring the trustworthiness of LLM internal representations.**
+**Graph-spectral diagnostics for transformer attention.**
 
-[`spectral_trust`](https://github.com/vcnoel/spectral-trust) constructs dynamic graphs from attention patterns and applies spectral analysis (eigenvalues, Dirichlet energy) to detect hallucinations, quantify uncertainty, and map the "smoothness" of reasoning flows.
+`spectral_trust` builds graphs from a transformer's attention patterns and
+computes spectral diagnostics on them (Laplacian eigenvalues, algebraic
+connectivity, Dirichlet energy). It is designed for research on internal-signal
+analysis of LLMs: hallucination detection, uncertainty quantification, and
+layer-wise routing diagnostics.
 
-## What is it?
-By treating the transformer's attention mechanism as a **graph** and the hidden states as **signals** on that graph, we can calculate rigorous mathematical metrics:
-*   **Dirichlet Energy**: How much the signal varies across connected tokens (proxy for conflict/uncertainty).
-*   **Smoothness Index**: Normalized energy indicating how well the representation aligns with the attention structure.
-*   **Fiedler Value**: Algebraic connectivity of the attention graph.
-*   **HFER (High-Frequency Energy Ratio)**: Energy concentration in high-frequency spectral components.
+## Metric families: read this first
 
-- **Plug-and-Play**: Works out-of-the-box with `Llama-3`, `Mistral`, `Qwen`, `Gemma`, and `Phi`.
-- **Directed Topology (v0.2.0)**: Support for Directed Laplacian spectral radius and imaginary components.
-- **Spectral Velocity (v0.2.0)**: Cross-layer differential diagnostics to isolate the "Topological Shockwave."
-- **Sparse Solver Optimization**: High-performance $O(kN^2)$ solver for large-scale exhaustive sweeps.
-- **Interactive Visualization**: New `--plots` CLI flag and 2x2 diagnostic dashboards.
-- **Offline Ready**: `--offline` mode to use cached models without internet access.
+Every metric is a function of a specific tensor, and the distinction matters
+for both access requirements and interpretation. As of v0.3.0 each metric is
+explicitly tagged with its family (`spectral_trust.METRIC_FAMILIES`, also
+embedded in every result):
 
-## Structure
-- `src/spectral_trust/`: Core package source code.
-- `notebooks/`: Tutorials and demos.
-- `experiments/`: Reproduction scripts for paper findings (Super Scar, etc.).
-- `examples/`: Minimal usage examples.
+| Family | Input tensors | Metrics | Valid claim |
+|--------|--------------|---------|-------------|
+| **attention** | attention weights only | `fiedler_value`, `spectral_radius`, `connectivity`, `eigenvalues`, `eig_energy`, `eig_spectral_entropy`, `eig_hfer`, `max_imaginary` | "attention-only": computable from attention maps, no hidden-state access |
+| **hybrid** | attention weights **and** residual-stream states | `energy`, `smoothness_index`, `spectral_entropy`, `hfer`, `spectral_masses` | projects residual-stream vectors onto the attention eigenbasis; requires full internals and reflects residual-stream content, **not** attention topology alone |
+
+If you report results as "attention-only", use family-**attention** metrics.
+The hybrid metrics remain available and can be strong detectors, but they must
+be benchmarked against direct hidden-state probes at equal access, not against
+attention-only baselines.
+
+Note on terminology: what Hugging Face returns via `output_hidden_states` are
+**residual-stream snapshots** (block outputs). Module-internal activations
+(attention-block outputs, MLP activations) are different tensors and are not
+consumed by this library.
+
+## Diagnostics
+
+Attention-graph construction: per layer, multi-head attention is aggregated
+(uniform or attention-mass-weighted), symmetrized, and turned into a graph
+Laplacian. Three normalizations are supported; the **symmetric normalized
+Laplacian is the default** since v0.3.0 because its spectrum lies in [0, 2]
+independent of sequence length, making metrics comparable across inputs
+(the combinatorial and random-walk spectra scale with length).
+
+- **Fiedler value** (λ₂) — algebraic connectivity; low values indicate
+  fragmented attention routing.
+- **eig_energy / eig_spectral_entropy / eig_hfer** — eigenvalue-only
+  counterparts of the classic energy/entropy/HFER diagnostics (v0.3.0).
+- **Dirichlet energy / smoothness index** — variation of residual-stream
+  signals across attention edges (hybrid).
+- **Spectral entropy / HFER / spectral masses** — frequency content of
+  residual-stream signals in the attention eigenbasis (hybrid).
+- **Spectral velocity** — layer-to-layer derivative of any metric trajectory.
+- **Directed diagnostics** — spectral radius and maximum imaginary component
+  of the directed random-walk Laplacian.
+- **Subgraph isolation** — restrict any diagnostic to a token span (e.g. a
+  generated tool call).
 
 ## Installation
 
 ```bash
 pip install spectral_trust
-# OR install from source
+# or from source
 pip install -e .
 ```
 
-## Usage
-
-### Automated Diagnosis (New!)
-Run a full medical report on your model to detect known pathologies (like the "Super Scar"):
-
-```bash
-gsp-cli diagnose --model microsoft/phi-4 --verbose
-```
-*   **scans** for structural anomalies (graph disconnection).
-*   **probes** with adversarial inputs (Active vs Passive).
-*   **reports** signature matches (e.g., "Synthetic Scar Detected").
-
-### Single-Shot Analysis
-**Analyze a sentence** (uses `cuda` if available):
-```bash
-gsp-cli analyze --text "The capital of France is Paris." --model llama-3.1-8b
-```
-
-**Offline Mode** (no internet required):
-```bash
-gsp-cli analyze --text "Refactoring is fun." --model llama-3.2-1b --offline
-```
+## Quickstart
 
 ### Python API
 
 ```python
-from spectral_trust import GSPDiagnosticsFramework, GSPConfig
+from spectral_trust import GSPDiagnosticsFramework, GSPConfig, METRIC_FAMILIES
 
-config = GSPConfig(model_name="llama-3.2-1b", device="cuda", local_files_only=True)
+config = GSPConfig(model_name="meta-llama/Llama-3.2-1B", device="cuda")
 with GSPDiagnosticsFramework(config) as framework:
     framework.instrumenter.load_model("meta-llama/Llama-3.2-1B")
     results = framework.analyze_text("The capital of France is Paris.")
-    
-    print(f"Smoothness: {results['layer_diagnostics'][-1].smoothness_index:.4f}")
+
+    last = results["layer_diagnostics"][-1]
+    print("fiedler:", last.fiedler_value)            # attention-only
+    print("eig_entropy:", last.eig_spectral_entropy) # attention-only
+    print("smoothness:", last.smoothness_index)      # hybrid (needs hidden states)
+    print(METRIC_FAMILIES["smoothness_index"])       # -> "hybrid"
 ```
 
-### Compare Two Texts
-
-Compare the spectral properties of two different inputs side-by-side:
+### CLI
 
 ```bash
-python -m spectral_trust.cli compare \
-  --text1 "Total confidence: The capital of France is Paris." \
-  --text2 "Low confidence: I think the capital might be Paris." \
-  --model llama-3.2-1b
+# analyze one input
+gsp-cli analyze --text "The capital of France is Paris." --model llama-3.2-1b
+
+# compare two inputs side by side (overlaid metric plots)
+gsp-cli compare --text1 "..." --text2 "..." --model llama-3.2-1b
+
+# multi-run stability analysis with sampling
+gsp-cli analyze --text "..." --runs 5 --temperature 0.7
+
+# offline mode (cached models only)
+gsp-cli analyze --text "..." --model llama-3.2-1b --offline
 ```
 
-This will generate a comparison plot overlaying the metrics for both texts.
+### Graph construction options
 
-### Multi-Run Analysis (Stochastic)
+- `normalization`: `"sym"` (default, length-invariant spectrum), `"rw"`,
+  `"none"`.
+- `symmetrization`: `"symmetric"` (default), `"row_norm"`, `"col_norm"`.
+- `head_aggregation`: `"uniform"` (default) or `"attention_weighted"`.
+  Head-averaging discards head-level structure; for detection tasks consider
+  per-head analysis on top of the raw attentions.
+- `remove_self_loops`: drop the diagonal before building the Laplacian
+  (standard in spectral graph theory; changes the Fiedler scale).
 
-Run the analysis multiple times (useful with sampling enabled) to see metric stability:
+### Determinism and precision (v0.3.0)
 
-```bash
-python -m spectral_trust.cli analyze \
-  --text "The capital of France is Paris." \
-  --runs 5 \
-  --temperature 0.7
-```
+`DirectedTopologist.get_fiedler_value` now uses an **exact dense solve for
+graphs up to 512 nodes** (a few milliseconds on GPU) and a **seeded, deflated
+Lanczos** beyond that. Two v0.2.x defects are fixed: the unseeded random
+Lanczos start (non-deterministic results) and a `>1e-6` eigenvalue filter that
+discarded exactly the near-zero λ₂ regime that connectivity-based diagnostics
+are meant to detect. Callers who need bit-identical runs should stay on the
+exact path or pass a fixed `seed`.
 
-### Advanced GSP Options
+## Repository layout
 
-For rigorous spectral graph analysis, you may want to exclude self-attention loops (the diagonal) to match standard spectral graph theory (where $A_{ii}=0$). 
+- `src/spectral_trust/` — package source
+  - `graph.py` — attention-graph construction (symmetrization, aggregation, Laplacians)
+  - `spectral.py` — eigendecomposition and diagnostics (`SpectralAnalyzer`, `SpectralDiagnostics`, `METRIC_FAMILIES`)
+  - `directed_topology.py` — directed Laplacian metrics, GPU Lanczos
+  - `framework.py` — end-to-end orchestration (`GSPDiagnosticsFramework`)
+  - `instrumentation.py` — model loading and tensor capture
+- `examples/` — minimal usage examples (hallucination differential analysis, head-masking ablation)
+- `benchmarks/` — latency and precision scaling scripts
+- `notebooks/` — demo notebook
+- `tests/` — unit tests
 
-*   **Default**: Self-loops kept. Faithful to Transformer mechanics. Fiedler values $\approx 1.0$.
-*   **`--remove_self_loops`**: Self-loops removed. Faithful to Graph Signal Processing theory. Fiedler values $\approx 2.0$ (for connected graphs). Better for measuring pure token-to-token mixing.
+## Model compatibility
 
-```bash
-gsp-cli analyze --text "..." --remove_self_loops
-```
+Works with any Hugging Face causal LM that exposes attention maps
+(`output_attentions=True`), including Llama 3.x, Mistral, Qwen 2.x/3.x, Gemma,
+and Phi. Hybrid models with linear-attention layers (e.g. Qwen3.5) expose
+attention only on their full-attention layers; diagnostics are computed on
+those layers.
 
-## Scientific Validation
+## Changelog
 
-This framework implements the methodologies described in **[Noël, 2026]**.
+**v0.3.0**
+- Metric family tagging (`METRIC_FAMILIES`, `SpectralDiagnostics.families`):
+  every metric declares whether it is attention-only or hybrid.
+- New attention-only metrics: `eig_energy`, `eig_spectral_entropy`, `eig_hfer`.
+- Default Laplacian normalization changed `rw` → `sym` (length-invariant
+  spectrum, deterministic symmetric solver path).
+- `get_fiedler_value`: exact solve ≤ 512 nodes; seeded, null-deflated Lanczos
+  above; removed the near-zero eigenvalue filter.
 
-### Case Study: The Phi-4 "Super Scar"
-We used `spectral_trust` to discover a critical vulnerability in the Phi-4 model:
-*   **Pathology**: Complete structural attention collapse (Fiedler $\to$ 0.0) when processing "Heavy Agent" passive sentences.
-*   **Cause**: Interaction between passive voice syntax and high-complexity noun phrases.
-*   **Reproduction**:
-    ```bash
-    python experiments/reproduce_super_scar.py
-    ```
-    *(Generates comparative plots for Phi vs. Qwen/Llama baselines)*
+**v0.2.3** — fail loudly on non-finite attention tensors.
 
-It provides the reference implementation for measuring:
-*   **Fiedler Drop**: The loss of algebraic connectivity in hallucinating models.
-*   **Energy Spikes**: High-frequency noise indicating semantic conflict.
-
-## Model Compatibility & Benchmarks
-
-| Model Family | Status | Tested Version | Precision |
-| :--- | :---: | :--- | :---: |
-| **Llama-3** | ✅ Passed | `meta-llama/Llama-3.2-1B` | FP16 |
-| **Phi-3** | ✅ Passed | `microsoft/Phi-3-mini-4k-instruct` | BF16 |
-| **Inference Time** | ⚡ Fast | ~45ms / 128 tokens | Exact Eig |
-
-## Research Tools included
-*   `examples/detect_hallucination.py`: Differential spectral analysis of counter-factuals.
-*   `examples/ablation_study.py`: Causal intervention via head masking to verify structural load-bearing.
-*   `benchmarks/`: Latency and precision scaling scripts.
+**v0.2.x** — directed topology metrics, spectral velocity, subgraph isolation,
+GPU Lanczos, sparse solver optimizations.
 
 ## License
-MIT
 
-
-## License
-
-This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). For commercial use, enterprise licensing, or closed-source integration (such as cloud deployment without open-sourcing your backend), please contact the author to arrange a commercial license.
+GNU Affero General Public License v3.0 (AGPL-3.0). For commercial use or
+closed-source integration, contact the author for a commercial license.

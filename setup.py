@@ -1,4 +1,4 @@
-# This program is free software: you can redistribute it and/or modify
+﻿# This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
@@ -19,7 +19,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="spectral_trust",
-    version="0.2.3",
+    version="0.3.0",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
     install_requires=[
@@ -38,7 +38,7 @@ setup(
             "gsp-cli=spectral_trust.cli:main",
         ],
     },
-    author="Valentin Noël",
+    author="Valentin NoÃ«l",
     author_email="val.noel@proton.me",
     description="Spectral diagnostics for trust in LLMs",
     long_description=long_description,

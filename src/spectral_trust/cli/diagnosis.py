@@ -59,24 +59,27 @@ class DiagnosisEngine:
         values = np.array(trace[metric_name])
         anomalies = []
         
-        # 1. Instability (Huge Delta)
+        # 1. Instability: large layer-to-layer jump
         deltas = np.diff(values)
         max_delta = np.max(np.abs(deltas)) if len(deltas) > 0 else 0
         if max_delta > 0.5:
              idx = np.argmax(np.abs(deltas))
-             anomalies.append(f"INSTABILITY: Huge jump ({max_delta:.2f}) at Layer {idx}->{idx+1}")
+             anomalies.append(
+                 f"instability: layer-to-layer jump of {max_delta:.2f} "
+                 f"at layers {idx}->{idx+1}")
 
-        # 2. Lobotomy (Plateau)
-        # Check for 5+ layers with variance < 0.001
+        # 2. Plateau: 5+ consecutive layers with near-zero variance
         for i in range(len(values) - 5):
             window = values[i:i+5]
             if np.std(window) < 0.001:
-                anomalies.append(f"LOBOTOMY: Plateau detected layers {i}-{i+5}")
-                break # Report once per Metric
-                
-        # 3. Collapse (Near Zero)
+                anomalies.append(f"plateau: layers {i}-{i+5} are constant "
+                                 f"(std < 0.001)")
+                break # Report once per metric
+
+        # 3. Connectivity collapse: near-zero values
         if np.min(values) < 0.05:
-            anomalies.append(f"COLLAPSE: Values verify low (<0.05). Min: {np.min(values):.3f}")
+            anomalies.append(f"connectivity collapse: min value "
+                             f"{np.min(values):.3f} (< 0.05)")
 
         return anomalies
 
@@ -101,13 +104,13 @@ class DiagnosisEngine:
         fiedler_anomalies = self.detect_anomalies(base_trace, "fiedler")
         
         if fiedler_anomalies:
-            report.append(f"PATHOLOGY DETECTED (Baseline):")
+            report.append("Baseline anomalies:")
             for a in fiedler_anomalies:
                 report.append(f"  -> {a}")
                 warnings.append(a.split(':')[0])
 
         # --- 2. Impact Test (Active vs Passive) ---
-        # Look for scars (Pattern: Drop in early layers)
+        # Early-layer connectivity drop under passive-voice inputs
         active = np.array(r['active']['fiedler'])
         passive = np.array(r['passive']['fiedler'])
         diff = active - passive
@@ -123,37 +126,31 @@ class DiagnosisEngine:
         print(f"    -> [Debug] Layer 2-5 Delta:   {np.round(diff_early, 3)} (Mean: {early_diff:.3f})")
         
         if early_diff > 0.05:
-            msg = f"SIGNATURE: [Synthetic Scar] (Connectivity Drop)"
-            desc = f"  -> Passive voice degrades structure in layers 2-5 (Mean Delta: {early_diff:.3f})."
-            report.append(msg)
-            report.append(desc)
-            warnings.append("Synthetic Scar")
+            report.append("Finding: early-layer connectivity drop under passive voice")
+            report.append(f"  -> mean Fiedler delta (layers 2-5, active - passive): {early_diff:.3f}")
+            warnings.append("connectivity_drop_passive")
 
-        # --- 3. Style Understanding Gap ---
+        # --- 3. Register divergence (natural vs technical phrasing) ---
         if 'natural' in r:
             gap = self.compare_traces(r['natural'], r['technical'])
             if gap > 0.05: # Threshold for MSE
-                 msg = f"SIGNATURE: [Understanding Gap]"
-                 desc = f"  -> Model treats Technical vs Natural language as disjoint concepts (MSE: {gap:.3f})"
-                 report.append(msg)
-                 report.append(desc)
-                 warnings.append("Understanding Gap")
+                 report.append("Finding: register divergence (natural vs technical phrasing)")
+                 report.append(f"  -> Fiedler-trace MSE between registers: {gap:.3f}")
+                 warnings.append("register_divergence")
 
-        # --- 4. Fragmented Baseline Check ---
+        # --- 4. Weak baseline connectivity ---
         avg_base = np.mean(base_trace['fiedler'])
         if avg_base < 0.25:
-             msg = "SIGNATURE: [Fragmented Baseline]"
-             desc = f"  -> Global Fiedler is critically low ({avg_base:.2f}). Model may treat English as 'comment'."
-             report.append(msg)
-             report.append(desc)
-             warnings.append("Fragmented Baseline")
+             report.append("Finding: weak baseline connectivity")
+             report.append(f"  -> mean baseline Fiedler value {avg_base:.2f} (< 0.25)")
+             warnings.append("weak_baseline_connectivity")
 
-        # --- 5. Multilingual Gearbox ---
+        # --- 5. Multilingual entropy check ---
         if 'ja_complex' in r:
             ja_entropy = np.mean(r['ja_complex']['entropy'])
             if ja_entropy < 0.2 and avg_base > 0.5:
-                 msg = "CAPABILITY: [Adaptive Gearbox]"
-                 report.append(msg)
+                 report.append("Note: low spectral entropy on multilingual input "
+                               "with healthy baseline connectivity")
 
         return report, warnings
 
@@ -179,30 +176,30 @@ class DiagnosisEngine:
         self.measure(probes['multilingual_test']['ja_complex'], 'ja_complex')
         
         print("\n" + "="*50)
-        print(f"MEDICAL REPORT: {self.model_name}")
+        print(f"DIAGNOSTIC REPORT: {self.model_name}")
         print("="*50)
-        
+
         report, warnings = self.check_heuristics()
-        
+
         if not report:
-            print("No specific pathology detected (Nominal).")
+            print("No anomalies detected.")
         else:
             for line in report:
                 print(line)
-        
-        # Print Vital Signs (Min/Max)
+
+        # Baseline summary statistics
         base = self.results['standard_english']['fiedler']
         print("-" * 50)
-        print(f"VITAL SIGNS (Baseline Fiedler):")
+        print("Baseline Fiedler summary:")
         print(f"  Range: [{np.min(base):.3f}, {np.max(base):.3f}]")
         print(f"  Mean:  {np.mean(base):.3f}")
         print(f"  Vol (Std): {np.std(base):.3f}")
 
         print("-" * 50)
         if warnings:
-            print(f"WARNINGS: {', '.join(warnings)}")
+            print(f"Warnings: {', '.join(warnings)}")
         else:
-            print("Status: Healthy")
+            print("Status: no findings")
             
 def run_diagnosis(model_name):
     engine = DiagnosisEngine(model_name)

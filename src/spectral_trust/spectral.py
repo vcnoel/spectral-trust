@@ -23,9 +23,49 @@ from .config import GSPConfig
 
 logger = logging.getLogger(__name__)
 
+# ── Metric provenance (v0.3.0) ─────────────────────────────────────────────────
+#
+# Every diagnostic is tagged with the tensor family it consumes. This matters
+# because the families have different access requirements and different
+# scientific interpretations, and conflating them has led to "attention-only"
+# claims about metrics that in fact read the residual stream:
+#
+#   "attention"  — function of the attention weight matrices alone.
+#                  Available when a serving stack exposes attention maps.
+#   "hybrid"     — residual-stream states projected onto the attention-graph
+#                  eigenbasis. Requires BOTH attentions and hidden states;
+#                  results reflect residual-stream content as much as graph
+#                  topology. NOT attention-only.
+#
+# (Signals that read hidden states directly, e.g. supervised probes, are out
+# of scope for this library and would form a third family, "residual".)
+METRIC_FAMILIES: Dict[str, str] = {
+    "fiedler_value": "attention",
+    "spectral_radius": "attention",
+    "max_imaginary": "attention",
+    "connectivity": "attention",
+    "eigenvalues": "attention",
+    "eig_energy": "attention",
+    "eig_spectral_entropy": "attention",
+    "eig_hfer": "attention",
+    "energy": "hybrid",
+    "smoothness_index": "hybrid",
+    "spectral_entropy": "hybrid",
+    "hfer": "hybrid",
+    "spectral_masses": "hybrid",
+}
+
+
 @dataclass
 class SpectralDiagnostics:
-    """Container for spectral diagnostics results"""
+    """
+    Container for spectral diagnostics results.
+
+    Each metric belongs to a tensor family (see METRIC_FAMILIES / the
+    `families` field): "attention" metrics are functions of attention
+    weights alone; "hybrid" metrics project residual-stream states onto the
+    attention eigenbasis and therefore require hidden-state access.
+    """
     layer: int
     energy: float
     smoothness_index: float
@@ -39,6 +79,18 @@ class SpectralDiagnostics:
     # New in v0.2.0: Directed metrics
     spectral_radius: Optional[float] = None
     max_imaginary: Optional[float] = None
+    # New in v0.3.0: attention-only (eigenvalue-only) counterparts of the
+    # hybrid energy/entropy/HFER metrics.
+    eig_energy: Optional[float] = None
+    eig_spectral_entropy: Optional[float] = None
+    eig_hfer: Optional[float] = None
+
+    #: metric name -> tensor family ("attention" | "hybrid")
+    families: Dict[str, str] = None
+
+    def __post_init__(self):
+        if self.families is None:
+            self.families = dict(METRIC_FAMILIES)
 
     def to_dict(self) -> Dict[str, Any]:
         d = {
@@ -51,11 +103,16 @@ class SpectralDiagnostics:
             'spectral_masses': self.spectral_masses.tolist(),
             'fiedler_value': float(self.fiedler_value),
             'connectivity': bool(self.connectivity),
+            'families': dict(self.families),
         }
         if self.spectral_radius is not None:
             d['spectral_radius'] = float(self.spectral_radius)
         if self.max_imaginary is not None:
             d['max_imaginary'] = float(self.max_imaginary)
+        for k in ('eig_energy', 'eig_spectral_entropy', 'eig_hfer'):
+            v = getattr(self, k)
+            if v is not None:
+                d[k] = float(v)
         return d
 
 
@@ -171,6 +228,45 @@ class SpectralAnalyzer:
 
         return eigenvals, eigenvecs
     
+    # ── Attention-only (eigenvalue-only) metrics, v0.3.0 ──────────────────────
+    # Counterparts of energy / spectral_entropy / hfer that are functions of
+    # the Laplacian EIGENVALUES alone — no hidden states enter the
+    # computation, so these are valid under attention-only access. When the
+    # sparse solver truncates the eigenbasis, they are normalized over the
+    # retained modes (the existing truncation warning applies).
+
+    @staticmethod
+    def compute_eig_energy(eigenvalues: np.ndarray) -> float:
+        """Mean Laplacian eigenvalue (trace / T). Attention-only."""
+        if eigenvalues.size == 0:
+            return 0.0
+        return float(np.mean(eigenvalues))
+
+    @staticmethod
+    def compute_eig_spectral_entropy(eigenvalues: np.ndarray) -> float:
+        """Entropy of the eigenvalue distribution, normalized to [0, 1] by
+        log(#modes). Attention-only."""
+        n = eigenvalues.size
+        if n < 2:
+            return 0.0
+        total = float(np.sum(eigenvalues))
+        if total <= 1e-12:
+            return 0.0
+        p = np.maximum(eigenvalues / total, 1e-12)
+        return float(-np.sum(p * np.log(p)) / np.log(n))
+
+    @staticmethod
+    def compute_eig_hfer(eigenvalues: np.ndarray) -> float:
+        """Fraction of eigenvalue mass in the upper half of the spectrum.
+        Attention-only."""
+        n = eigenvalues.size
+        if n < 2:
+            return 0.0
+        total = float(np.sum(eigenvalues))
+        if total <= 1e-12:
+            return 0.0
+        return float(np.sum(eigenvalues[n // 2:]) / total)
+
     def compute_dirichlet_energy(self, signals: np.ndarray, laplacian: np.ndarray) -> float:
         """
         Compute Dirichlet energy of signals on graph
@@ -295,7 +391,6 @@ class SpectralAnalyzer:
         fiedler_value = eigenvalues[1] if len(eigenvalues) > 1 else 0.0
         spectral_radius = eigenvalues[-1] if len(eigenvalues) > 0 else 0.0
 
-
         return SpectralDiagnostics(
             layer=layer_idx,
             energy=energy,
@@ -308,6 +403,9 @@ class SpectralAnalyzer:
             fiedler_value=fiedler_value,
             connectivity=connectivity,
             spectral_radius=spectral_radius,
+            eig_energy=self.compute_eig_energy(eigenvalues),
+            eig_spectral_entropy=self.compute_eig_spectral_entropy(eigenvalues),
+            eig_hfer=self.compute_eig_hfer(eigenvalues),
         )
 
     def _check_connectivity(self, laplacian: np.ndarray) -> bool:

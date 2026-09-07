@@ -62,36 +62,53 @@ def sparse_arnoldi_iteration(A: torch.Tensor, k_steps: int = 20, tol: float = 1e
         
     return H[:-1, :], Q[:, :-1]
 
-def sparse_lanczos_iteration(A: torch.Tensor, k_steps: int = 20, tol: float = 1e-9) -> torch.Tensor:
+def sparse_lanczos_iteration(A: torch.Tensor, k_steps: int = 20, tol: float = 1e-9,
+                             seed: Optional[int] = 0,
+                             deflate: Optional[torch.Tensor] = None) -> torch.Tensor:
     """
     Perform Lanczos iteration for symmetric matrices.
     A: (N, N) symmetric tensor
+    seed: seeds the start vector so results are deterministic (v0.3.0 fix —
+          previously the unseeded random start made repeated calls disagree).
+    deflate: optional unit vector to project out of the Krylov space (e.g. a
+          known Laplacian null vector), so Ritz values approximate the
+          spectrum on its orthogonal complement.
     Returns the tridiagonal matrix T.
     """
     device = A.device
     N = A.shape[0]
     k_steps = min(k_steps, N)
-    
+
     alpha = torch.zeros(k_steps, device=device, dtype=A.dtype)
     beta = torch.zeros(k_steps, device=device, dtype=A.dtype)
     q_prev = torch.zeros(N, device=device, dtype=A.dtype)
-    
-    # Random start vector
-    q = torch.randn(N, device=device, dtype=A.dtype)
+
+    gen = torch.Generator(device="cpu")
+    if seed is not None:
+        gen.manual_seed(seed)
+    q = torch.randn(N, generator=gen).to(device=device, dtype=A.dtype)
+
+    def _deflated(v: torch.Tensor) -> torch.Tensor:
+        if deflate is not None:
+            v = v - torch.dot(deflate, v) * deflate
+        return v
+
+    q = _deflated(q)
     q = q / torch.norm(q)
-    
+
     for j in range(k_steps):
         v = torch.matmul(A, q)
         alpha[j] = torch.dot(q, v)
         v = v - alpha[j] * q - (beta[j-1] * q_prev if j > 0 else 0)
-        
+        v = _deflated(v)
+
         if j < k_steps - 1:
             beta[j] = torch.norm(v)
             if beta[j] < tol:
                 break
             q_prev = q
             q = v / beta[j]
-            
+
     # Construct tridiagonal matrix T
     T = torch.diag(alpha)
     if k_steps > 1:
@@ -160,21 +177,43 @@ class DirectedTopologist:
             logger.warning(f"Eigenvalue computation failed: {e}")
             return {"max_imaginary": 0.0, "spectral_radius": 0.0}
 
-    def get_fiedler_value(self, L_sym: torch.Tensor) -> float:
+    def get_fiedler_value(self, L_sym: torch.Tensor,
+                          exact_threshold: int = 512,
+                          seed: int = 0) -> float:
         """
-        Extract Fiedler value (smallest non-zero eigenvalue) using Lanczos
+        Fiedler value (second-smallest eigenvalue) of a symmetric Laplacian.
+
+        v0.3.0 fixes two defects of the original implementation:
+        1. It filtered out eigenvalues below 1e-6, which erased exactly the
+           near-zero lambda_2 regime (fragmented graphs) that Fiedler-based
+           hallucination diagnostics are designed to detect.
+        2. Its Lanczos start vector was unseeded, so repeated calls on the
+           same input returned different values.
+
+        For graphs up to `exact_threshold` nodes the exact dense solve is
+        used (a few ms on GPU and exact by construction). Larger graphs use
+        seeded Lanczos with the constant vector deflated (the null direction
+        of a combinatorial Laplacian), returning the second-smallest Ritz
+        value clamped at zero. Lanczos values are approximations; prefer the
+        exact path when latency allows.
         """
-        # For small non-zero, we look at the tridiagonal matrix
-        n_iter = min(L_sym.shape[-1], 20)
-        T = sparse_lanczos_iteration(L_sym, k_steps=n_iter)
-        
-        try:
-            # Smallest eigenvalues of T approximate smallest of L_sym
-            eigvals = torch.linalg.eigvalsh(T)
-            # Filter near-zero (the first eigenvalue of Laplacian is always 0)
-            non_zero = eigvals[eigvals > 1e-6]
-            if len(non_zero) > 0:
-                return torch.min(non_zero).item()
+        L = L_sym.to(torch.float32)
+        N = L.shape[-1]
+        if N < 2:
             return 0.0
+
+        try:
+            if N <= exact_threshold:
+                eigvals = torch.linalg.eigvalsh(0.5 * (L + L.transpose(-2, -1)))
+                return float(eigvals[1].clamp(min=0.0))
+
+            ones = torch.ones(N, device=L.device, dtype=L.dtype)
+            ones = ones / torch.norm(ones)
+            n_iter = min(N, 32)
+            T = sparse_lanczos_iteration(L, k_steps=n_iter, seed=seed,
+                                         deflate=ones)
+            eigvals = torch.linalg.eigvalsh(T)
+            idx = 1 if len(eigvals) > 1 else 0
+            return float(eigvals[idx].clamp(min=0.0))
         except Exception:
             return 0.0
