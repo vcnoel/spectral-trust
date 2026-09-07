@@ -96,6 +96,30 @@ gsp-cli analyze --text "..." --runs 5 --temperature 0.7
 gsp-cli analyze --text "..." --model llama-3.2-1b --offline
 ```
 
+### Head resolution matters
+
+Most attention-graph diagnostics (including earlier versions of this library)
+average attention over heads before building the graph. **Head-averaging is a
+signal destroyer.** Attention heads are specialized: the routing anomaly that
+accompanies a failure is typically carried by a few heads, and summing heads
+mixes it into a near-uniform background. Two independent lines of evidence:
+
+- In our tool-call hallucination experiments, per-head Fiedler values (one λ₂
+  per head per layer, no averaging) reached detection AUCs competitive with
+  supervised hidden-state probes, while the same metric computed on the
+  head-averaged graph was near chance under leakage-controlled evaluation.
+- LapEigvals (Binkowski et al., EMNLP 2025), the strongest published
+  attention-based hallucination detector, keeps per-head resolution
+  throughout — its features are per-layer, per-head top-k Laplacian values.
+
+Practical guidance: use head-averaged diagnostics (`aggregate_heads`) for
+qualitative layer-trajectory analysis and visualization, but for any
+*detection* task, compute metrics per head and let the probe learn which
+heads carry signal. The per-head pattern is: symmetrize each head's attention
+matrix separately, build one Laplacian per head, and concatenate per-head
+metric values as features. `head_aggregation="attention_weighted"` (mass-
+weighted averaging) softens but does not remove the aggregation loss.
+
 ### Graph construction options
 
 - `normalization`: `"sym"` (default, length-invariant spectrum), `"rw"`,
