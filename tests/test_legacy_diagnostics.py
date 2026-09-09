@@ -49,10 +49,17 @@ def test_graph_constructor_symmetry():
     # Check symmetry
     assert torch.allclose(laplacian, laplacian.T, atol=1e-6)
 
-def test_config_backward_compatibility():
-    """Verify GSPConfig defaults maintain v0.1.4 behavior."""
+def test_config_defaults():
+    """Pin the documented GSPConfig defaults.
+
+    normalization changed "rw" -> "sym" in v0.3.0: the symmetric normalized
+    Laplacian has a spectrum in [0, 2] independent of sequence length, so
+    metrics are comparable across inputs of different length, and it always
+    takes the deterministic symmetric solver path. Callers reproducing
+    pre-0.3.0 numbers must pass normalization="rw" explicitly.
+    """
     config = GSPConfig()
     assert config.directed == False
     assert config.calc_velocity == False
     assert config.subgraph_indices is None
-    assert config.normalization == "rw"
+    assert config.normalization == "sym"

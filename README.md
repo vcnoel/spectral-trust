@@ -120,6 +120,36 @@ matrix separately, build one Laplacian per head, and concatenate per-head
 metric values as features. `head_aggregation="attention_weighted"` (mass-
 weighted averaging) softens but does not remove the aggregation loss.
 
+### Per-head diagnostics
+
+```python
+import torch
+from spectral_trust import (
+    GSPConfig, per_head_metrics_all_layers,
+    stack_feature_vector, layer_delta_features,
+)
+
+out = model(input_ids, output_attentions=True)     # attentions: [1, H, T, T] per layer
+
+# one Laplacian per head per layer; all heads decomposed in one batched call
+diags = per_head_metrics_all_layers(
+    out.attentions,
+    config=GSPConfig(normalization="sym"),
+    token_span=(prompt_len, seq_len),              # restrict to a span of interest
+)
+
+diags[12].metric("fiedler_value")                  # [num_heads] for layer 12
+features = stack_feature_vector(diags)             # layers x heads x 5, for a probe
+dynamics = layer_delta_features(diags, metric="spectral_radius")
+```
+
+Five metrics per head come out of a single eigendecomposition, so extracting
+all of them costs the same as extracting one: `fiedler_value` (lambda_2),
+`connectivity_ratio` (lambda_2/lambda_max), `spectral_entropy_norm`, `hfer`,
+and `spectral_radius`. All are family **attention** (attention weights only).
+`token_span` takes the induced subgraph *before* building the Laplacian, so
+the diagnostic is local to that span rather than to the whole sequence.
+
 ### Graph construction options
 
 - `normalization`: `"sym"` (default, length-invariant spectrum), `"rw"`,
@@ -146,6 +176,7 @@ exact path or pass a fixed `seed`.
 - `src/spectral_trust/` — package source
   - `graph.py` — attention-graph construction (symmetrization, aggregation, Laplacians)
   - `spectral.py` — eigendecomposition and diagnostics (`SpectralAnalyzer`, `SpectralDiagnostics`, `METRIC_FAMILIES`)
+  - `per_head.py` — per-head spectral diagnostics and probe feature helpers
   - `directed_topology.py` — directed Laplacian metrics, GPU Lanczos
   - `framework.py` — end-to-end orchestration (`GSPDiagnosticsFramework`)
   - `instrumentation.py` — model loading and tensor capture
@@ -164,19 +195,37 @@ those layers.
 
 ## Changelog
 
-**v0.3.0**
-- Metric family tagging (`METRIC_FAMILIES`, `SpectralDiagnostics.families`):
-  every metric declares whether it is attention-only or hybrid.
-- New attention-only metrics: `eig_energy`, `eig_spectral_entropy`, `eig_hfer`.
-- Default Laplacian normalization changed `rw` → `sym` (length-invariant
-  spectrum, deterministic symmetric solver path).
-- `get_fiedler_value`: exact solve ≤ 512 nodes; seeded, null-deflated Lanczos
-  above; removed the near-zero eigenvalue filter.
+**v0.3.0** — first release since 0.2.2. Three of these changes alter results
+for existing callers; they are marked *(behaviour change)*.
 
-**v0.2.3** — fail loudly on non-finite attention tensors.
+- **Per-head spectral diagnostics** (`per_head.py`): `per_head_metrics`,
+  `per_head_metrics_all_layers`, `stack_feature_vector`,
+  `layer_delta_features`. One Laplacian per head, five eigenvalue-only
+  metrics from a single batched eigendecomposition, optional token-span
+  restriction, and probe-ready feature vectors plus cross-layer dynamics.
+- **Metric provenance** (`METRIC_FAMILIES`, `SpectralDiagnostics.families`):
+  every metric declares whether it is computed from attention weights alone
+  ("attention") or from residual-stream states projected onto the attention
+  eigenbasis ("hybrid"). The energy / smoothness / entropy / HFER metrics are
+  hybrid and must not be reported as attention-only.
+- **New attention-only metrics**: `eig_energy`, `eig_spectral_entropy`,
+  `eig_hfer` — eigenvalue-only counterparts of the hybrid trio.
+- *(behaviour change)* Default Laplacian normalization `rw` → `sym`: spectrum
+  in [0, 2] independent of sequence length, and always the deterministic
+  symmetric solver path. Pass `normalization="rw"` to reproduce pre-0.3.0
+  numbers.
+- *(behaviour change)* `get_fiedler_value`: exact dense solve for graphs up to
+  512 nodes, seeded and null-deflated Lanczos above. Removes an unseeded
+  random Lanczos start (non-deterministic results) and a `>1e-6` eigenvalue
+  filter that discarded exactly the near-zero λ₂ regime the diagnostic is
+  meant to detect.
+- *(behaviour change)* Non-finite attention tensors now raise
+  `NonFiniteAttentionError` instead of propagating NaNs.
+- Documentation rewritten around the metric-family contract; informal
+  terminology removed from CLI output and the demo notebook.
 
-**v0.2.x** — directed topology metrics, spectral velocity, subgraph isolation,
-GPU Lanczos, sparse solver optimizations.
+**v0.2.x** — directed topology metrics, spectral velocity, subgraph
+isolation, GPU Lanczos, sparse solver optimizations.
 
 ## License
 

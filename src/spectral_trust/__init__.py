@@ -22,6 +22,11 @@ from .instrumentation import (
     LLMInstrumenter, NonFiniteAttentionError, assert_finite_attention,
 )
 from .directed_topology import DirectedTopologist
+from .per_head import (
+    PerHeadDiagnostics, per_head_metrics, per_head_metrics_all_layers,
+    stack_feature_vector, layer_delta_features,
+    PER_HEAD_METRIC_NAMES, PER_HEAD_METRIC_FAMILY,
+)
 
 __version__ = "0.3.0"
 
@@ -37,5 +42,12 @@ __all__ = [
     "NonFiniteAttentionError",
     "assert_finite_attention",
     "DirectedTopologist",
+    "PerHeadDiagnostics",
+    "per_head_metrics",
+    "per_head_metrics_all_layers",
+    "stack_feature_vector",
+    "layer_delta_features",
+    "PER_HEAD_METRIC_NAMES",
+    "PER_HEAD_METRIC_FAMILY",
     "__version__",
 ]
