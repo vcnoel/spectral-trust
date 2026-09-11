@@ -113,10 +113,14 @@ def per_head_metrics(
     cfg = config or GSPConfig()
     gc = GraphConstructor(cfg)
 
-    attn = attention.to(torch.float32)
+    # Slice BEFORE widening the dtype. A full layer of attention at a few
+    # thousand tokens is over a gigabyte in float32, and when the diagnostic
+    # is restricted to a span only that submatrix is needed; converting first
+    # costs both the memory and the time of the whole matrix.
     if token_span is not None:
         start, end = token_span
-        attn = attn[:, start:end, start:end]
+        attention = attention[:, start:end, start:end]
+    attn = attention.to(torch.float32)
 
     num_heads, seq_len, _ = attn.shape
     if seq_len < 3:
