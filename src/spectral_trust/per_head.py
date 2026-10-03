@@ -120,7 +120,11 @@ def per_head_metrics(
     if token_span is not None:
         start, end = token_span
         attention = attention[:, start:end, start:end]
-    attn = attention.to(torch.float32)
+    # Decompose on the CPU. The batched symmetric eigensolver on CUDA is
+    # very slow for many small matrices (measured 1.9 s against 0.1 s for
+    # 32 heads x 16 layers at a 90-token span on one consumer GPU), and the
+    # block moved here is a few hundred kilobytes.
+    attn = attention.detach().to(device="cpu", dtype=torch.float32)
 
     num_heads, seq_len, _ = attn.shape
     if seq_len < 3:
@@ -136,7 +140,16 @@ def per_head_metrics(
     adjacency = gc.symmetrize_attention(attn.unsqueeze(0))[0]
     laplacian = gc.construct_laplacian(adjacency)
     laplacian = 0.5 * (laplacian + laplacian.transpose(-2, -1))
-    eigenvalues = torch.linalg.eigvalsh(laplacian).clamp(min=0.0)  # [H, S]
+    # One thread: a batch of small symmetric eigenproblems is slower with more
+    # threads, which oversubscribe the cores (measured at 32 heads and a
+    # 250-token span: 36 ms on one thread, 1.2 s on 24). The caller's thread
+    # count is restored afterwards.
+    prev_threads = torch.get_num_threads()
+    torch.set_num_threads(1)
+    try:
+        eigenvalues = torch.linalg.eigvalsh(laplacian).clamp(min=0.0)  # [H, S]
+    finally:
+        torch.set_num_threads(prev_threads)
 
     lam2 = eigenvalues[:, 1]
     lam_max = eigenvalues[:, -1]

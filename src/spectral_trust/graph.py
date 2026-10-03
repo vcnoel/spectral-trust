@@ -128,15 +128,17 @@ class GraphConstructor:
             deg_inv = torch.zeros_like(degrees)
             mask = degrees > 1e-8
             deg_inv[mask] = 1.0 / degrees[mask].clamp(min=1e-8)
-            deg_inv_diag = torch.diag_embed(deg_inv)
-            laplacian = torch.eye(adjacency.shape[-1], device=adjacency.device).unsqueeze(0) - torch.matmul(deg_inv_diag, adjacency)
+            # D^{-1} W by broadcasting: O(S^2), where a dense diagonal
+            # matrix product is O(S^3)
+            laplacian = torch.eye(adjacency.shape[-1], device=adjacency.device).unsqueeze(0) - deg_inv.unsqueeze(-1) * adjacency
         elif self.config.normalization == "sym":
             # Symmetric normalized Laplacian: L = I - D^{-1/2}WD^{-1/2}
             deg_sqrt_inv = torch.zeros_like(degrees)
             mask = degrees > 1e-8
             deg_sqrt_inv[mask] = 1.0 / torch.sqrt(degrees[mask].clamp(min=1e-8))
-            deg_sqrt_inv_diag = torch.diag_embed(deg_sqrt_inv)
-            normalized_adj = torch.matmul(torch.matmul(deg_sqrt_inv_diag, adjacency), deg_sqrt_inv_diag)
+            # D^{-1/2} W D^{-1/2} by broadcasting: O(S^2), where two dense
+            # diagonal matrix products are O(S^3)
+            normalized_adj = deg_sqrt_inv.unsqueeze(-1) * adjacency * deg_sqrt_inv.unsqueeze(-2)
             laplacian = torch.eye(adjacency.shape[-1], device=adjacency.device).unsqueeze(0) - normalized_adj
         elif self.config.normalization == "none":
             # Combinatorial Laplacian: L = D - W
