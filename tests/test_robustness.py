@@ -30,3 +30,25 @@ def test_analyze_layer_single_token(norm, solver):
     # a leading batch dimension is still accepted
     d_batched = SpectralAnalyzer(cfg).analyze_layer(X, L.unsqueeze(0), 0)
     assert d_batched.to_dict() == d.to_dict()
+
+
+def test_band_energies_refuses_rw_and_handles_a_zero_spectrum():
+    """Regression (0.4.0): band_energies symmetrized a non-symmetric (rw)
+    operator in its dense path and ran the Chebyshev recurrence on it (both
+    rely on an orthonormal eigenbasis), and the default Gershgorin range was
+    0 for an all-zero Laplacian (one token), a division by zero."""
+    from spectral_trust import band_energies
+    g = torch.Generator().manual_seed(4)
+    attn = torch.softmax(torch.randn(1, 12, 12, generator=g), -1)
+    attn[0, :, 0] += 2.0                           # uneven degrees
+    L_rw = _laplacian(attn, "rw")[0]
+    X = torch.randn(12, 3, generator=g)
+    for method in ("dense", "chebyshev"):
+        with pytest.raises(ValueError):
+            band_energies(L_rw, X, edges=4, order=8, method=method)
+    L0 = _laplacian(torch.ones(1, 1, 1), "sym")[0]        # [[0.]]
+    X0 = torch.tensor([[3.0, 4.0]])
+    for method, tol in (("dense", 1e-6), ("chebyshev", 2e-2)):   # order-8 filter
+        E, edges = band_energies(L0, X0, edges=4, order=8, method=method)
+        assert E.sum() == pytest.approx(25.0, rel=1e-6)
+        assert E[0] == pytest.approx(25.0, rel=tol) and edges[-1] > 0

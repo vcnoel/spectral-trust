@@ -335,6 +335,8 @@ solver. One change alters results for existing callers; it is marked
   a wrong value.
 - *(fix)* `analyze_layer` accepts a one-token graph (its `squeeze()` turned a
   1 x 1 Laplacian into a 0-d array).
+- *(fix)* `band_energies` raises `ValueError` for a non-symmetric (`rw`)
+  operator instead of symmetrizing it, and handles an all-zero Laplacian.
 - *(fix)* Every scalar metric of `SpectralDiagnostics` is a plain Python
   `float` (`fiedler_value`, `spectral_radius` and `smoothness_index` were
   numpy scalars), so the fields serialise with `json` directly.

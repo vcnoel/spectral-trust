@@ -581,7 +581,12 @@ def band_energies(
         lambda_max: an upper bound on the spectrum. Pass ``2.0`` for
             ``normalization="sym"`` (its spectrum lies in [0, 2]) so that
             uniform bands mean the same thing for every input. Default: the
-            Gershgorin bound of ``L``, which depends on the input.
+            Gershgorin bound of ``L``, which depends on the input (1.0 if
+            ``L`` is zero).
+
+    Raises:
+        ValueError: if ``L`` is not symmetric (the ``rw`` operator), since
+            both methods rely on an orthonormal eigenbasis.
         method: ``"chebyshev"`` or ``"dense"`` (exact, ``torch.linalg.eigh``).
         project_dim, seed: optional Johnson-Lindenstrauss projection of X.
 
@@ -595,10 +600,21 @@ def band_energies(
     if L.dim() != 2 or L.shape[0] != L.shape[1] or X.shape[0] != L.shape[0]:
         raise ValueError(
             f"L must be [S, S] and X [S, d]; got {tuple(L.shape)} and {tuple(X.shape)}")
+    if not bool(((L - L.T).abs() <= 1e-6).all()):
+        raise ValueError(
+            "band_energies needs a symmetric Laplacian (normalization 'sym' or "
+            "'none'); the 'rw' eigenbasis is not orthonormal")
     if project_dim is not None:
         X = jl_project(X, project_dim, seed=seed)
     X = X.to(L.dtype)
-    lam_max = float(lambda_max) if lambda_max is not None else gershgorin_bound(L)
+    if lambda_max is not None:
+        lam_max = float(lambda_max)
+        if lam_max <= 0:
+            raise ValueError(f"lambda_max must be positive, got {lambda_max}")
+    else:
+        lam_max = gershgorin_bound(L)
+        if lam_max <= 0:          # the zero operator: every mode sits at 0
+            lam_max = 1.0
     e = _resolve_edges(edges, lam_max)
     if method == "chebyshev":
         mu = chebyshev_moments(L, X, order, lam_max)
