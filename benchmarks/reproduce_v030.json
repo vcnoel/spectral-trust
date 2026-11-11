@@ -1,0 +1,357 @@
+{
+  "cases": 37,
+  "current_version": "0.4.0",
+  "float64_attribution": {
+    "energy": {
+      "current_max_rel_err_vs_float64": 4.862708501159193e-07,
+      "v030_max_rel_err_vs_float64": 4.18945129349759e-07
+    },
+    "smoothness_index": {
+      "current_max_rel_err_vs_float64": 4.86099581559763e-07,
+      "v030_max_rel_err_vs_float64": 3.72292902624061e-07
+    }
+  },
+  "max_rel_diff": 1.6367605707780001e-07,
+  "metrics": {
+    "deltas": {
+      "identical": 8,
+      "max_rel_diff": 0.0,
+      "values": 8,
+      "worst_case": null
+    },
+    "features": {
+      "identical": 60,
+      "max_rel_diff": 0.0,
+      "values": 60,
+      "worst_case": null
+    },
+    "layer.connectivity": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "layer.eig_energy": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "layer.eig_hfer": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "layer.eig_spectral_entropy": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "layer.eigenvalues": {
+      "identical": 3360,
+      "max_rel_diff": 0.0,
+      "values": 3360,
+      "worst_case": null
+    },
+    "layer.energy": {
+      "identical": 0,
+      "max_rel_diff": 1.3554516598449488e-07,
+      "values": 36,
+      "worst_case": "random,S=64,d=32,seed=0"
+    },
+    "layer.families.connectivity": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "layer.families.eig_energy": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "layer.families.eig_hfer": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "layer.families.eig_spectral_entropy": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "layer.families.eigenvalues": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "layer.families.energy": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "layer.families.fiedler_value": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "layer.families.hfer": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "layer.families.max_imaginary": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "layer.families.smoothness_index": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "layer.families.spectral_entropy": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "layer.families.spectral_masses": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "layer.families.spectral_radius": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "layer.fiedler_value": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "layer.hfer": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "layer.layer": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "layer.smoothness_index": {
+      "identical": 0,
+      "max_rel_diff": 1.4116456211157762e-07,
+      "values": 36,
+      "worst_case": "causal,S=200,d=256,seed=0"
+    },
+    "layer.spectral_entropy": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "layer.spectral_masses": {
+      "identical": 3360,
+      "max_rel_diff": 0.0,
+      "values": 3360,
+      "worst_case": null
+    },
+    "layer.spectral_radius": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "per_head": {
+      "identical": 720,
+      "max_rel_diff": 0.0,
+      "values": 720,
+      "worst_case": null
+    },
+    "per_head_span": {
+      "identical": 720,
+      "max_rel_diff": 0.0,
+      "values": 720,
+      "worst_case": null
+    },
+    "subgraph.connectivity": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "subgraph.eig_energy": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "subgraph.eig_hfer": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "subgraph.eig_spectral_entropy": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "subgraph.eigenvalues": {
+      "identical": 2520,
+      "max_rel_diff": 0.0,
+      "values": 2520,
+      "worst_case": null
+    },
+    "subgraph.energy": {
+      "identical": 0,
+      "max_rel_diff": 1.5054492452446146e-07,
+      "values": 36,
+      "worst_case": "random,S=16,d=32,seed=1"
+    },
+    "subgraph.families.connectivity": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "subgraph.families.eig_energy": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "subgraph.families.eig_hfer": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "subgraph.families.eig_spectral_entropy": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "subgraph.families.eigenvalues": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "subgraph.families.energy": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "subgraph.families.fiedler_value": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "subgraph.families.hfer": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "subgraph.families.max_imaginary": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "subgraph.families.smoothness_index": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "subgraph.families.spectral_entropy": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "subgraph.families.spectral_masses": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "subgraph.families.spectral_radius": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "subgraph.fiedler_value": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "subgraph.hfer": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "subgraph.layer": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "subgraph.smoothness_index": {
+      "identical": 0,
+      "max_rel_diff": 1.6367605707780001e-07,
+      "values": 36,
+      "worst_case": "random,S=200,d=256,seed=1"
+    },
+    "subgraph.spectral_entropy": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    },
+    "subgraph.spectral_masses": {
+      "identical": 2520,
+      "max_rel_diff": 0.0,
+      "values": 2520,
+      "worst_case": null
+    },
+    "subgraph.spectral_radius": {
+      "identical": 36,
+      "max_rel_diff": 0.0,
+      "values": 36,
+      "worst_case": null
+    }
+  },
+  "reference_ref": "7197315",
+  "reference_version": "0.3.0",
+  "reproduced": true,
+  "tolerance": 1e-06
+}
