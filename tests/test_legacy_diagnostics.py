@@ -190,6 +190,18 @@ def test_every_metric_is_a_plain_python_float(cfg):
     json.dumps(diag.to_dict())
 
 
+def test_cli_banner_reports_the_package_version(monkeypatch, capsys):
+    """The CLI printed a hard-coded 'v0.2.0-RC1'; the version is defined in
+    setup.py and spectral_trust.__version__ only."""
+    import sys
+    import spectral_trust
+    from spectral_trust import cli
+    monkeypatch.setattr(sys, "argv", ["gsp-cli", "list-models"])
+    cli.main()
+    out = capsys.readouterr().out
+    assert f"v{spectral_trust.__version__}" in out and "RC1" not in out
+
+
 def test_cli_config_uses_the_dense_default():
     """The CLI has no solver flag; its fallback must follow the library."""
     import argparse

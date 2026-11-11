@@ -526,7 +526,8 @@ def cmd_list_models(args):
         print(f"  {k:20} -> {v['name']}")
 
 def main():
-    print("DEBUG: [spectral-trust v0.2.0-RC1] CLI Main Initialized")
+    from .. import __version__
+    print(f"DEBUG: [spectral-trust v{__version__}] CLI Main Initialized")
     parser = argparse.ArgumentParser(description="Spectral Trust CLI")
     subparsers = parser.add_subparsers(dest='command', required=True)
     
