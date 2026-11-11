@@ -182,8 +182,8 @@ attention with a sink token; full tables in `benchmarks/results.md`).
 | Question | Use | Exact? | Measured |
 |---|---|---|---|
 | How far do a few tokens' states sit from what they attend to? | `row_dirichlet_energy(W, X, rows)`, `row_value_spread(A, V, rows)` | exact; a row-anchored quantity, related to the Laplacian energies in the docstring | no eigendecomposition, O(\|rows\| S d) |
-| HFER on the full basis | `top_band_hfer(L, X)` | exact: equals `eigen_solver="dense"` to ≤ 2e-8 in float32 | 2.0x to 3.8x faster than the dense HFER path |
-| Hybrid metrics for wide models | `GSPConfig(project_dim=k)` | estimate: energy and spectral masses unbiased, ratios O(1/√k) | see the error table below |
+| HFER on the full basis | `top_band_hfer(L, X)` | exact: equals `eigen_solver="dense"` to ≤ 2e-8 in float32 | 1.9x to 3.9x faster than the dense HFER path |
+| Hybrid metrics for wide models | `GSPConfig(project_dim=k)` | estimate: energy and spectral masses unbiased, ratios O(1/√k) | 0.9x to 2.8x per layer; see the error table below |
 | Band energies on long contexts | `band_energies(L, X, edges, order)`, `band_entropy(E)` | approximation of the band energies; band entropy is a different quantity from `spectral_entropy` | faster than dense eigh at S = 4096 (below) |
 | Only some heads | `heads=` in the per-head functions | exact: equals the full computation sliced | cost proportional to the number of heads |
 
@@ -198,8 +198,8 @@ run on the device of their inputs. Summed over all rows,
 0.4.0; now `"dense"`) keeps 50 modes and divides the energy of the top 5 by
 the energy of those 50. On the
 benchmark's structured signals that ratio was 4x (S = 128) to 30x
-(S = 2048) smaller than the full-basis HFER, and the truncated solve was 1.6x
-to 3.1x slower than the dense one at every size measured. `top_band_hfer`
+(S = 2048) smaller than the full-basis HFER, and the truncated solve was 1.7x
+to 6.5x slower than the dense one at every size measured. `top_band_hfer`
 returns the full-basis value: since the
 spectral energies of a symmetric Laplacian sum to `||X||_F²`, it needs only
 the top `num_high_modes(S, 0.1) = S - int(0.9 S)` eigenvectors, the same
@@ -222,9 +222,10 @@ Residual-like signals (a large shared mean, a massive-activation token,
 decaying spectrum) have few effective dimensions, and the error then
 approaches its worst case, a standard deviation of `sqrt(2/k)`. Use the
 projection for screening and ranking at large d, and keep one seed across a
-study. Most of the speedup at short contexts comes from the d x d products
-in the energy evaluation (13x at S = 128, d = 4096, k = 256); at S ≥ 2048 the
-eigendecomposition dominates and the gain at k = 256 is 1.1x to 2.1x.
+study. Since 0.4.0 the energy is a trace-only sum, so inside `analyze_layer`
+the projection saves little time: 0.9x to 1.8x at k = 256 (up to 2.8x at
+k = 64, d = 4096), because at S ≥ 2048 the eigendecomposition dominates.
+Its clear gain is in band energies on long contexts, below.
 
 **Chebyshev band energies.** `band_energies(L, X, edges=8, order=64,
 lambda_max=2.0)` estimates the energy in eight eigenvalue bands from
@@ -367,7 +368,10 @@ rounding (`benchmarks/reproduce_v030.md`).
   twice. `analyze_layer` projects the signals onto the eigenbasis once
   instead of three times (`compute_spectral_masses`). Energy and smoothness
   move only by float32 rounding (at most 1.6e-7 relative in the
-  reproduction check).
+  reproduction check). Under each version's defaults, `analyze_layer` is
+  2.4x to 25x faster than in 0.3.0 at S = 128 to 2048, and per-head hybrid
+  metrics 6.9x to 67x faster than a 0.3.0 loop over heads
+  (`benchmarks/end_to_end.py`).
 - Benchmarks: `benchmarks/fast_vs_dense.py`, `end_to_end.py` and
   `reproduce_v030.py`, with results in `benchmarks/results.md` and
   `benchmarks/reproduce_v030.md`.
