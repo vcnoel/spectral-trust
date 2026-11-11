@@ -307,12 +307,13 @@ def top_band_hfer(
     The result equals :meth:`SpectralAnalyzer.compute_hfer` with
     ``eigen_solver="dense"`` (to ~1e-8 in float32, ~1e-15 in float64).
 
-    How it differs from the default configuration: ``eigen_solver="sparse"``
-    with ``num_eigenvalues=50`` keeps 25 bottom and 25 top modes once
-    S > 50, and divides the energy of the top ``int(0.1 * 50) = 5`` retained
-    modes by the energy of the 50 retained modes. That is a different
-    quantity (a fixed number of modes, normalised over a truncated basis);
-    this function returns the full-basis ratio at any S.
+    How it differs from the truncated solver: ``eigen_solver="sparse"``
+    (the default before 0.4.0) with ``num_eigenvalues=50`` keeps 25 bottom
+    and 25 top modes once S > 50, and divides the energy of the top
+    ``int(0.1 * 50) = 5`` retained modes by the energy of the 50 retained
+    modes. That is a different quantity (a fixed number of modes, normalised
+    over a truncated basis); this function returns the full-basis ratio at
+    any S, as the default ``eigen_solver="dense"`` does.
 
     If the boundary eigenvalue is degenerate (``lambda_{S-k} =
     lambda_{S-k-1}``), the split by index is basis-dependent for every

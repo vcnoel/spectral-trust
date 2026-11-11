@@ -129,9 +129,41 @@ def test_config_defaults():
     metrics are comparable across inputs of different length, and it always
     takes the deterministic symmetric solver path. Callers reproducing
     pre-0.3.0 numbers must pass normalization="rw" explicitly.
+
+    eigen_solver changed "sparse" -> "dense" in v0.4.0 (regression for the
+    truncated default): above 50 tokens the sparse default kept 50 modes, so
+    HFER, spectral entropy and spectral masses were normalised over a
+    truncated basis, and it was also slower than the dense solve.
     """
     config = GSPConfig()
     assert config.directed == False
     assert config.calc_velocity == False
     assert config.subgraph_indices is None
     assert config.normalization == "sym"
+    assert config.eigen_solver == "dense"
+    assert config.project_dim is None
+
+
+def test_default_analysis_uses_the_full_basis_and_sparse_stays_available(caplog):
+    S = 80
+    L = _random_laplacian(S, seed=2)
+    X = torch.randn(S, 8, generator=torch.Generator().manual_seed(2))
+    with caplog.at_level("WARNING", logger="spectral_trust.spectral"):
+        full = SpectralAnalyzer(GSPConfig(device="cpu")).analyze_layer(
+            X, torch.from_numpy(L), 0)
+    assert full.eigenvalues.shape == (S,)
+    assert not any("Truncated eigenbasis" in r.message for r in caplog.records)
+    caplog.clear()
+    with caplog.at_level("WARNING", logger="spectral_trust.spectral"):
+        trunc = SpectralAnalyzer(GSPConfig(device="cpu", eigen_solver="sparse")) \
+            .analyze_layer(X, torch.from_numpy(L), 0)
+    assert trunc.eigenvalues.shape == (50,)
+    assert any("Truncated eigenbasis" in r.message for r in caplog.records)
+
+
+def test_cli_config_uses_the_dense_default():
+    """The CLI has no solver flag; its fallback must follow the library."""
+    import argparse
+    from spectral_trust.cli import create_model_config
+    cfg = create_model_config("example-org/custom-model", argparse.Namespace())
+    assert cfg.eigen_solver == "dense"

@@ -194,8 +194,9 @@ run on the device of their inputs. Summed over all rows,
 `row_dirichlet_energy(W, X)` is twice the combinatorial Dirichlet energy
 `tr(X^T (D - W) X)`; the `sym` and `rw` identities are in the docstring.
 
-**HFER above 50 tokens.** The default `eigen_solver="sparse"` keeps 50 modes
-and divides the energy of the top 5 by the energy of those 50. On the
+**HFER above 50 tokens.** `eigen_solver="sparse"` (the default before
+0.4.0; now `"dense"`) keeps 50 modes and divides the energy of the top 5 by
+the energy of those 50. On the
 benchmark's structured signals that ratio was 4x (S = 128) to 30x
 (S = 2048) smaller than the full-basis HFER, and the truncated solve was 1.6x
 to 3.1x slower than the dense one at every size measured. `top_band_hfer`
@@ -303,8 +304,20 @@ those layers.
 
 ## Changelog
 
-**Unreleased** — fast diagnostics. Defaults are unchanged, so existing
-callers get the same results.
+**Unreleased** — fast diagnostics, a per-head `rw` fix, and a dense default
+solver. One change alters results for existing callers; it is marked
+*(behaviour change)*.
+
+- *(behaviour change)* Default `eigen_solver` `"sparse"` → `"dense"`, in
+  `GSPConfig` and in the CLI. Above 50 tokens the sparse default kept 50 of
+  the S modes, so `hfer`, `spectral_entropy`, `spectral_masses`, the `eig_*`
+  metrics and the length of `eigenvalues` came from a truncated basis (its
+  HFER was 4x to 30x smaller than the full-basis value in the benchmark);
+  `fiedler_value`, `spectral_radius` and `connectivity` agree up to the
+  ARPACK tolerance. The sparse solve was also slower than the dense one at
+  every size measured. Callers at 50 tokens or fewer, or who already passed
+  `eigen_solver="dense"`, get the same results. Pass `eigen_solver="sparse"`
+  to reproduce the old default; it still logs the truncation warning.
 
 - **Row-anchored energies** (`fast.py`): `row_dirichlet_energy(W, X, rows)`
   and `row_value_spread(A, V, rows)`, batched over heads, in torch on CPU or

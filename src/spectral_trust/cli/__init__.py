@@ -344,7 +344,7 @@ def create_model_config(model_key: str, args) -> GSPConfig:
         verbose=getattr(args, 'verbose', False),
         num_layers_analyze=getattr(args, 'num_layers', None),
         num_eigenvalues=getattr(args, 'num_eigenvalues', 100),
-        eigen_solver=getattr(args, 'eigen_solver', 'sparse'),
+        eigen_solver=getattr(args, 'eigen_solver', 'dense'),
         head_aggregation=getattr(args, 'head_aggregation', 'uniform'),
         symmetrization=getattr(args, 'symmetrization', 'symmetric'),
         normalization=getattr(args, 'normalization', 'rw'),

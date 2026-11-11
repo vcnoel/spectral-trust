@@ -35,8 +35,14 @@ class GSPConfig:
     hfer_cutoff_ratio: float = 0.1  # High frequency cutoff as ratio of total eigenvectors
     
     # Spectral computation
-    num_eigenvalues: int = 50  # Number of eigenvalues to compute for spectral analysis
-    eigen_solver: str = "sparse"  # sparse (ARPACK), dense (full eigendecomposition)
+    # Default changed sparse -> dense in v0.4.0. "sparse" (ARPACK) keeps only
+    # num_eigenvalues modes once seq_len > 50 (half from each end of the
+    # spectrum), so HFER, spectral entropy and spectral masses are normalised
+    # over a truncated basis and are not comparable to a full computation (a
+    # warning is logged); it was also slower than the dense solve at every
+    # size benchmarked. "dense" is the full eigendecomposition.
+    num_eigenvalues: int = 50  # Modes kept by eigen_solver="sparse"
+    eigen_solver: str = "dense"  # dense (full eigendecomposition), sparse (ARPACK, truncated)
     lanczos_max_iter: int = 1000
 
     # Random projection of the signals before the hybrid metrics (energy,
