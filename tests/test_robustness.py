@@ -32,6 +32,20 @@ def test_analyze_layer_single_token(norm, solver):
     assert d_batched.to_dict() == d.to_dict()
 
 
+@pytest.mark.parametrize("dtype", [torch.float16, torch.bfloat16])
+def test_jl_project_half_precision_computes_in_float32(dtype):
+    """Regression (0.4.0): jl_project multiplied half-precision signals by a
+    half-precision Gaussian matrix, losing about three digits."""
+    from spectral_trust import jl_project, gaussian_projection
+    X = torch.randn(16, 64, generator=torch.Generator().manual_seed(5)).to(dtype)
+    got = jl_project(X, 8, seed=1)
+    want = X.float() @ torch.from_numpy(gaussian_projection(64, 8, seed=1))
+    assert got.dtype == torch.float32
+    torch.testing.assert_close(got, want, rtol=1e-5, atol=1e-5)
+    Xn = X.float().numpy().astype(np.float16)
+    assert jl_project(Xn, 8, seed=1).dtype == np.float32
+
+
 def test_band_energies_refuses_rw_and_handles_a_zero_spectrum():
     """Regression (0.4.0): band_energies symmetrized a non-symmetric (rw)
     operator in its dense path and ran the Chebyshev recurrence on it (both

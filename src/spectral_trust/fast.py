@@ -401,13 +401,14 @@ def jl_project(X, k: int, seed: int = 0):
     """
     Project signals ``X`` (``[..., dim]``, numpy or torch) to ``[..., k]``
     with :func:`gaussian_projection`. Returns the input type, on the input's
-    device. If ``k >= dim`` the signals are returned unchanged.
+    device, in float32 or float64 (half-precision inputs are widened to
+    float32 first). If ``k >= dim`` the signals are returned unchanged.
     """
     dim = X.shape[-1]
     if k >= dim:
         return X
     if isinstance(X, torch.Tensor):
-        dtype = X.dtype if X.is_floating_point() else torch.float32
+        dtype = X.dtype if X.dtype in (torch.float32, torch.float64) else torch.float32
         R = torch.from_numpy(gaussian_projection(dim, k, seed, np.float64))
         return X.to(dtype) @ R.to(device=X.device, dtype=dtype)
     X = np.asarray(X)
