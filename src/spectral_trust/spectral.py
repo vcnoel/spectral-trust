@@ -428,7 +428,14 @@ class SpectralAnalyzer:
         """
         # Convert to numpy for numerical computations
         signals_np = signals.to(torch.float32).detach().cpu().numpy()
-        laplacian_np = laplacian.to(torch.float32).detach().cpu().numpy().squeeze()
+        laplacian_np = laplacian.to(torch.float32).detach().cpu().numpy()
+        # Drop a leading batch dimension of size 1 ([1, S, S] -> [S, S]).
+        # squeeze() would also collapse a 1 x 1 Laplacian to a 0-d array.
+        if laplacian_np.ndim > 2:
+            if int(np.prod(laplacian_np.shape[:-2])) != 1:
+                raise ValueError(
+                    f"expected one [S, S] Laplacian, got shape {laplacian_np.shape}")
+            laplacian_np = laplacian_np.reshape(laplacian_np.shape[-2:])
         # Optional Johnson-Lindenstrauss projection (config.project_dim): only
         # the hybrid metrics below read the signals.
         signals_np = self.project_signals(signals_np)

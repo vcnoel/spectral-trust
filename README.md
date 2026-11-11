@@ -333,6 +333,8 @@ solver. One change alters results for existing callers; it is marked
   hybrid path all call it, and a `cutoff_ratio` outside [0, 1] now raises
   `ValueError`; `compute_hfer` used to slice with a negative index and return
   a wrong value.
+- *(fix)* `analyze_layer` accepts a one-token graph (its `squeeze()` turned a
+  1 x 1 Laplacian into a 0-d array).
 - *(fix)* Every scalar metric of `SpectralDiagnostics` is a plain Python
   `float` (`fiedler_value`, `spectral_radius` and `smoothness_index` were
   numpy scalars), so the fields serialise with `json` directly.
