@@ -305,9 +305,11 @@ those layers.
 
 ## Changelog
 
-**Unreleased** — fast diagnostics, a per-head `rw` fix, and a dense default
+**v0.4.0** — fast diagnostics, a per-head `rw` fix, and a dense default
 solver. One change alters results for existing callers; it is marked
-*(behaviour change)*.
+*(behaviour change)*. With `normalization="sym"` and `eigen_solver="dense"`,
+and for the per-head attention metrics, 0.4.0 reproduces 0.3.0 to float32
+rounding (`benchmarks/reproduce_v030.md`).
 
 - *(behaviour change)* Default `eigen_solver` `"sparse"` → `"dense"`, in
   `GSPConfig` and in the CLI. Above 50 tokens the sparse default kept 50 of
@@ -319,27 +321,12 @@ solver. One change alters results for existing callers; it is marked
   every size measured. Callers at 50 tokens or fewer, or who already passed
   `eigen_solver="dense"`, get the same results. Pass `eigen_solver="sparse"`
   to reproduce the old default; it still logs the truncation warning.
-
 - **Row-anchored energies** (`fast.py`): `row_dirichlet_energy(W, X, rows)`
   and `row_value_spread(A, V, rows)`, batched over heads, in torch on CPU or
   GPU, with no eigendecomposition.
 - **Exact top-band HFER**: `top_band_hfer(L, X)` returns the full-basis HFER
   of a symmetric Laplacian from the top `num_high_modes(S, cutoff_ratio)`
   eigenpairs, equal to the dense path.
-- *(fix)* One HFER mode-count rule everywhere: `num_high_modes(n, r) =
-  n - int((1 - r) n)`, the rule `compute_hfer` has always used (it differs
-  from `ceil(r n)` only by floating-point rounding, never at the default
-  0.1 below n = 5000). `compute_hfer`, `top_band_hfer` and the per-head
-  hybrid path all call it, and a `cutoff_ratio` outside [0, 1] now raises
-  `ValueError`; `compute_hfer` used to slice with a negative index and return
-  a wrong value.
-- *(fix)* `analyze_layer` accepts a one-token graph (its `squeeze()` turned a
-  1 x 1 Laplacian into a 0-d array).
-- *(fix)* `band_energies` raises `ValueError` for a non-symmetric (`rw`)
-  operator instead of symmetrizing it, and handles an all-zero Laplacian.
-- *(fix)* Every scalar metric of `SpectralDiagnostics` is a plain Python
-  `float` (`fiedler_value`, `spectral_radius` and `smoothness_index` were
-  numpy scalars), so the fields serialise with `json` directly.
 - **Random projection**: `GSPConfig.project_dim` (default `None`) and
   `project_seed` apply a seeded Gaussian Johnson-Lindenstrauss map to the
   signals before the hybrid metrics; `gaussian_projection` and `jl_project`
@@ -355,17 +342,35 @@ solver. One change alters results for existing callers; it is marked
   `per_head_hybrid_metrics_all_layers` (energy, smoothness, spectral entropy,
   HFER on each head's full eigenbasis; family "hybrid"), with `heads=` and
   `project_dim`.
-- `benchmarks/fast_vs_dense.py` with results in `benchmarks/results.md`.
 - *(fix)* `per_head_metrics` with `normalization="rw"` symmetrized
   `I - D^{-1}W` before the eigensolve and so reported the spectrum of a
   different matrix (λ_max 2.42 against the true 1.58 on a sink-dominated
   graph). It now reports the rw operator's spectrum. Results with the
   default `sym` normalization are unchanged.
+- *(fix)* One HFER mode-count rule everywhere: `num_high_modes(n, r) =
+  n - int((1 - r) n)`, the rule `compute_hfer` has always used (it differs
+  from `ceil(r n)` only by floating-point rounding, never at the default
+  0.1 below n = 5000). `compute_hfer`, `top_band_hfer` and the per-head
+  hybrid path all call it, and a `cutoff_ratio` outside [0, 1] now raises
+  `ValueError`; `compute_hfer` used to slice with a negative index and return
+  a wrong value.
+- *(fix)* Every scalar metric of `SpectralDiagnostics` is a plain Python
+  `float` (`fiedler_value`, `spectral_radius` and `smoothness_index` were
+  numpy scalars), so the fields serialise with `json` directly.
+- *(fix)* `analyze_layer` accepts a one-token graph (its `squeeze()` turned a
+  1 x 1 Laplacian into a 0-d array).
+- *(fix)* `band_energies` raises `ValueError` for a non-symmetric (`rw`)
+  operator instead of symmetrizing it, and handles an all-zero Laplacian.
 - *(performance)* The Dirichlet energy and the smoothness index are
   trace-only sums, O(S²d), accumulated in float64; they no longer form the
   d x d matrix `X^T L X` (O(S d²) time, d² memory) or evaluate the energy
   twice. `analyze_layer` projects the signals onto the eigenbasis once
-  instead of three times (`compute_spectral_masses`).
+  instead of three times (`compute_spectral_masses`). Energy and smoothness
+  move only by float32 rounding (at most 1.6e-7 relative in the
+  reproduction check).
+- Benchmarks: `benchmarks/fast_vs_dense.py`, `end_to_end.py` and
+  `reproduce_v030.py`, with results in `benchmarks/results.md` and
+  `benchmarks/reproduce_v030.md`.
 
 **v0.3.0** — first release since 0.2.2. Three of these changes alter results
 for existing callers; they are marked *(behaviour change)*.
