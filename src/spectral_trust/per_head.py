@@ -36,7 +36,7 @@ attribution method ranked highest. The attribution stays outside the
 library: pass its scores through :func:`heads_from_scores`, or pass a
 boolean mask or ``(layer, head)`` pairs directly.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import lru_cache
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
@@ -209,7 +209,9 @@ def per_head_metrics(
         config: graph-construction settings (symmetrization, normalization,
             self-loops). Defaults to ``GSPConfig()``, i.e. the symmetric
             normalized Laplacian, whose spectrum lies in [0, 2] independent
-            of sequence length.
+            of sequence length. ``normalization="rw"`` reports the spectrum
+            of the random-walk operator ``I - D^{-1} W`` itself, which equals
+            that of the symmetric normalized Laplacian (the two are similar).
         token_span: optional ``(start, end)`` half-open token range. The
             induced subgraph is taken *before* the Laplacian is built, which
             is what makes the diagnostic local to a span of interest (e.g.
@@ -259,6 +261,14 @@ def per_head_metrics(
     # One Laplacian per head (heads act as the batch dimension), then a single
     # batched symmetric eigendecomposition for all of them.
     adjacency = gc.symmetrize_attention(attn.unsqueeze(0))[0]
+    if cfg.normalization == "rw":
+        # L_rw = I - D^{-1} W is not symmetric, and symmetrizing it would
+        # diagonalize a different matrix. For the symmetric W built here,
+        # D^{1/2} L_rw D^{-1/2} = I - D^{-1/2} W D^{-1/2} exactly (isolated
+        # tokens have identity rows and columns in both), so the symmetric
+        # normalized Laplacian has the same spectrum as the rw operator and
+        # the stable batched eigvalsh applies.
+        gc = GraphConstructor(replace(cfg, normalization="sym"))
     laplacian = gc.construct_laplacian(adjacency)
     laplacian = 0.5 * (laplacian + laplacian.transpose(-2, -1))
     # One thread: a batch of small symmetric eigenproblems is slower with more

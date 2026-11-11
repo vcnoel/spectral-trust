@@ -329,6 +329,11 @@ callers get the same results.
   HFER on each head's full eigenbasis; family "hybrid"), with `heads=` and
   `project_dim`.
 - `benchmarks/fast_vs_dense.py` with results in `benchmarks/results.md`.
+- *(fix)* `per_head_metrics` with `normalization="rw"` symmetrized
+  `I - D^{-1}W` before the eigensolve and so reported the spectrum of a
+  different matrix (λ_max 2.42 against the true 1.58 on a sink-dominated
+  graph). It now reports the rw operator's spectrum. Results with the
+  default `sym` normalization are unchanged.
 
 **v0.3.0** — first release since 0.2.2. Three of these changes alter results
 for existing callers; they are marked *(behaviour change)*.
