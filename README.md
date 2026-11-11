@@ -202,7 +202,8 @@ benchmark's structured signals that ratio was 4x (S = 128) to 30x
 to 3.1x slower than the dense one at every size measured. `top_band_hfer`
 returns the full-basis value: since the
 spectral energies of a symmetric Laplacian sum to `||X||_F²`, it needs only
-the top `ceil(0.1 S)` eigenvectors. It applies to `sym` and `none`; the `rw`
+the top `num_high_modes(S, 0.1) = S - int(0.9 S)` eigenvectors, the same
+mode count as every other HFER path. It applies to `sym` and `none`; the `rw`
 eigenbasis is not orthonormal.
 
 **Random projection.** `project_dim=k` multiplies the signals by a seeded
@@ -323,9 +324,15 @@ solver. One change alters results for existing callers; it is marked
   and `row_value_spread(A, V, rows)`, batched over heads, in torch on CPU or
   GPU, with no eigendecomposition.
 - **Exact top-band HFER**: `top_band_hfer(L, X)` returns the full-basis HFER
-  of a symmetric Laplacian from the top `ceil(cutoff_ratio * S)` eigenpairs,
-  equal to the dense path; `num_high_modes` exposes the dense path's
-  mode-count rule.
+  of a symmetric Laplacian from the top `num_high_modes(S, cutoff_ratio)`
+  eigenpairs, equal to the dense path.
+- *(fix)* One HFER mode-count rule everywhere: `num_high_modes(n, r) =
+  n - int((1 - r) n)`, the rule `compute_hfer` has always used (it differs
+  from `ceil(r n)` only by floating-point rounding, never at the default
+  0.1 below n = 5000). `compute_hfer`, `top_band_hfer` and the per-head
+  hybrid path all call it, and a `cutoff_ratio` outside [0, 1] now raises
+  `ValueError`; `compute_hfer` used to slice with a negative index and return
+  a wrong value.
 - **Random projection**: `GSPConfig.project_dim` (default `None`) and
   `project_seed` apply a seeded Gaussian Johnson-Lindenstrauss map to the
   signals before the hybrid metrics; `gaussian_projection` and `jl_project`

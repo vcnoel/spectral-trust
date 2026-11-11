@@ -44,7 +44,7 @@ import numpy as np
 import torch
 
 from .config import GSPConfig
-from .fast import gaussian_projection
+from .fast import gaussian_projection, num_high_modes
 from .graph import GraphConstructor
 from .spectral import SpectralAnalyzer
 
@@ -438,7 +438,7 @@ def per_head_hybrid_metrics(
         total = masses.sum(dim=-1)
         probs = (masses / total.unsqueeze(-1).clamp(min=1e-30)).clamp(min=1e-12)
         entropy = -(probs * probs.log()).sum(dim=-1)
-        cutoff = int((1 - cfg.hfer_cutoff_ratio) * seq_len)
+        cutoff = seq_len - num_high_modes(seq_len, cfg.hfer_cutoff_ratio)
         hfer = masses[:, cutoff:].sum(dim=-1) / total.clamp(min=1e-30)
         empty = total < 1e-8
         entropy = torch.where(empty, torch.zeros_like(entropy), entropy)

@@ -32,7 +32,10 @@ class GSPConfig:
     # random-walk variants scale with T, a length confound); it is also a
     # symmetric operator, so the deterministic eigh/eigsh path is always used.
     normalization: str = "sym"  # sym (symmetric), rw (random walk), none
-    hfer_cutoff_ratio: float = 0.1  # High frequency cutoff as ratio of total eigenvectors
+    # HFER counts the top n - int((1 - hfer_cutoff_ratio) * n) of the n modes
+    # as high frequency (spectral_trust.fast.num_high_modes, the one rule
+    # every HFER path uses); must lie in [0, 1].
+    hfer_cutoff_ratio: float = 0.1
     
     # Spectral computation
     # Default changed sparse -> dense in v0.4.0. "sparse" (ARPACK) keeps only

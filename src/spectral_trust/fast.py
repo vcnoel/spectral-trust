@@ -22,7 +22,7 @@ functions here avoid, shrink or share that cost:
   energies for a chosen set of query tokens. They need no eigendecomposition
   and cost O(|rows| * S * d).
 - :func:`top_band_hfer` computes the exact full-basis HFER from the top
-  ``ceil(cutoff_ratio * S)`` eigenpairs only.
+  :func:`num_high_modes` eigenpairs only (about ``cutoff_ratio * S``).
 - :func:`gaussian_projection` / :func:`jl_project` shrink the signal width d
   to k with a seeded Johnson-Lindenstrauss map (``GSPConfig.project_dim``).
 - :func:`band_energies` and :func:`band_entropy` estimate the signal energy in
@@ -214,14 +214,29 @@ AUTO_TORCH_MAX_SIZE = 1024
 
 def num_high_modes(seq_len: int, cutoff_ratio: float) -> int:
     """
-    Number of modes :meth:`SpectralAnalyzer.compute_hfer` counts as high
-    frequency: ``seq_len - int((1 - cutoff_ratio) * seq_len)``.
+    The library's rule for how many modes HFER counts as high frequency:
+    ``seq_len - int((1 - cutoff_ratio) * seq_len)``, i.e. the modes from
+    index ``int((1 - cutoff_ratio) * seq_len)`` up, in ascending eigenvalue
+    order. Every HFER path uses it: :meth:`SpectralAnalyzer.compute_hfer`
+    (``seq_len`` = number of modes in the basis, 50 under the truncated
+    ``eigen_solver="sparse"``), :func:`top_band_hfer` and
+    :func:`~spectral_trust.per_head.per_head_hybrid_metrics`.
 
-    This equals ``ceil(cutoff_ratio * seq_len)`` except where floating-point
+    It equals ``ceil(cutoff_ratio * seq_len)`` except where floating-point
     rounding of ``(1 - cutoff_ratio) * seq_len`` lands just below an integer
-    (e.g. ``cutoff_ratio=0.3``, ``seq_len=90``: 28 rather than 27). The rule
-    is reproduced exactly so that the fast path selects the same modes.
+    (``cutoff_ratio=0.3``, ``seq_len=90``: 28 rather than 27). With the
+    default 0.1 the two agree for every ``seq_len`` below 5000. The rule is
+    kept as it is so that results do not change.
+
+    The eigenvalue-only ``eig_hfer`` and the per-head attention ``hfer`` are
+    different metrics: eigenvalue mass in the upper half of the spectrum
+    (index ``seq_len // 2`` up), independent of ``cutoff_ratio``.
+
+    Raises:
+        ValueError: if ``cutoff_ratio`` is outside [0, 1].
     """
+    if not 0.0 <= cutoff_ratio <= 1.0:
+        raise ValueError(f"cutoff_ratio must be in [0, 1], got {cutoff_ratio}")
     return int(seq_len) - int((1 - cutoff_ratio) * seq_len)
 
 
@@ -346,10 +361,10 @@ def top_band_hfer(
         raise ValueError(
             "top_band_hfer needs a symmetric Laplacian (normalization 'sym' "
             "or 'none'); the 'rw' eigenbasis is not orthonormal")
+    k = num_high_modes(L.shape[0], cutoff_ratio)        # validates the ratio
     total = float(np.sum(X * X))
     if total < 1e-8:
         return 0.0
-    k = num_high_modes(L.shape[0], cutoff_ratio)
     U_high = top_band_eigenvectors(L, k, method=method)
     high = float(np.sum((U_high.T @ X) ** 2))
     return high / total

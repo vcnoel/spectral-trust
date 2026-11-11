@@ -199,6 +199,44 @@ def test_top_band_hfer_uses_the_dense_cutoff_rule():
     assert num_high_modes(50, 0.1) == 5
 
 
+def test_hfer_mode_count_is_one_rule_everywhere():
+    """Regression (0.4.0): every HFER path counts num_high_modes(S, r) =
+    S - int((1 - r) S) modes (28 of 90 at r = 0.3, where ceil(r S) = 27),
+    and every path rejects a cutoff ratio outside [0, 1] instead of slicing
+    with a negative index (r = 1.5 used to return the energy of the top 45
+    modes from compute_hfer and the per-head path)."""
+    S, ratio = 90, 0.3
+    assert num_high_modes(S, ratio) == 28
+    attn = _attention(1, S, seed=21).float()
+    cfg = GSPConfig(device="cpu", eigen_solver="dense", hfer_cutoff_ratio=ratio)
+    gc = GraphConstructor(cfg)
+    L = gc.construct_laplacian(gc.symmetrize_attention(attn.unsqueeze(0))[0])[0]
+    vals, vecs = np.linalg.eigh(L.double().numpy())
+    an = SpectralAnalyzer(cfg)
+    for mode, want in ((S - 28, 1.0), (S - 29, 0.0)):     # lowest high / highest low
+        X = np.outer(vecs[:, mode], [1.0, -2.0, 0.5]).astype(np.float32)
+        Xt = torch.from_numpy(X)
+        got = {
+            "compute_hfer": an.analyze_layer(Xt, L, 0).hfer,
+            "top_band_hfer": top_band_hfer(L, X, cutoff_ratio=ratio),
+            "per_head_hybrid": float(per_head_hybrid_metrics(
+                attn, Xt, config=cfg).metric("hfer")[0]),
+        }
+        for name, v in got.items():
+            assert v == pytest.approx(want, abs=1e-4), (name, mode, v)
+    for bad in (1.5, -0.1):
+        bad_cfg = GSPConfig(device="cpu", eigen_solver="dense", hfer_cutoff_ratio=bad)
+        X = np.ones((S, 3), dtype=np.float32)
+        with pytest.raises(ValueError):
+            SpectralAnalyzer(bad_cfg).analyze_layer(torch.from_numpy(X), L, 0)
+        with pytest.raises(ValueError):
+            top_band_hfer(L, X, cutoff_ratio=bad)
+        with pytest.raises(ValueError):
+            per_head_hybrid_metrics(attn, torch.from_numpy(X), config=bad_cfg)
+        with pytest.raises(ValueError):
+            num_high_modes(S, bad)
+
+
 def test_top_band_hfer_rejects_rw_and_handles_zero_signal():
     L, _ = _sym_laplacian(30, norm="rw")
     with pytest.raises(ValueError):

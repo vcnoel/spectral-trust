@@ -20,7 +20,7 @@ from scipy.sparse.linalg import eigsh, ArpackNoConvergence
 from scipy.linalg import eigh, eig
 import logging
 from .config import GSPConfig
-from .fast import gaussian_projection
+from .fast import gaussian_projection, num_high_modes
 
 logger = logging.getLogger(__name__)
 
@@ -385,10 +385,12 @@ class SpectralAnalyzer:
 
     @staticmethod
     def hfer_from_masses(spectral_energies: np.ndarray, cutoff_ratio: float) -> float:
-        """HFER of per-mode energies ordered by ascending eigenvalue."""
+        """HFER of per-mode energies ordered by ascending eigenvalue: the
+        share of the top ``num_high_modes(n, cutoff_ratio)`` modes, the
+        library's single mode-count rule (see :func:`fast.num_high_modes`)."""
         # Determine cutoff index
         num_eigenvectors = len(spectral_energies)
-        cutoff_index = int((1 - cutoff_ratio) * num_eigenvectors)
+        cutoff_index = num_eigenvectors - num_high_modes(num_eigenvectors, cutoff_ratio)
         
         # Compute HFER
         total_energy = np.sum(spectral_energies)
