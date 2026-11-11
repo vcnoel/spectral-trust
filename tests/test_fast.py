@@ -8,6 +8,7 @@ from spectral_trust.fast import (
     row_dirichlet_energy, row_value_spread,
     top_band_hfer, num_high_modes, HFER_METHODS,
     gaussian_projection, jl_project,
+    band_energies, band_entropy, band_filter_response, gershgorin_bound,
 )
 
 
@@ -327,6 +328,70 @@ def test_jl_entropy_error_shrinks_with_width():
         ent = _jl_trials(L, X, k, range(100))["spectral_entropy"]
         med[k] = np.median(np.abs(ent / exact - 1.0))
     assert med[128] < med[16] / 2
+
+
+# ── Chebyshev band energies ──────────────────────────────────────────────────
+
+def _cheb_case(seq=512, dim=64, seed=5):
+    L, _ = _sym_laplacian(seq, seed=seed)
+    L = 0.5 * (L + L.T)                 # exactly symmetric in float64
+    return L, _structured_signals(seq, dim, seed)
+
+
+def test_chebyshev_is_the_damped_filter_applied_to_the_dense_spectrum():
+    """Implementation exactness: the estimate equals sum_k p_b(lambda_k) m_k."""
+    L, X = _cheb_case()
+    vals, vecs = np.linalg.eigh(L)
+    masses = ((vecs.T @ X) ** 2).sum(1)
+    for order in (17, 64, 200):          # odd and even degrees
+        got, _ = band_energies(L, X, edges=8, order=order, lambda_max=2.0)
+        resp = band_filter_response(vals, 8, order, 2.0)
+        np.testing.assert_allclose(got, resp @ masses, rtol=0, atol=1e-9 * masses.sum())
+        assert resp.min() >= -1e-12 and resp.max() <= 1 + 1e-12   # Jackson: no overshoot
+        assert got.sum() == pytest.approx(float((X ** 2).sum()), rel=1e-10)
+
+
+def test_chebyshev_band_energies_against_dense_at_512():
+    L, X = _cheb_case()
+    exact, edges = band_energies(L, X, edges=8, lambda_max=2.0, method="dense")
+    np.testing.assert_allclose(edges, np.linspace(0, 2, 9))
+    assert exact.sum() == pytest.approx(float((X ** 2).sum()), rel=1e-10)
+    H_exact = band_entropy(exact)
+    for order, tol_p, tol_h in ((64, 5e-3, 2e-2), (128, 5e-3, 1e-2)):
+        approx, _ = band_energies(L, X, edges=8, order=order, lambda_max=2.0)
+        p, q = approx / approx.sum(), exact / exact.sum()
+        assert np.abs(p - q).max() <= tol_p, (order, np.abs(p - q).max())
+        assert abs(band_entropy(approx) - H_exact) <= tol_h * H_exact
+    # band entropy is a coarse-graining of the per-mode spectral entropy
+    full = SpectralAnalyzer(GSPConfig(device="cpu", eigen_solver="dense")) \
+        .analyze_layer(torch.from_numpy(X), torch.from_numpy(L), 0).spectral_entropy
+    assert H_exact <= full + 1e-6
+    assert band_entropy(exact, normalize=True) <= 1.0 + 1e-12
+
+
+def test_chebyshev_options_and_precision():
+    L, X = _cheb_case(seq=128, dim=16)
+    a, _ = band_energies(L, X, edges=[0.0, 0.5, 1.0, 1.5, 2.0], order=48, lambda_max=2.0)
+    b, _ = band_energies(L, X, edges=4, order=48, lambda_max=2.0)
+    np.testing.assert_allclose(a, b, rtol=1e-12)
+    f32, _ = band_energies(torch.from_numpy(L).float(), torch.from_numpy(X).float(),
+                           edges=4, order=48, lambda_max=2.0)
+    np.testing.assert_allclose(f32, b, rtol=1e-4, atol=1e-6 * b.sum())
+    assert gershgorin_bound(L) >= np.linalg.eigvalsh(L).max() - 1e-12
+    default, e = band_energies(L, X, edges=4, order=48)          # Gershgorin range
+    assert e[-1] == pytest.approx(gershgorin_bound(L))
+    assert default.sum() == pytest.approx(float((X ** 2).sum()), rel=1e-10)
+    # projected signals: unbiased energies, total equals the projected norm
+    proj, _ = band_energies(L, X, edges=4, order=48, lambda_max=2.0,
+                            project_dim=8, seed=3)
+    XR = X @ gaussian_projection(16, 8, seed=3, dtype=np.float64)
+    assert proj.sum() == pytest.approx(float((XR ** 2).sum()), rel=1e-10)
+    with pytest.raises(ValueError):
+        band_energies(L, X, edges=[0.0, 1.0, 1.0])
+    with pytest.raises(ValueError):
+        band_energies(L, X, method="lanczos")
+    assert band_entropy(np.array([1.0, 0.0, 0.0])) == pytest.approx(0.0, abs=1e-9)
+    assert band_entropy(np.ones(4), normalize=True) == pytest.approx(1.0)
 
 
 @pytest.mark.skipif(not torch.cuda.is_available(), reason="no CUDA device")
