@@ -89,9 +89,22 @@ class SpectralDiagnostics:
     #: metric name -> tensor family ("attention" | "hybrid")
     families: Dict[str, str] = None
 
+    #: Scalar metric fields, stored as plain Python floats (None if unset).
+    SCALAR_FIELDS = ("energy", "smoothness_index", "spectral_entropy", "hfer",
+                     "fiedler_value", "spectral_radius", "max_imaginary",
+                     "eig_energy", "eig_spectral_entropy", "eig_hfer")
+
     def __post_init__(self):
         if self.families is None:
             self.families = dict(METRIC_FAMILIES)
+        # Plain Python types, so that the fields themselves (not only
+        # to_dict) serialise with json and compare without numpy scalars.
+        self.layer = int(self.layer)
+        self.connectivity = bool(self.connectivity)
+        for name in self.SCALAR_FIELDS:
+            value = getattr(self, name)
+            if value is not None:
+                setattr(self, name, float(value))
 
     def to_dict(self) -> Dict[str, Any]:
         d = {
@@ -432,8 +445,8 @@ class SpectralAnalyzer:
         spectral_entropy = self.spectral_entropy_from_masses(spectral_masses)
         hfer = self.hfer_from_masses(spectral_masses, self.config.hfer_cutoff_ratio)
 
-        fiedler_value = eigenvalues[1] if len(eigenvalues) > 1 else 0.0
-        spectral_radius = eigenvalues[-1] if len(eigenvalues) > 0 else 0.0
+        fiedler_value = float(eigenvalues[1]) if len(eigenvalues) > 1 else 0.0
+        spectral_radius = float(eigenvalues[-1]) if len(eigenvalues) > 0 else 0.0
 
         return SpectralDiagnostics(
             layer=layer_idx,

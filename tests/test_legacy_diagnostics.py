@@ -161,6 +161,35 @@ def test_default_analysis_uses_the_full_basis_and_sparse_stays_available(caplog)
     assert any("Truncated eigenbasis" in r.message for r in caplog.records)
 
 
+SCALAR_METRICS = ("energy", "smoothness_index", "spectral_entropy", "hfer",
+                  "fiedler_value", "spectral_radius", "eig_energy",
+                  "eig_spectral_entropy", "eig_hfer")
+
+
+@pytest.mark.parametrize("cfg", [
+    dict(normalization="sym"), dict(normalization="sym", eigen_solver="sparse"),
+    dict(normalization="rw"), dict(normalization="none"),
+    dict(normalization="sym", project_dim=4),
+], ids=["sym", "sym-sparse", "rw", "none", "projected"])
+def test_every_metric_is_a_plain_python_float(cfg):
+    """Regression (0.4.0): fiedler_value and spectral_radius were numpy
+    scalars taken from the eigenvalue array (and smoothness_index a
+    numpy.float32), which json cannot serialise."""
+    import json
+    S = 60
+    c = GSPConfig(device="cpu", **cfg)
+    gc = GraphConstructor(c)
+    g = torch.Generator().manual_seed(3)
+    W = gc.symmetrize_attention(torch.softmax(torch.randn(1, 1, S, S, generator=g), -1))[0]
+    L = gc.construct_laplacian(W)[0]
+    diag = SpectralAnalyzer(c).analyze_layer(torch.randn(S, 8, generator=g), L, 0)
+    for name in SCALAR_METRICS:
+        assert type(getattr(diag, name)) is float, (name, type(getattr(diag, name)))
+    assert type(diag.connectivity) is bool and type(diag.layer) is int
+    json.dumps({name: getattr(diag, name) for name in SCALAR_METRICS})
+    json.dumps(diag.to_dict())
+
+
 def test_cli_config_uses_the_dense_default():
     """The CLI has no solver flag; its fallback must follow the library."""
     import argparse
