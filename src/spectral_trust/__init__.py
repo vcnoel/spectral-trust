@@ -27,7 +27,10 @@ from .per_head import (
     stack_feature_vector, layer_delta_features,
     PER_HEAD_METRIC_NAMES, PER_HEAD_METRIC_FAMILY,
 )
-from .fast import row_dirichlet_energy, row_value_spread
+from .fast import (
+    row_dirichlet_energy, row_value_spread,
+    top_band_hfer, num_high_modes,
+)
 
 __version__ = "0.3.0"
 
@@ -52,5 +55,7 @@ __all__ = [
     "PER_HEAD_METRIC_FAMILY",
     "row_dirichlet_energy",
     "row_value_spread",
+    "top_band_hfer",
+    "num_high_modes",
     "__version__",
 ]

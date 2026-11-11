@@ -4,7 +4,10 @@ import pytest
 import torch
 
 from spectral_trust import GSPConfig, GraphConstructor, SpectralAnalyzer
-from spectral_trust.fast import row_dirichlet_energy, row_value_spread
+from spectral_trust.fast import (
+    row_dirichlet_energy, row_value_spread,
+    top_band_hfer, num_high_modes, HFER_METHODS,
+)
 
 
 def _attention(num_heads, seq, seed=0, causal=True):
@@ -138,6 +141,65 @@ def test_row_selection_validation():
         row_value_spread(A, X, reduction="mean")
     assert torch.allclose(row_dirichlet_energy(A, X, rows=[-1]),
                           row_dirichlet_energy(A, X, rows=[5]))
+
+
+# ── Top-band HFER ────────────────────────────────────────────────────────────
+
+def _sym_laplacian(seq, seed=0, norm="sym"):
+    attn = _attention(1, seq, seed=seed)
+    cfg = GSPConfig(device="cpu", normalization=norm)
+    gc = GraphConstructor(cfg)
+    W = gc.symmetrize_attention(attn.unsqueeze(0))[0]
+    return gc.construct_laplacian(W)[0].double().numpy(), cfg
+
+
+def _dense_hfer(L, X, ratio):
+    cfg = GSPConfig(device="cpu", eigen_solver="dense", hfer_cutoff_ratio=ratio)
+    an = SpectralAnalyzer(cfg)
+    vals, vecs = an.compute_eigendecomposition(L)
+    return an.compute_hfer(X, vecs, vals, ratio)
+
+
+@pytest.mark.parametrize("seq", [40, 97, 300])
+@pytest.mark.parametrize("ratio", [0.1, 0.05, 0.3])
+def test_top_band_hfer_matches_dense_float64(seq, ratio):
+    L, _ = _sym_laplacian(seq, seed=seq)
+    X = _signals(seq, 64, seed=seq).numpy()
+    X[:, 0] += 5.0                      # a dominant direction, as in residual streams
+    want = _dense_hfer(L, X, ratio)
+    for method in HFER_METHODS:
+        got = top_band_hfer(L, X, cutoff_ratio=ratio, method=method)
+        assert abs(got - want) <= 1e-6, (method, got, want)
+        assert abs(got - want) <= 1e-10, (method, got, want)
+
+
+@pytest.mark.parametrize("norm", ["sym", "none"])
+def test_top_band_hfer_matches_analyze_layer_float32(norm):
+    """Against the library's own dense hybrid path, in its float32 precision."""
+    seq = 256
+    L, cfg = _sym_laplacian(seq, seed=7, norm=norm)
+    X = torch.from_numpy(_signals(seq, 128, seed=7).numpy()).float()
+    dense_cfg = GSPConfig(device="cpu", normalization=norm, eigen_solver="dense")
+    diag = SpectralAnalyzer(dense_cfg).analyze_layer(X, torch.from_numpy(L).float(), 0)
+    got = top_band_hfer(torch.from_numpy(L).float(), X)
+    assert abs(got - diag.hfer) <= 1e-6, (got, diag.hfer)
+
+
+def test_top_band_hfer_uses_the_dense_cutoff_rule():
+    # (1 - 0.3) * 90 rounds to 62.999...; the dense path keeps 28 high modes
+    assert num_high_modes(90, 0.3) == 28
+    assert num_high_modes(128, 0.1) == 13
+    assert num_high_modes(50, 0.1) == 5
+
+
+def test_top_band_hfer_rejects_rw_and_handles_zero_signal():
+    L, _ = _sym_laplacian(30, norm="rw")
+    with pytest.raises(ValueError):
+        top_band_hfer(L, np.ones((30, 4)))
+    L, _ = _sym_laplacian(30)
+    assert top_band_hfer(L, np.zeros((30, 4))) == 0.0
+    with pytest.raises(ValueError):
+        top_band_hfer(L, np.ones((30, 4)), method="lanczos")
 
 
 @pytest.mark.skipif(not torch.cuda.is_available(), reason="no CUDA device")
