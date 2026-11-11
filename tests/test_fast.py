@@ -3,7 +3,12 @@ import numpy as np
 import pytest
 import torch
 
-from spectral_trust import GSPConfig, GraphConstructor, SpectralAnalyzer
+from spectral_trust import (
+    GSPConfig, GraphConstructor, SpectralAnalyzer,
+    per_head_metrics, per_head_metrics_all_layers,
+    per_head_hybrid_metrics, per_head_hybrid_metrics_all_layers,
+    heads_from_scores, stack_feature_vector, PER_HEAD_HYBRID_METRIC_NAMES,
+)
 from spectral_trust.fast import (
     row_dirichlet_energy, row_value_spread,
     top_band_hfer, num_high_modes, HFER_METHODS,
@@ -392,6 +397,126 @@ def test_chebyshev_options_and_precision():
         band_energies(L, X, method="lanczos")
     assert band_entropy(np.array([1.0, 0.0, 0.0])) == pytest.approx(0.0, abs=1e-9)
     assert band_entropy(np.ones(4), normalize=True) == pytest.approx(1.0)
+
+
+# ── Head subsets ─────────────────────────────────────────────────────────────
+
+def _layers(num_layers=3, num_heads=6, seq=24):
+    return [_attention(num_heads, seq, seed=10 + i).float() for i in range(num_layers)]
+
+
+def test_head_subset_matches_full_sliced_in_every_form():
+    attn = _layers(1)[0]
+    full = per_head_metrics(attn, layer=2)
+    want = full.values[[1, 4]]
+    forms = [
+        [4, 1],                                          # indices, any order
+        [(2, 1), (2, 4), (0, 3)],                        # pairs; layer 0 ignored
+        np.array([False, True, False, False, True, False]),
+        torch.tensor([False, True, False, False, True, False]),
+        np.eye(6, dtype=bool)[[0, 0, 1]] | np.eye(6, dtype=bool)[[0, 0, 4]],  # [L, H]
+    ]
+    for heads in forms:
+        sub = per_head_metrics(attn, layer=2, heads=heads)
+        assert sub.heads == [1, 4]
+        np.testing.assert_allclose(sub.values, want, atol=1e-6)
+    assert full.heads is None and "heads" not in full.to_dict()
+    assert per_head_metrics(attn, layer=2, heads=[4, 1]).to_dict()["heads"] == [1, 4]
+    # with a token span the selection composes with the induced subgraph
+    span = per_head_metrics(attn, token_span=(5, 20), heads=[3])
+    np.testing.assert_allclose(
+        span.values, per_head_metrics(attn, token_span=(5, 20)).values[[3]], atol=1e-6)
+
+
+def test_unselected_heads_are_never_computed():
+    attn = _layers(1)[0].clone()
+    attn[0] = float("nan")              # would poison any computation touching it
+    sub = per_head_metrics(attn, heads=[2, 5])
+    assert np.isfinite(sub.values).all()
+    X = _signals(attn.shape[-1], 8).float()
+    hyb = per_head_hybrid_metrics(attn, X, heads=[2, 5])
+    assert np.isfinite(hyb.values).all()
+
+
+def test_top_k_heads_from_user_scores_all_layers():
+    attns = _layers(3, 6)
+    scores = np.random.default_rng(0).standard_normal((3, 6))   # user's attribution
+    scores[1, 2] = np.nan
+    top = heads_from_scores(scores, k=5)
+    assert len(top) == 5 and (1, 2) not in top
+    flat = sorted(((l, h) for l in range(3) for h in range(6) if (l, h) != (1, 2)),
+                  key=lambda p: -scores[p])[:5]
+    assert top == sorted(flat)
+    full = per_head_metrics_all_layers(attns)
+    sub = per_head_metrics_all_layers(attns, heads=top)
+    for layer, (f, s) in enumerate(zip(full, sub)):
+        chosen = [h for l, h in top if l == layer]
+        assert s.heads == chosen
+        np.testing.assert_allclose(s.values, f.values[chosen], atol=1e-6)
+    assert stack_feature_vector(sub).shape == (5 * 5,)
+
+
+def _hybrid_reference(attn_head, X, cfg):
+    """SpectralAnalyzer, dense solver, on one head's Laplacian."""
+    gc = GraphConstructor(cfg)
+    W = gc.symmetrize_attention(attn_head[None, None])[0]
+    L = gc.construct_laplacian(W)[0]
+    dense = GSPConfig(device="cpu", normalization=cfg.normalization,
+                      eigen_solver="dense", hfer_cutoff_ratio=cfg.hfer_cutoff_ratio)
+    d = SpectralAnalyzer(dense).analyze_layer(X, L, 0)
+    return [d.energy, d.smoothness_index, d.spectral_entropy, d.hfer]
+
+
+@pytest.mark.parametrize("norm", ["sym", "none", "rw"])
+def test_hybrid_per_head_matches_layer_analyzer(norm):
+    attn = _layers(1, 4, seq=60)[0]
+    X = _structured_signals(60, 32, 3).astype(np.float32)
+    Xt = torch.from_numpy(X)
+    cfg = GSPConfig(device="cpu", normalization=norm)
+    got = per_head_hybrid_metrics(attn, Xt, config=cfg, layer=0)
+    assert got.family == "hybrid" and got.metric_names == PER_HEAD_HYBRID_METRIC_NAMES
+    for h in range(4):
+        want = _hybrid_reference(attn[h], Xt, cfg)
+        np.testing.assert_allclose(got.values[h], want, rtol=2e-4, atol=1e-5)
+
+
+def test_hybrid_head_subsets_and_projection():
+    attns = _layers(3, 5, seq=30)
+    hidden = [_signals(30, 40, seed=i).float() for i in range(4)]   # embeddings first
+    full = per_head_hybrid_metrics_all_layers(attns, hidden)
+    mask = np.zeros((3, 5), dtype=bool)
+    mask[0, [0, 3]] = True
+    mask[2, 4] = True
+    sub = per_head_hybrid_metrics_all_layers(attns, hidden, heads=mask)
+    for layer, (f, s) in enumerate(zip(full, sub)):
+        chosen = list(np.flatnonzero(mask[layer]))
+        assert s.heads == chosen
+        np.testing.assert_allclose(s.values, f.values[chosen], rtol=1e-6, atol=1e-7)
+    # layer i pairs with hidden_states[i + 1]
+    one = per_head_hybrid_metrics(attns[1], hidden[2], layer=1)
+    np.testing.assert_allclose(full[1].values, one.values, rtol=1e-6)
+    # project_dim applies the same JL map as the layer-level analyzer
+    cfg = GSPConfig(device="cpu", project_dim=8, project_seed=2)
+    proj = per_head_hybrid_metrics(attns[0], hidden[1], config=cfg, heads=[1])
+    XR = hidden[1] @ torch.from_numpy(gaussian_projection(40, 8, seed=2))
+    ref = per_head_hybrid_metrics(attns[0], XR, heads=[1])
+    np.testing.assert_allclose(proj.values, ref.values, rtol=1e-5)
+    with pytest.raises(ValueError):
+        per_head_hybrid_metrics_all_layers(attns, hidden[:2])
+
+
+def test_head_selection_validation():
+    attn = _layers(1)[0]
+    with pytest.raises(ValueError):
+        per_head_metrics(attn, heads=[(0, 1)])            # pairs need layer=
+    with pytest.raises(ValueError):
+        per_head_metrics(attn, heads=np.ones(5, dtype=bool))
+    with pytest.raises(IndexError):
+        per_head_metrics(attn, heads=[6])
+    with pytest.raises(TypeError):
+        per_head_metrics(attn, heads=["a"])
+    empty = per_head_metrics(attn, heads=[])
+    assert empty.values.shape == (0, 5) and empty.heads == []
 
 
 @pytest.mark.skipif(not torch.cuda.is_available(), reason="no CUDA device")
