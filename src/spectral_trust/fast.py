@@ -205,7 +205,11 @@ def row_value_spread(
 # ── Exact HFER from the top band ─────────────────────────────────────────────
 
 #: Solvers accepted by :func:`top_band_hfer`.
-HFER_METHODS = ("auto", "subset", "full", "eigsh")
+HFER_METHODS = ("auto", "subset", "torch", "full", "eigsh")
+
+#: ``method="auto"`` uses the full torch solve up to this size and the
+#: LAPACK subset solve above it (crossover measured between 1024 and 2048).
+AUTO_TORCH_MAX_SIZE = 1024
 
 
 def num_high_modes(seq_len: int, cutoff_ratio: float) -> int:
@@ -235,26 +239,41 @@ def top_band_eigenvectors(L: np.ndarray, k: int, method: str = "auto") -> np.nda
     Orthonormal eigenvectors of the ``k`` largest eigenvalues of a symmetric
     matrix, ``[S, k]`` in ascending eigenvalue order.
 
-    ``method``:
+    ``method`` (timings from two runs of ``benchmarks/fast_vs_dense.py
+    --section solvers``, float32, two threads, ``k = 0.1 S``):
 
-    - ``"auto"`` / ``"subset"``: LAPACK ``syevr`` restricted to the top ``k``
-      indices (``scipy.linalg.eigh(subset_by_index=...)``). It still reduces
-      ``L`` to tridiagonal form, but computes and back-transforms only ``k``
-      eigenvectors. Fastest of the four at every size measured (S = 128 to
-      4096, float32, two threads): 3.2 s against 8.4 s for the full solve at
-      S = 4096. ``torch.lobpcg`` was 10 to 60 times slower than the full
-      solve and is not offered.
-    - ``"full"``: the full dense solve, then the top ``k`` columns.
+    - ``"subset"``: LAPACK ``syevr`` restricted to the top ``k`` indices
+      (``scipy.linalg.eigh(subset_by_index=...)``). It still reduces ``L``
+      to tridiagonal form, but computes and back-transforms only ``k``
+      eigenvectors. Clearly fastest at S = 4096: 2.5-3.6 s against
+      4.3-4.5 s for the full torch solve and 6.9-7.4 s for the full scipy
+      solve.
+    - ``"torch"``: the full ``torch.linalg.eigh`` solve (MKL), then the top
+      ``k`` columns. Clearly fastest up to S = 512 (11 ms against 17 ms for
+      the subset solve at S = 512). Between S = 1024 and 2048 the two are
+      within about 20% and swap places from run to run.
+    - ``"auto"``: ``"torch"`` up to :data:`AUTO_TORCH_MAX_SIZE`, then
+      ``"subset"``.
+    - ``"full"``: the full scipy solve, as in the dense analyzer path.
     - ``"eigsh"``: ARPACK Lanczos (``which="LA"``, machine-precision
-      tolerance). Only competitive when ``k`` is a few modes; at
-      ``k = 0.1 S`` it is no faster than the full solve.
+      tolerance). Slower than the full scipy solve at ``k = 0.1 S``
+      (1.6-2.8 s at S = 2048); only worth it for a handful of modes.
+
+    ``torch.lobpcg`` was measured too (0.5 s at S = 128, 2.2 s at S = 512,
+    50 to 1000 times slower than a full solve) and is not offered.
     """
     S = L.shape[0]
     if k <= 0:
         return np.zeros((S, 0), dtype=L.dtype)
-    if method in ("auto", "subset") or (method == "eigsh" and k >= S - 1):
+    if method == "auto":
+        method = "torch" if S <= AUTO_TORCH_MAX_SIZE else "subset"
+    if method == "subset" or (method == "eigsh" and k >= S - 1):
         _, vecs = sla.eigh(L, subset_by_index=[S - k, S - 1], driver="evr")
         return vecs
+    if method == "torch":
+        # torch.linalg.eigh reads the lower triangle, as LAPACK does
+        vecs = torch.linalg.eigh(torch.from_numpy(np.ascontiguousarray(L)))[1]
+        return vecs[:, S - k:].numpy()
     if method == "full":
         return sla.eigh(L)[1][:, S - k:]
     if method == "eigsh":
