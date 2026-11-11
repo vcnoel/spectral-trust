@@ -38,6 +38,16 @@ class GSPConfig:
     num_eigenvalues: int = 50  # Number of eigenvalues to compute for spectral analysis
     eigen_solver: str = "sparse"  # sparse (ARPACK), dense (full eigendecomposition)
     lanczos_max_iter: int = 1000
+
+    # Random projection of the signals before the hybrid metrics (energy,
+    # smoothness_index, spectral_entropy, hfer, spectral_masses): a seeded
+    # Gaussian Johnson-Lindenstrauss map from the hidden size d to
+    # project_dim. Energy and spectral masses stay unbiased; the ratios carry
+    # an O(1/sqrt(project_dim)) error (see spectral_trust.fast). None
+    # disables it, and a width >= d leaves the signals unchanged. Attention
+    # metrics are not affected.
+    project_dim: Optional[int] = None
+    project_seed: int = 0
     
     # Evaluation parameters
     batch_size: int = 1

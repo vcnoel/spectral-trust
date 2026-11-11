@@ -20,6 +20,7 @@ from scipy.sparse.linalg import eigsh, ArpackNoConvergence
 from scipy.linalg import eigh, eig
 import logging
 from .config import GSPConfig
+from .fast import gaussian_projection
 
 logger = logging.getLogger(__name__)
 
@@ -121,7 +122,32 @@ class SpectralAnalyzer:
     
     def __init__(self, config: GSPConfig):
         self.config = config
-    
+        self._projections: Dict[Tuple[int, int, int, str], np.ndarray] = {}
+
+    def project_signals(self, signals: np.ndarray) -> np.ndarray:
+        """
+        Apply the configured Johnson-Lindenstrauss projection
+        (``config.project_dim``) to ``[seq_len, d]`` signals. Returns the
+        signals unchanged when projection is off or ``project_dim >= d``.
+        The matrix is cached per (d, k, seed, dtype), so every layer of a
+        model shares one projection.
+        """
+        k = getattr(self.config, "project_dim", None)
+        if k is None:
+            return signals
+        if k <= 0:
+            raise ValueError(f"project_dim must be positive, got {k}")
+        dim = signals.shape[1]
+        if k >= dim:
+            return signals
+        seed = getattr(self.config, "project_seed", 0)
+        key = (dim, k, seed, signals.dtype.str)
+        R = self._projections.get(key)
+        if R is None:
+            R = gaussian_projection(dim, k, seed=seed, dtype=signals.dtype)
+            self._projections[key] = R
+        return signals @ R
+
     @staticmethod
     def _is_symmetric(matrix: np.ndarray, tol: float = 1e-6) -> bool:
         """True if the operator is symmetric to within `tol` (so eigh/eigsh are valid)."""
@@ -372,6 +398,9 @@ class SpectralAnalyzer:
         # Convert to numpy for numerical computations
         signals_np = signals.to(torch.float32).detach().cpu().numpy()
         laplacian_np = laplacian.to(torch.float32).detach().cpu().numpy().squeeze()
+        # Optional Johnson-Lindenstrauss projection (config.project_dim): only
+        # the hybrid metrics below read the signals.
+        signals_np = self.project_signals(signals_np)
         
         # Single eigendecomposition (was previously called twice — once here, once inside _check_connectivity)
         eigenvalues, eigenvectors = self.compute_eigendecomposition(laplacian_np)

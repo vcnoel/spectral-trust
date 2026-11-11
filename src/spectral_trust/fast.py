@@ -23,6 +23,8 @@ functions here avoid, shrink or share that cost:
   and cost O(|rows| * S * d).
 - :func:`top_band_hfer` computes the exact full-basis HFER from the top
   ``ceil(cutoff_ratio * S)`` eigenpairs only.
+- :func:`gaussian_projection` / :func:`jl_project` shrink the signal width d
+  to k with a seeded Johnson-Lindenstrauss map (``GSPConfig.project_dim``).
 
 The row energies accept batched inputs (a leading head dimension, e.g.
 ``[H, S, S]``) and run in torch on whatever device their inputs live on.
@@ -328,3 +330,48 @@ def top_band_hfer(
     U_high = top_band_eigenvectors(L, k, method=method)
     high = float(np.sum((U_high.T @ X) ** 2))
     return high / total
+
+
+# ── Johnson-Lindenstrauss projection of the signals ──────────────────────────
+
+def gaussian_projection(dim: int, k: int, seed: int = 0,
+                        dtype=np.float32) -> np.ndarray:
+    r"""
+    Seeded Gaussian Johnson-Lindenstrauss matrix ``R`` of shape ``[dim, k]``
+    with i.i.d. ``N(0, 1/k)`` entries, so ``E[R R^T] = I``.
+
+    For any PSD matrix ``A`` (here ``X^T L X``, ``X^T X`` or
+    ``X^T U_band U_band^T X``) the estimate ``tr(R^T A R)`` is unbiased for
+    ``tr(A)`` with relative standard deviation
+    ``sqrt(2 ||A||_F^2 / k) / tr(A) <= sqrt(2 / k)``. Energy and spectral
+    masses are therefore unbiased; smoothness, HFER and entropy are ratios
+    or functions of such estimates and carry an O(1/sqrt(k)) error.
+
+    The matrix is drawn as ``standard_normal((k, dim)).T / sqrt(k)`` in
+    float64, then cast: for one seed, the first ``k'`` columns of the
+    ``k``-column matrix times ``sqrt(k / k')`` are exactly the ``k'``-column
+    matrix.
+    """
+    if k <= 0 or dim <= 0:
+        raise ValueError(f"dim and k must be positive, got dim={dim}, k={k}")
+    rng = np.random.default_rng(seed)
+    R = rng.standard_normal((k, dim)).T / np.sqrt(k)
+    return R.astype(dtype)
+
+
+def jl_project(X, k: int, seed: int = 0):
+    """
+    Project signals ``X`` (``[..., dim]``, numpy or torch) to ``[..., k]``
+    with :func:`gaussian_projection`. Returns the input type, on the input's
+    device. If ``k >= dim`` the signals are returned unchanged.
+    """
+    dim = X.shape[-1]
+    if k >= dim:
+        return X
+    if isinstance(X, torch.Tensor):
+        dtype = X.dtype if X.is_floating_point() else torch.float32
+        R = torch.from_numpy(gaussian_projection(dim, k, seed, np.float64))
+        return X.to(dtype) @ R.to(device=X.device, dtype=dtype)
+    X = np.asarray(X)
+    dtype = np.result_type(X.dtype, np.float32)
+    return X.astype(dtype, copy=False) @ gaussian_projection(dim, k, seed, dtype)

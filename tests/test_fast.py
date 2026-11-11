@@ -7,6 +7,7 @@ from spectral_trust import GSPConfig, GraphConstructor, SpectralAnalyzer
 from spectral_trust.fast import (
     row_dirichlet_energy, row_value_spread,
     top_band_hfer, num_high_modes, HFER_METHODS,
+    gaussian_projection, jl_project,
 )
 
 
@@ -200,6 +201,132 @@ def test_top_band_hfer_rejects_rw_and_handles_zero_signal():
     assert top_band_hfer(L, np.zeros((30, 4))) == 0.0
     with pytest.raises(ValueError):
         top_band_hfer(L, np.ones((30, 4)), method="lanczos")
+
+
+# ── Johnson-Lindenstrauss projection ─────────────────────────────────────────
+
+def _structured_signals(seq, dim, seed):
+    """Residual-stream-like: a large shared direction plus a decaying spectrum."""
+    rng = np.random.default_rng(seed)
+    scales = 1.0 / np.arange(1, dim + 1)
+    X = rng.standard_normal((seq, dim)) * scales
+    X[:, 0] += 3.0
+    return X
+
+
+def _jl_trials(L64, X, k, seeds):
+    cfg = dict(device="cpu", eigen_solver="dense", project_dim=k)
+    out = {m: [] for m in ("energy", "smoothness_index", "hfer", "spectral_entropy")}
+    for s in seeds:
+        an = SpectralAnalyzer(GSPConfig(project_seed=s, **cfg))
+        d = an.analyze_layer(torch.from_numpy(X), torch.from_numpy(L64), 0)
+        for m in out:
+            out[m].append(getattr(d, m))
+    return {m: np.array(v) for m, v in out.items()}
+
+
+def _lm_bounds(A, k, t):
+    """Laurent-Massart bounds on tr(R^T A R)/tr(A) - 1 at level exp(-t) per side."""
+    w = np.clip(np.linalg.eigvalsh(A), 0, None)
+    w = w / w.sum()
+    upper = 2 * np.sqrt((w ** 2).sum() * t / k) + 2 * w.max() * t / k
+    lower = 2 * np.sqrt((w ** 2).sum() * t / k)
+    return lower, upper
+
+
+def test_projection_plumbing_is_exact():
+    seq, dim, k = 70, 96, 16
+    L, _ = _sym_laplacian(seq, seed=11)
+    X = _structured_signals(seq, dim, 11).astype(np.float32)
+    proj = SpectralAnalyzer(GSPConfig(device="cpu", eigen_solver="dense",
+                                      project_dim=k, project_seed=5))
+    plain = SpectralAnalyzer(GSPConfig(device="cpu", eigen_solver="dense"))
+    Lt = torch.from_numpy(L).float()
+    d_proj = proj.analyze_layer(torch.from_numpy(X), Lt, 0)
+    XR = X @ gaussian_projection(dim, k, seed=5)
+    d_ref = plain.analyze_layer(torch.from_numpy(XR), Lt, 0)
+    for m in ("energy", "smoothness_index", "hfer", "spectral_entropy"):
+        assert getattr(d_proj, m) == pytest.approx(getattr(d_ref, m), rel=1e-6)
+    # attention-family metrics do not read the signals
+    d_plain = plain.analyze_layer(torch.from_numpy(X), Lt, 0)
+    assert d_proj.fiedler_value == d_plain.fiedler_value
+    np.testing.assert_array_equal(d_proj.eigenvalues, d_plain.eigenvalues)
+    # a width >= d is the identity
+    wide = SpectralAnalyzer(GSPConfig(device="cpu", eigen_solver="dense",
+                                      project_dim=dim))
+    assert wide.analyze_layer(torch.from_numpy(X), Lt, 0).energy == d_plain.energy
+    # nested draws, and the torch path uses the same matrix
+    R8 = gaussian_projection(dim, 8, seed=5, dtype=np.float64)
+    R16 = gaussian_projection(dim, 16, seed=5, dtype=np.float64)
+    np.testing.assert_allclose(R16[:, :8] * np.sqrt(16 / 8), R8, rtol=1e-12)
+    Xt = torch.from_numpy(X).double()
+    np.testing.assert_allclose(jl_project(Xt, 16, seed=5).numpy(),
+                               X.astype(np.float64) @ R16, rtol=1e-10)
+
+
+def test_jl_energy_is_unbiased_with_the_predicted_spread():
+    seq, dim, k, n = 64, 256, 64, 400
+    L, _ = _sym_laplacian(seq, seed=12)
+    X = _structured_signals(seq, dim, 12)
+    A = X.T @ L @ X
+    exact = float(np.trace(A))
+    trials = _jl_trials(L, X, k, range(n))
+    err = trials["energy"] / exact - 1.0
+    predicted_sd = np.sqrt(2.0 * np.sum(A * A) / k) / exact
+    assert predicted_sd <= np.sqrt(2.0 / k) + 1e-12
+    # unbiased: mean within 4 standard errors of zero
+    assert abs(err.mean()) <= 4 * predicted_sd / np.sqrt(n)
+    # spread: sample sd within 15% of the closed form (SE of an sd ~ 4% here)
+    assert abs(err.std(ddof=1) / predicted_sd - 1.0) <= 0.15
+    # tail: Laurent-Massart bound at delta = 0.05 holds empirically
+    delta = 0.05
+    lower, upper = _lm_bounds(A, k, np.log(2 / delta))
+    outside = np.mean((err > upper) | (err < -lower))
+    assert outside <= delta + 3 * np.sqrt(delta * (1 - delta) / n)
+
+
+@pytest.mark.parametrize("metric", ["smoothness_index", "hfer"])
+def test_jl_ratio_metrics_follow_the_delta_method_and_union_bound(metric):
+    seq, dim, k, n = 64, 256, 64, 400
+    L, _ = _sym_laplacian(seq, seed=13)
+    X = _structured_signals(seq, dim, 13)
+    vals, vecs = np.linalg.eigh(L)
+    if metric == "smoothness_index":
+        num = X.T @ L @ X
+    else:
+        U_high = vecs[:, seq - num_high_modes(seq, 0.1):]
+        num = X.T @ U_high @ U_high.T @ X
+    den = X.T @ X
+    exact = np.trace(num) / np.trace(den)
+    err = _jl_trials(L, X, k, range(n))[metric] / exact - 1.0
+    # delta method: Var(Q_num - Q_den), Var(Q_A) = 2 tr(A^2)/(k tr(A)^2)
+    tn, td = np.trace(num), np.trace(den)
+    var = (2.0 / k) * (np.sum(num * num) / tn ** 2 + np.sum(den * den) / td ** 2
+                       - 2.0 * np.sum(num * den) / (tn * td))
+    # first-order prediction; second-order terms add ~10% at k = 64
+    sd_ratio = err.std(ddof=1) / np.sqrt(var)
+    assert 0.85 <= sd_ratio <= 1.3, sd_ratio
+    # union bound: numerator and denominator each inside their delta/2 band
+    delta = 0.05
+    t = np.log(4 / delta)
+    ln, un = _lm_bounds(num, k, t)
+    ld, ud = _lm_bounds(den, k, t)
+    lo, hi = (1 - ln) / (1 + ud) - 1.0, (1 + un) / (1 - ld) - 1.0
+    outside = np.mean((err < lo) | (err > hi))
+    assert outside <= delta + 3 * np.sqrt(delta * (1 - delta) / n)
+
+
+def test_jl_entropy_error_shrinks_with_width():
+    seq, dim = 64, 256
+    L, _ = _sym_laplacian(seq, seed=14)
+    X = _structured_signals(seq, dim, 14)
+    exact = SpectralAnalyzer(GSPConfig(device="cpu", eigen_solver="dense")) \
+        .analyze_layer(torch.from_numpy(X), torch.from_numpy(L), 0).spectral_entropy
+    med = {}
+    for k in (16, 128):
+        ent = _jl_trials(L, X, k, range(100))["spectral_entropy"]
+        med[k] = np.median(np.abs(ent / exact - 1.0))
+    assert med[128] < med[16] / 2
 
 
 @pytest.mark.skipif(not torch.cuda.is_available(), reason="no CUDA device")

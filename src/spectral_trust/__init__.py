@@ -30,6 +30,7 @@ from .per_head import (
 from .fast import (
     row_dirichlet_energy, row_value_spread,
     top_band_hfer, num_high_modes,
+    gaussian_projection, jl_project,
 )
 
 __version__ = "0.3.0"
@@ -57,5 +58,7 @@ __all__ = [
     "row_value_spread",
     "top_band_hfer",
     "num_high_modes",
+    "gaussian_projection",
+    "jl_project",
     "__version__",
 ]
