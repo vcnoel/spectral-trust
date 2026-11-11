@@ -334,6 +334,11 @@ callers get the same results.
   different matrix (λ_max 2.42 against the true 1.58 on a sink-dominated
   graph). It now reports the rw operator's spectrum. Results with the
   default `sym` normalization are unchanged.
+- *(performance)* The Dirichlet energy and the smoothness index are
+  trace-only sums, O(S²d), accumulated in float64; they no longer form the
+  d x d matrix `X^T L X` (O(S d²) time, d² memory) or evaluate the energy
+  twice. `analyze_layer` projects the signals onto the eigenbasis once
+  instead of three times (`compute_spectral_masses`).
 
 **v0.3.0** — first release since 0.2.2. Three of these changes alter results
 for existing callers; they are marked *(behaviour change)*.

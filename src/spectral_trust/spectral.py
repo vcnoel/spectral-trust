@@ -295,35 +295,51 @@ class SpectralAnalyzer:
 
     def compute_dirichlet_energy(self, signals: np.ndarray, laplacian: np.ndarray) -> float:
         """
-        Compute Dirichlet energy of signals on graph
+        Compute Dirichlet energy of signals on graph, ``tr(X^T L X)``.
+
+        Evaluated as ``sum(X * (L X))``: one S x S by S x d product, O(S^2 d)
+        time and O(S d) memory. The d x d matrix ``X^T L X`` is never formed
+        (before 0.4.0 it was, at O(S d^2) cost). Accumulated in float64.
+
         Args:
             signals: [seq_len, embedding_dim] signal matrix
             laplacian: [seq_len, seq_len] Laplacian matrix
         Returns:
             Total Dirichlet energy
         """
-        # Energy = Tr(X^T L X)
-        energy_matrix = np.dot(signals.T, np.dot(laplacian, signals))
-        energy = np.trace(energy_matrix)
-        return float(energy)
-    
-    def compute_smoothness_index(self, signals: np.ndarray, laplacian: np.ndarray) -> float:
+        return float(np.sum(signals * np.dot(laplacian, signals), dtype=np.float64))
+
+    def compute_smoothness_index(self, signals: np.ndarray, laplacian: np.ndarray,
+                                 energy: Optional[float] = None) -> float:
         """
-        Compute smoothness index (normalized energy)
+        Compute smoothness index (normalized energy),
+        ``tr(X^T L X) / ||X||_F^2``.
+
         Args:
             signals: [seq_len, embedding_dim] signal matrix
             laplacian: [seq_len, seq_len] Laplacian matrix
+            energy: the Dirichlet energy, if already computed (analyze_layer
+                passes it so that it is evaluated once)
         Returns:
             Smoothness index
         """
-        energy = self.compute_dirichlet_energy(signals, laplacian)
-        signal_norm = np.trace(np.dot(signals.T, signals))
-        
+        if energy is None:
+            energy = self.compute_dirichlet_energy(signals, laplacian)
+        signal_norm = float(np.sum(signals * signals, dtype=np.float64))
+
         if signal_norm < 1e-8:
             return 0.0
-        
+
         return energy / signal_norm
-    
+
+    @staticmethod
+    def compute_spectral_masses(signals: np.ndarray, eigenvectors: np.ndarray) -> np.ndarray:
+        """Energy of the signals in each eigenmode, ``||u_k^T X||^2``: the one
+        projection onto the eigenbasis that entropy, HFER and spectral masses
+        share."""
+        signal_hat = np.dot(eigenvectors.T, signals)  # [num_eigenvectors, embedding_dim]
+        return np.sum(signal_hat**2, axis=1)          # [num_eigenvectors]
+
     def compute_spectral_entropy(self, signals: np.ndarray, eigenvectors: np.ndarray) -> float:
         """
         Compute spectral entropy of signals
@@ -333,12 +349,12 @@ class SpectralAnalyzer:
         Returns:
             Spectral entropy
         """
-        # Project signals onto eigenbasis
-        signal_hat = np.dot(eigenvectors.T, signals)  # [num_eigenvectors, embedding_dim]
-        
-        # Compute spectral energies per frequency
-        spectral_energies = np.sum(signal_hat**2, axis=1)  # [num_eigenvectors]
-        
+        return self.spectral_entropy_from_masses(
+            self.compute_spectral_masses(signals, eigenvectors))
+
+    @staticmethod
+    def spectral_entropy_from_masses(spectral_energies: np.ndarray) -> float:
+        """Spectral entropy (natural log, unnormalised) of per-mode energies."""
         # Normalize to get probability distribution
         total_energy = np.sum(spectral_energies)
         if total_energy < 1e-8:
@@ -364,14 +380,14 @@ class SpectralAnalyzer:
         Returns:
             HFER value
         """
-        # Project signals onto eigenbasis
-        signal_hat = np.dot(eigenvectors.T, signals)  # [num_eigenvectors, embedding_dim]
-        
-        # Compute spectral energies per frequency
-        spectral_energies = np.sum(signal_hat**2, axis=1)  # [num_eigenvectors]
-        
+        return self.hfer_from_masses(
+            self.compute_spectral_masses(signals, eigenvectors), cutoff_ratio)
+
+    @staticmethod
+    def hfer_from_masses(spectral_energies: np.ndarray, cutoff_ratio: float) -> float:
+        """HFER of per-mode energies ordered by ascending eigenvalue."""
         # Determine cutoff index
-        num_eigenvectors = len(eigenvalues)
+        num_eigenvectors = len(spectral_energies)
         cutoff_index = int((1 - cutoff_ratio) * num_eigenvectors)
         
         # Compute HFER
@@ -406,16 +422,13 @@ class SpectralAnalyzer:
         eigenvalues, eigenvectors = self.compute_eigendecomposition(laplacian_np)
         connectivity = bool(np.sum(eigenvalues < 1e-6) == 1)
 
-        # Compute diagnostics
+        # Compute diagnostics: the energy once, the eigenbasis projection once
         energy = self.compute_dirichlet_energy(signals_np, laplacian_np)
-        smoothness_index = self.compute_smoothness_index(signals_np, laplacian_np)
-        spectral_entropy = self.compute_spectral_entropy(signals_np, eigenvectors)
-        hfer = self.compute_hfer(signals_np, eigenvectors, eigenvalues,
-                               self.config.hfer_cutoff_ratio)
-
-        # Compute spectral masses
-        signal_hat = np.dot(eigenvectors.T, signals_np)
-        spectral_masses = np.sum(signal_hat**2, axis=1)
+        smoothness_index = self.compute_smoothness_index(signals_np, laplacian_np,
+                                                         energy=energy)
+        spectral_masses = self.compute_spectral_masses(signals_np, eigenvectors)
+        spectral_entropy = self.spectral_entropy_from_masses(spectral_masses)
+        hfer = self.hfer_from_masses(spectral_masses, self.config.hfer_cutoff_ratio)
 
         fiedler_value = eigenvalues[1] if len(eigenvalues) > 1 else 0.0
         spectral_radius = eigenvalues[-1] if len(eigenvalues) > 0 else 0.0

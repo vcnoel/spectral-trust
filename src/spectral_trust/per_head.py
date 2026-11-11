@@ -421,8 +421,10 @@ def per_head_hybrid_metrics(
             rows.append([d.energy, d.smoothness_index, d.spectral_entropy, d.hfer])
         values = np.asarray(rows, dtype=np.float32)
     else:
-        energy = (X.unsqueeze(0) * (laplacian @ X)).sum(dim=(-2, -1))   # [H]
-        signal_norm = float((X * X).sum())
+        # trace-only, accumulated in float64, as in SpectralAnalyzer
+        energy = (X.unsqueeze(0) * (laplacian @ X)).sum(dim=(-2, -1),
+                                                        dtype=torch.float64)   # [H]
+        signal_norm = float((X * X).sum(dtype=torch.float64))
         smoothness = (energy / signal_norm if signal_norm >= 1e-8
                       else torch.zeros_like(energy))
         sym = 0.5 * (laplacian + laplacian.transpose(-2, -1))

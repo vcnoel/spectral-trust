@@ -1,9 +1,81 @@
+import tracemalloc
+
 import pytest
 import torch
 import numpy as np
 from spectral_trust.config import GSPConfig
 from spectral_trust.spectral import SpectralAnalyzer
 from spectral_trust.graph import GraphConstructor
+
+
+def _random_laplacian(seq, seed=0):
+    g = torch.Generator().manual_seed(seed)
+    a = torch.softmax(torch.randn(1, 1, seq, seq, generator=g), dim=-1)
+    gc = GraphConstructor(GSPConfig(device="cpu"))
+    return gc.construct_laplacian(gc.symmetrize_attention(a)[0])[0].numpy()
+
+
+def test_energy_and_smoothness_never_form_a_d_by_d_matrix():
+    """Regression (0.4.0): tr(X^T L X) and tr(X^T X) were taken from the full
+    d x d products, O(S d^2) time and d^2 memory (61 MB here, 64 GB at
+    d = 131072), and the smoothness index computed the energy a second time.
+    Both are now trace-only sums."""
+    S, d = 8, 4000
+    X = np.random.default_rng(0).standard_normal((S, d)).astype(np.float32)
+    L = _random_laplacian(S)
+    an = SpectralAnalyzer(GSPConfig(device="cpu"))
+    X64, L64 = X.astype(np.float64), L.astype(np.float64)
+    want_energy = float(np.sum(X64 * (L64 @ X64)))
+    want_smooth = want_energy / float(np.sum(X64 * X64))
+    for fn, want in ((lambda: an.compute_dirichlet_energy(X, L), want_energy),
+                     (lambda: an.compute_smoothness_index(X, L), want_smooth)):
+        tracemalloc.start()
+        try:
+            got = fn()
+            _, peak = tracemalloc.get_traced_memory()
+        finally:
+            tracemalloc.stop()
+        assert peak < 8 * 2 ** 20, f"peak {peak / 2 ** 20:.1f} MB: a d x d matrix was built"
+        assert got == pytest.approx(want, rel=1e-6)
+
+
+def test_analyze_layer_evaluates_the_energy_once_and_projects_once(monkeypatch):
+    """Regression (0.4.0): analyze_layer computed the Dirichlet energy twice
+    (directly and inside the smoothness index) and projected the signals onto
+    the eigenbasis three times (entropy, HFER, spectral masses)."""
+    class CountingBasis(np.ndarray):
+        transposes = 0
+
+        @property
+        def T(self):
+            CountingBasis.transposes += 1
+            return np.asarray(self).T
+
+    calls = {"energy": 0}
+    real_energy = SpectralAnalyzer.compute_dirichlet_energy
+    real_eig = SpectralAnalyzer.compute_eigendecomposition
+
+    def counting_energy(self, signals, laplacian):
+        calls["energy"] += 1
+        return real_energy(self, signals, laplacian)
+
+    def counting_eig(self, laplacian):
+        vals, vecs = real_eig(self, laplacian)
+        return vals, vecs.view(CountingBasis)
+
+    monkeypatch.setattr(SpectralAnalyzer, "compute_dirichlet_energy", counting_energy)
+    monkeypatch.setattr(SpectralAnalyzer, "compute_eigendecomposition", counting_eig)
+    S = 30
+    X = torch.randn(S, 16, generator=torch.Generator().manual_seed(1))
+    an = SpectralAnalyzer(GSPConfig(device="cpu", eigen_solver="dense"))
+    diag = an.analyze_layer(X, torch.from_numpy(_random_laplacian(S)), 0)
+    assert calls["energy"] == 1
+    assert CountingBasis.transposes == 1
+    # the single projection still yields consistent masses, entropy and HFER
+    m = np.asarray(diag.spectral_masses, dtype=np.float64)
+    p = np.maximum(m / m.sum(), 1e-12)
+    assert diag.spectral_entropy == pytest.approx(float(-(p * np.log(p)).sum()), rel=1e-5)
+    assert diag.hfer == pytest.approx(float(m[int(0.9 * S):].sum() / m.sum()), rel=1e-5)
 
 def test_legacy_metrics_accuracy():
     """Verify standard GSP diagnostics on a fixed symmetric graph."""
