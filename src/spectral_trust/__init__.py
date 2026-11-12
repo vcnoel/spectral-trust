@@ -39,6 +39,7 @@ from .fast import (
 from .cache import SpectralCache, LayerSpectra, HeadSpectra, GRAPH_METRIC_NAMES
 from .model import SpectralModel, compute_spectra
 from .interop import from_transformer_lens, from_nnsight, from_hf_outputs
+from . import viz
 
 __version__ = "0.4.0rc1"
 
@@ -85,5 +86,6 @@ __all__ = [
     "from_transformer_lens",
     "from_nnsight",
     "from_hf_outputs",
+    "viz",
     "__version__",
 ]
