@@ -63,15 +63,18 @@ def _tokens_from(tokens, tokenizer, batch: int, seq: int,
         if tokenizer is None:
             raise ValueError("text input needs the model's tokenizer; pass token "
                              "strings or ids instead")
-        ids = [list(tokenizer(t)["input_ids"]) for t in tokens]
-    elif all(isinstance(t, (int,)) or hasattr(t, "__index__") for t in tokens)             and not any(isinstance(t, (list, tuple)) for t in tokens):
+        ids = [_encode_to_length(tokenizer, t, seq) for t in tokens]
+    elif all(isinstance(t, int) for t in tokens):
         ids = [[int(i) for i in tokens]]
-    elif tokens and isinstance(tokens[0], (list, tuple)) and tokens[0]             and isinstance(tokens[0][0], str):
+    elif isinstance(tokens[0], (list, tuple)) and tokens[0] and isinstance(tokens[0][0], str):
         return [list(t) for t in tokens], None
     else:
         ids = [[int(i) for i in row] for row in tokens]
     if len(ids) != batch:
         raise ValueError(f"{len(ids)} token sequences for a batch of {batch}")
+    if any(len(row) != seq for row in ids):
+        raise ValueError(f"the token ids have {[len(r) for r in ids]} tokens but the "
+                         f"attention covers {seq}; pass the ids that were run")
     if to_str_tokens is not None:
         strs = [list(to_str_tokens(torch.tensor(row))) for row in ids]
     elif tokenizer is not None:
@@ -79,6 +82,21 @@ def _tokens_from(tokens, tokenizer, batch: int, seq: int,
     else:
         strs = [[str(i) for i in row] for row in ids]
     return strs, ids
+
+
+def _encode_to_length(tokenizer, text: str, seq: int) -> List[int]:
+    """Token ids of ``text`` as they were run: with the tokenizer's special
+    tokens, without them, or with a BOS token prepended (TransformerLens'
+    ``prepend_bos``), whichever gives ``seq`` tokens."""
+    full = list(tokenizer(text)["input_ids"])
+    plain = list(tokenizer(text, add_special_tokens=False)["input_ids"])
+    bos = getattr(tokenizer, "bos_token_id", None)
+    candidates = [full, plain] + ([[bos] + plain] if bos is not None else [])
+    for ids in candidates:
+        if len(ids) == seq:
+            return ids
+    raise ValueError(f"the text has {len(plain)} tokens ({len(full)} with special tokens) "
+                     f"but the attention covers {seq}; pass the token ids that were run")
 
 
 def _cache_get(cache, key):
