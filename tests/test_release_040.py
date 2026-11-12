@@ -52,8 +52,39 @@ def test_zero_tolerance_keeps_the_old_floor_in_float64():
 def test_zero_tolerance_scales_with_lambda_max_in_float32():
     vals = np.array([3e-3, 50.0, 6000.0], dtype=np.float32)
     tol = SpectralAnalyzer.zero_eigenvalue_tolerance(vals, 256)
-    assert tol == pytest.approx(16 * np.finfo(np.float32).eps * 6000.0, rel=1e-6)
+    assert tol == pytest.approx(16 * 16 * np.finfo(np.float32).eps * 6000.0, rel=1e-6)
     assert SpectralAnalyzer.is_connected(vals, 256)
+
+
+def test_noise_on_the_zero_mode_does_not_disconnect_a_normalised_graph():
+    # gpt2 layer 5, float32 sym: the zero mode came out at 1.07e-6, above the old 1e-6 cut
+    vals = np.array([1.07e-6, 0.85, 1.1, 1.3], dtype=np.float32)
+    assert SpectralAnalyzer.is_connected(vals, 12)
+
+
+def test_two_numerically_zero_modes_stay_disconnected_in_float32():
+    vals = np.array([1e-7, 2e-6, 0.9, 1.3], dtype=np.float32)
+    assert not SpectralAnalyzer.is_connected(vals, 12)
+
+
+def test_single_node_is_connected():
+    assert SpectralAnalyzer.is_connected(np.array([0.0]), 1)
+    assert not SpectralAnalyzer.is_connected(np.array([]), 0)
+
+
+def test_gpt2_like_attention_is_connected_end_to_end():
+    from spectral_trust import GraphConstructor
+    g = torch.Generator().manual_seed(5)
+    seq = 12
+    a = torch.rand(1, 12, seq, seq, generator=g).tril()
+    a = a / a.sum(-1, keepdim=True)
+    cfg = GSPConfig(device="cpu", normalization="sym")
+    gc = GraphConstructor(cfg)
+    sym = gc.symmetrize_attention(a).squeeze(0)
+    adj = gc.aggregate_heads(sym.unsqueeze(0), attn_mask=None).squeeze(0)
+    lap = gc.construct_laplacian(adj.unsqueeze(0)).squeeze(0)
+    d = SpectralAnalyzer(cfg).analyze_layer(torch.randn(seq, 16, generator=g), lap, 0)
+    assert d.connectivity
 
 
 def test_cli_normalization_default_is_sym():

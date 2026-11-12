@@ -23,12 +23,14 @@ rounding (`benchmarks/reproduce_v030.md`).
 - *(behaviour change)* The CLI's `--normalization` default `"rw"` → `"sym"`,
   matching `GSPConfig` since 0.3.0. Pass `--normalization rw` for the old
   CLI results.
-- *(behaviour change)* `connectivity` counts an eigenvalue as zero below
-  `max(1e-6, sqrt(S) * eps * lambda_max)` instead of a fixed 1e-6, through
-  `SpectralAnalyzer.zero_eigenvalue_tolerance` and `is_connected`. Float32
-  noise on unnormalised (`"none"`) graphs crossed the fixed threshold and
-  reported connected graphs as disconnected. Float64 input keeps the old
-  threshold; float32 normalised graphs see it rise to at most about 1e-5.
+- *(behaviour change)* `connectivity` is true when the second-smallest
+  Laplacian eigenvalue is at least `max(1e-6, 16 * sqrt(S) * eps * lambda_max)`,
+  through `SpectralAnalyzer.zero_eigenvalue_tolerance` and `is_connected`.
+  0.3.0 counted eigenvalues below a fixed 1e-6 and required exactly one, so
+  float32 noise on the zero mode (1.07e-6 on gpt2 layer 5, and larger on
+  unnormalised `"none"` graphs) reported connected graphs as disconnected.
+  Float64 results change only where the zero mode itself exceeded 1e-6. For
+  float32 normalised graphs the threshold is at most about 2e-4 at 2048 tokens.
 - *(behaviour change)* Hybrid models such as Qwen3.5, which return attention
   for their full-attention layers only: `analyze_text` now pairs each
   attention tensor with the output of its own layer and reports the true
