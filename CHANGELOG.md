@@ -3,7 +3,7 @@
 ## v0.4.0
 
 Fast diagnostics, a per-head `rw` fix, and a dense default
-solver. One change alters results for existing callers; it is marked
+solver. Three changes alter results for existing callers; they are marked
 *(behaviour change)*. With `normalization="sym"` and `eigen_solver="dense"`,
 and for the per-head attention metrics, 0.4.0 reproduces 0.3.0 to float32
 rounding (`benchmarks/reproduce_v030.md`).
