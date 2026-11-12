@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use spectral-trust in your work, please cite the software as below."
 type: software
 title: "spectral-trust: graph-spectral diagnostics for transformer attention"
-version: 0.4.0rc1
+version: 0.4.0
 authors:
   - family-names: "Noël"
     given-names: "Valentin"

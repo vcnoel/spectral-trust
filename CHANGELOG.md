@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.4.0 (first published as release candidate 0.4.0rc1)
+## v0.4.0
 
 A TransformerLens-style API (`SpectralModel`, `SpectralCache`), adapters
 for TransformerLens, nnsight and Hugging Face outputs, interactive views,
