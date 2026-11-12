@@ -1,0 +1,78 @@
+name: models
+
+# run_with_spectra on tiny random checkpoints of several architectures, and
+# the TransformerLens and nnsight adapter tests on gpt2. Both download from
+# the Hugging Face Hub. Nothing is built or published from here: no tag
+# trigger, no secrets, read-only token.
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  model-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        model:
+          - hf-internal-testing/tiny-random-gpt2
+          - hf-internal-testing/tiny-random-LlamaForCausalLM
+          - hf-internal-testing/tiny-random-MistralForCausalLM
+          - hf-internal-testing/tiny-random-Gemma2ForCausalLM
+          - hf-internal-testing/tiny-random-Gemma3ForCausalLM
+          - hf-internal-testing/tiny-random-PhiForCausalLM
+          - hf-internal-testing/tiny-random-GPTNeoXForCausalLM
+          # hf-internal-testing has no Qwen2 checkpoint
+          - trl-internal-testing/tiny-Qwen2ForCausalLM-2.5
+          - trl-internal-testing/tiny-Qwen3ForCausalLM
+    env:
+      SPECTRAL_TRUST_MODELS: ${{ matrix.model }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: setup.py
+
+      - name: Install the CPU build of torch
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install spectral-trust and pytest
+        run: |
+          python -m pip install -e .
+          python -m pip install pytest
+
+      - name: Run the model matrix
+        run: python -m pytest -q tests/test_model_matrix.py
+
+  interop:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: setup.py
+
+      - name: Install the CPU build of torch
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install spectral-trust with TransformerLens and nnsight
+        run: |
+          python -m pip install -e ".[tl,nnsight]"
+          python -m pip install pytest
+
+      - name: Run the adapter tests
+        run: python -m pytest -q -rs tests/test_interop.py

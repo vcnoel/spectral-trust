@@ -476,29 +476,38 @@ class SpectralAnalyzer:
     def zero_eigenvalue_tolerance(eigenvalues: np.ndarray, n: int) -> float:
         """Threshold below which a Laplacian eigenvalue counts as zero.
 
-        A fixed 1e-6 is crossed by floating-point noise on unnormalised
-        ("none") graphs, whose eigenvalues scale with the node degrees. The
-        tolerance is sqrt(n) * eps * lambda_max, with eps of the eigenvalues'
-        dtype, and never drops below the previous 1e-6. On causal sink-heavy
-        graphs (n from 8 to 2048, float32, sym and none), the measured error of
-        the zero eigenvalue stayed below 0.46 of this tolerance. Float64 input
-        keeps the 0.3.0 threshold. For float32 normalised graphs the threshold
-        rises from 1e-6 to at most about 1e-5, which is below what float32 can
-        resolve for a Fiedler value at those sizes.
+        The tolerance is max(1e-6, 16 * sqrt(n) * eps * lambda_max), with eps
+        of the eigenvalues' dtype. A fixed 1e-6 is crossed by floating-point
+        noise: on unnormalised ("none") graphs, whose eigenvalues scale with the
+        node degrees, and on float32 normalised attention graphs, where the zero
+        mode of gpt2 layer 5 came out at 1.07e-6. The factor 16 leaves a margin
+        of about 8 over the largest float32 error measured on real and
+        synthetic attention graphs. Float64 input keeps the 1e-6 floor. For
+        float32 normalised graphs the threshold is at most about 2e-4 at 2048
+        tokens, below the Fiedler values attention graphs show in practice.
         """
         eigenvalues = np.asarray(eigenvalues)
         if eigenvalues.size == 0:
             return 1e-6
         dtype = eigenvalues.dtype if np.issubdtype(eigenvalues.dtype, np.floating) else np.float64
         lam_max = float(np.max(np.abs(eigenvalues)))
-        return max(1e-6, float(np.sqrt(max(int(n), 1))) * float(np.finfo(dtype).eps) * lam_max)
+        return max(1e-6, 16.0 * float(np.sqrt(max(int(n), 1))) * float(np.finfo(dtype).eps) * lam_max)
 
     @classmethod
     def is_connected(cls, eigenvalues: np.ndarray, n: int) -> bool:
-        """True when exactly one Laplacian eigenvalue is numerically zero."""
-        eigenvalues = np.asarray(eigenvalues)
+        """True when the second-smallest Laplacian eigenvalue is numerically nonzero.
+
+        Every graph Laplacian (sym, rw and none) has a zero eigenvalue by
+        construction, so a graph is connected exactly when its algebraic
+        connectivity, the second-smallest eigenvalue, is above zero. Testing
+        only that eigenvalue means noise on the zero mode cannot flip the
+        answer. A single node counts as connected.
+        """
+        eigenvalues = np.sort(np.asarray(eigenvalues).ravel())
+        if eigenvalues.size <= 1:
+            return bool(eigenvalues.size == 1)
         tol = cls.zero_eigenvalue_tolerance(eigenvalues, n)
-        return bool(np.sum(eigenvalues < tol) == 1)
+        return bool(eigenvalues[1] >= tol)
 
     def _check_connectivity(self, laplacian: np.ndarray) -> bool:
         """Retained for external callers. analyze_layer no longer calls this."""

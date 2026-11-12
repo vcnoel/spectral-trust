@@ -1,14 +1,17 @@
 """Regenerate the README figures in docs/assets/ from the library's own output.
 
     python docs/make_assets.py                  # every asset
-    python docs/make_assets.py hero heads       # a subset of: hero, heads, speedup
+    python docs/make_assets.py hero logo        # a subset of: hero, logo, heads, speedup
     python docs/make_assets.py --no-tex         # matplotlib's STIX type instead of LaTeX
 
-hero      hero.gif, and hero.png as a still fallback. Qwen/Qwen3-0.6B reads one prompt;
-          for each layer, the head-averaged attention graph that analyze_text builds
-          (one node per token, edge width = symmetrised attention), its Fiedler vector
-          as node colour, the layer's Laplacian spectrum, and fiedler_value and hfer
-          up to that layer.
+hero      hero.png and hero-dark.png (light and dark themes): three lines of code and
+          their output on Qwen/Qwen3-0.6B, from SpectralModel.run_with_spectra. One
+          head's attention graph (node colour: Fiedler vector), the per-head
+          fiedler_value of every layer and head, and that head's Laplacian spectrum.
+          The head is, among those with a Fiedler value below 0.1, the one whose
+          Fiedler vector splits the tokens most evenly.
+logo      logo.svg and logo-dark.svg: a six-token graph split by its Fiedler vector,
+          and the name, with the text converted to outlines.
 heads     heads.png: per-head attention-only metrics on one prompt, one cell per
           (layer, head), from per_head_metrics_all_layers.
 speedup   speedup.png: time per call under the 0.3.0 and 0.4.0 defaults, read from
@@ -17,8 +20,9 @@ speedup   speedup.png: time per call under the 0.3.0 and 0.4.0 defaults, read fr
 The model runs on the CPU only (CUDA_VISIBLE_DEVICES=-1, at most 4 threads) and is
 read from the local Hugging Face cache (HF_HUB_OFFLINE=1). Run once with
 HF_HUB_OFFLINE=0 to download it. Type is LaTeX with newtx when latex, dvipng and
-newtx are installed, and matplotlib's STIX otherwise; both are Times designs.
-Needs matplotlib and Pillow, both dependencies of the package.
+newtx are installed, and matplotlib's STIX otherwise; both are Times designs. Code
+is set in DejaVu Sans Mono. Needs matplotlib and Pillow, both dependencies of the
+package.
 """
 import os
 
@@ -197,158 +201,274 @@ def run_model(texts=PROMPTS):
     return cfg, runs
 
 
-# ── hero animation ───────────────────────────────────────────────────────────
+# ── static hero: three lines of code and their output ───────────────────────
 
-def hero_frames(cfg, run):
-    """Per layer: the adjacency analyze_text built, and the library's spectrum."""
+HERO_CODE = [
+    "import spectral_trust as st",
+    f'model = st.SpectralModel.from_pretrained("{MODEL}")',
+    f'cache = model.run_with_spectra("{HERO_PROMPT}")',
+]
+
+# Light and dark themes of the hero and the logo. The dark one follows GitHub's
+# dark background; the data colours (orange, blue) are the same in both.
+THEMES = {
+    "light": dict(bg="#FFFFFF", ink=INK, mid=MID, grid=GRID, band=BAND, code_bg="#F6F8FA",
+                  code_edge="#D0D7DE", string=BLUE, node_edge=INK,
+                  heat=["#FFFFFF", ORANGE, ORANGE_DARK, "#3D1F00"]),
+    "dark": dict(bg="#0D1117", ink="#E6EDF3", mid="#8B949E", grid="#21262D", band="#30363D",
+                 code_bg="#161B22", code_edge="#30363D", string="#79C0FF", node_edge="#E6EDF3",
+                 heat=["#161B22", ORANGE_DARK, ORANGE, "#FFE7B3"]),
+}
+
+
+def hero_cache():
+    """run_with_spectra on the hero prompt, on the CPU, from the local cache."""
+    import transformers
+    from spectral_trust import SpectralModel
+
+    transformers.logging.set_verbosity_error()
+    torch.set_num_threads(4)
+    offline = os.environ.get("HF_HUB_OFFLINE", "1") not in ("0", "false", "False")
+    model = SpectralModel.from_pretrained(MODEL, local_files_only=offline)
+    return model.run_with_spectra(HERO_PROMPT)
+
+
+def hero_head(cache, weak_cut: float = 0.1):
+    """The head drawn in the hero: among the heads whose Fiedler value is
+    below ``weak_cut`` (a weak two-way cut), the one whose Fiedler vector
+    splits the signal mass most evenly between its two signs."""
+    best, choice = -1.0, None
+    for layer in cache.layers:
+        for head in np.flatnonzero(cache[f"blocks.{layer}.attn.fiedler_value"] < weak_cut):
+            _, _, u = _head_graph(cache, layer, int(head))
+            balance = min((u[u > 0] ** 2).sum(), (u[u < 0] ** 2).sum())
+            if balance > best:
+                best, choice = balance, (layer, int(head))
+    return choice
+
+
+def _head_graph(cache, layer, head):
+    """Symmetrised attention of one head and the Fiedler vector of its
+    Laplacian, built exactly as the library builds it (GSPConfig defaults)."""
     from spectral_trust import GraphConstructor
 
-    gc = GraphConstructor(cfg)
-    frames, prev = [], None
-    for diag, att in zip(run["layer_diagnostics"], run["model_outputs"]["attentions"]):
-        W = gc.symmetrize_attention(att)                  # [1, H, S, S]
-        A = gc.aggregate_heads(W)                         # [1, S, S], head average
-        L = gc.construct_laplacian(A)[0].numpy()
-        # The drawn graph is the one the library analysed.
-        lam = np.maximum(np.linalg.eigvalsh(0.5 * (L + L.T)), 0.0)
-        assert np.allclose(lam, diag.eigenvalues, atol=1e-4), diag.layer
-        u = np.asarray(diag.eigenvectors[:, 1], dtype=float)
-        # An eigenvector's sign is arbitrary; keep it continuous across layers.
-        flip = (u[np.argmax(np.abs(u))] < 0) if prev is None else (u @ prev < 0)
-        u = -u if flip else u
-        prev = u
-        frames.append(dict(layer=diag.layer, A=A[0].numpy(), u=u, eig=np.asarray(diag.eigenvalues),
-                           fiedler=diag.fiedler_value, hfer=diag.hfer))
-    return frames
+    gc = GraphConstructor(cache.config)
+    pattern = torch.as_tensor(cache[f"blocks.{layer}.attn.pattern"])
+    W = gc.symmetrize_attention(pattern.unsqueeze(0))[0, head]
+    L = gc.construct_laplacian(W.unsqueeze(0))[0].numpy().astype(np.float64)
+    lam, vec = np.linalg.eigh(0.5 * (L + L.T))
+    lam = np.maximum(lam, 0.0)
+    # the drawn spectrum is the one the cache holds
+    assert np.allclose(lam, cache[f"blocks.{layer}.attn.eigenvalues"][head], atol=1e-4)
+    u = vec[:, 1]
+    u = -u if u[np.argmax(np.abs(u))] < 0 else u
+    return W.numpy().astype(np.float64), lam, u
 
 
-def draw_hero(frames, i, tokens, cutoff_ratio, umax):
-    from spectral_trust import num_high_modes
+def draw_hero(cache, theme: str):
+    from matplotlib.patches import FancyBboxPatch, Rectangle
 
-    f = frames[i]
+    t = THEMES[theme]
+    layer, head = hero_head(cache)
+    W, lam, u = _head_graph(cache, layer, head)
+    tokens = [s.strip() or s for s in cache.tokens]
     n = len(tokens)
-    L = len(frames)
-    fig = plt.figure(figsize=(9.0, 4.0), dpi=RENDER_DPI)
+    fig = plt.figure(figsize=(10.0, 4.75), dpi=RENDER_DPI)
+    fig.patch.set_facecolor(t["bg"])
 
-    # graph: tokens clockwise from the top left
-    ax = axes_in(fig, 0.25, 0.45, 3.9, 3.35)
-    ax.set_xlim(-1.55, 1.55)
-    ax.set_ylim(-1.32, 1.32)
+    # the code, typeset as code (never through LaTeX)
+    box = FancyBboxPatch((0.25 / 10, 3.62 / 4.75), 9.5 / 10, 0.98 / 4.75,
+                         boxstyle="round,pad=0.0,rounding_size=0.012", transform=fig.transFigure,
+                         facecolor=t["code_bg"], edgecolor=t["code_edge"], linewidth=0.8)
+    fig.patches.append(box)
+    for k, line in enumerate(HERO_CODE):
+        y = 4.39 - 0.27 * k
+        x = 0.45
+        parts = line.split('"')
+        for j, part in enumerate(parts):
+            piece = part if j % 2 == 0 else f'"{part}"'
+            colour = t["string"] if j % 2 else t["ink"]
+            txt = text_in(fig, x, y, piece, fontsize=10.5, family="DejaVu Sans Mono",
+                          color=colour, ha="left", va="baseline", usetex=False)
+            fig.canvas.draw()
+            bb = txt.get_window_extent()
+            x += bb.width / fig.dpi
+
+    def title(ax_left, s):
+        text_in(fig, ax_left, 3.22, s, fontsize=9.5, family="DejaVu Sans Mono", color=t["mid"],
+                ha="left", va="baseline", usetex=False)
+
+    # 1. one head's attention graph
+    title(0.3, f"cache.graph({layer}, head={head})")
+    ax = axes_in(fig, 0.25, 0.3, 3.15, 2.75)
+    ax.set_facecolor(t["bg"])
+    ax.set_xlim(-1.6, 1.6)
+    ax.set_ylim(-1.35, 1.35)
     ax.set_aspect("equal")
     ax.axis("off")
     theta = np.pi / 2 + np.pi / n - 2 * np.pi * np.arange(n) / n
     pos = np.stack([np.cos(theta), np.sin(theta)], axis=1)
-    A = f["A"]
-    off = A[~np.eye(n, dtype=bool)]
-    wmax = float(off.max()) if off.size else 1.0
-    edges = sorted(((A[a, b] / wmax, a, b) for a in range(n) for b in range(a + 1, n)))
-    for w, a, b in edges:
-        ax.plot(*pos[[a, b]].T, color=INK, lw=0.3 + 6.5 * w, alpha=0.10 + 0.75 * w,
+    off = W.copy()
+    np.fill_diagonal(off, 0.0)
+    wmax = float(off.max())
+    for w, a, b in sorted((off[a, b] / wmax, a, b) for a in range(n) for b in range(a + 1, n)):
+        ax.plot(*pos[[a, b]].T, color=t["ink"], lw=0.3 + 4.5 * w, alpha=0.06 + 0.74 * w,
                 solid_capstyle="round", zorder=1)
     cmap = LinearSegmentedColormap.from_list("fiedler", [BLUE, "#FFFFFF", ORANGE])
-    norm = Normalize(-umax, umax)
-    ax.scatter(pos[:, 0], pos[:, 1], s=430, c=f["u"], cmap=cmap, norm=norm,
-               edgecolors=INK, linewidths=0.7, zorder=3)
-    for (x, y), t in zip(pos, tokens):
+    umax = float(np.max(np.abs(u)))
+    ax.scatter(pos[:, 0], pos[:, 1], s=250, c=u, cmap=cmap, norm=Normalize(-umax, umax),
+               edgecolors=t["node_edge"], linewidths=0.6, zorder=3)
+    for (x, y), tok in zip(pos, tokens):
         ha = "left" if x > 0.3 else "right" if x < -0.3 else "center"
         va = "bottom" if y > 0.3 else "top" if y < -0.3 else "center"
-        ax.text(1.2 * x, 1.17 * y, esc(t.strip() or t), ha=ha, va=va, fontsize=11, zorder=4)
+        ax.text(1.2 * x, 1.16 * y, esc(tok), ha=ha, va=va, fontsize=9.5, color=t["ink"],
+                zorder=4)
+    text_in(fig, 0.3, 0.12, "node colour: Fiedler vector,  edges: attention", fontsize=8,
+            color=t["mid"], ha="left", va="baseline")
 
-    text_in(fig, 0.2, 3.66, f"layer {f['layer']}", fontsize=14, ha="left", va="baseline")
-    text_in(fig, 0.2, 3.44, esc(f"{MODEL}, {L} layers"), fontsize=8.5, color=MID,
-            ha="left", va="baseline")
+    # 2. every head, layers x heads
+    title(3.85, 'cache.heatmap("fiedler_value")')
+    grid = cache.metric("attn.fiedler_value")
+    n_layers, n_heads = grid.shape
+    ax2 = axes_in(fig, 4.25, 0.42, 1.85, 2.62)
+    lo, hi = np.percentile(grid, [1, 99])
+    heat = LinearSegmentedColormap.from_list("heat_" + theme, t["heat"])
+    im = ax2.imshow(grid, cmap=heat, norm=Normalize(lo, hi), aspect="auto",
+                    interpolation="nearest", origin="upper")
+    row = cache.layers.index(layer)
+    ax2.add_patch(Rectangle((head - 0.5, row - 0.5), 1, 1, fill=False, edgecolor=t["string"],
+                            linewidth=1.4, zorder=5))
+    ax2.set_xticks(sorted({0, n_heads // 2, n_heads - 1}))
+    ax2.set_yticks(sorted({0, (n_layers - 1) // 3, 2 * (n_layers - 1) // 3, n_layers - 1}))
+    ax2.set_xlabel("head", labelpad=1.5, color=t["ink"])
+    ax2.set_ylabel("layer", labelpad=1.5, color=t["ink"])
+    for side in ("top", "right"):
+        ax2.spines[side].set_visible(True)
+    cax = axes_in(fig, 6.2, 0.42, 0.09, 2.62)
+    cb = fig.colorbar(im, cax=cax)
+    cb.outline.set_linewidth(0.5)
+    cb.outline.set_edgecolor(t["ink"])
+    cb.ax.tick_params(labelsize=7.5, length=2, pad=1.5, colors=t["ink"])
+    cb.locator = matplotlib.ticker.MaxNLocator(4)
+    cb.update_ticks()
 
-    # colour scale of the Fiedler vector
-    cax = axes_in(fig, 1.45, 0.30, 1.5, 0.08)
-    cax.imshow(np.linspace(-1, 1, 256)[None, :], aspect="auto", cmap=cmap,
-               extent=(-umax, umax, 0, 1))
-    cax.set_yticks([])
-    cax.set_xticks([-umax, 0, umax])
-    cax.set_xticklabels(["$-$", "0", "$+$"])
-    cax.tick_params(length=2, labelsize=8, pad=1.5)
-    for s in cax.spines.values():
-        s.set_visible(False)
-    text_in(fig, 2.2, 0.06, "Fiedler vector entry (node colour)", fontsize=8.5, color=MID,
-            ha="center", va="baseline")
-
-    # the layer's Laplacian spectrum
-    ax2 = axes_in(fig, 5.05, 2.45, 2.55, 1.25)
+    # 3. that head's Laplacian spectrum
+    title(6.95, f"cache.spectrum({layer}, head={head})")
+    ax3 = axes_in(fig, 7.4, 0.42, 2.35, 2.62)
     k = np.arange(1, n + 1)
-    hi = num_high_modes(n, cutoff_ratio)
-    ax2.axvspan(n - hi + 0.5, n + 0.5, color=GRID, lw=0, zorder=0)
-    ax2.text(n - hi / 2 + 0.5, 1.93, "HFER\nmodes", fontsize=7.5, color=MID, ha="center",
-             va="top", linespacing=1.0)
-    ax2.plot(k, f["eig"], color=GREY, lw=0.8, zorder=1)
-    ax2.scatter(k, f["eig"], s=14, color=INK, zorder=2)
-    ax2.scatter([2], [f["eig"][1]], **EFFECT, zorder=3)
-    # Upper left stays empty: the sym eigenvalues average 1, so the low modes sit below 1.
-    ax2.text(0.04, 0.96, rf"$\lambda_2 = {f['fiedler']:.3f}$", transform=ax2.transAxes,
-             color=ORANGE_DARK, fontsize=9.5, ha="left", va="top")
-    ax2.set_xlim(0.5, n + 0.5)
-    ax2.set_ylim(0, 2.0)
-    ax2.set_yticks([0, 1, 2])
-    ax2.set_xticks([1, 2] + list(range(4, n + 1, 2)) if n > 3 else list(k))
-    ax2.set_xlabel("mode $k$", labelpad=1.5)
-    ax2.set_ylabel(r"eigenvalue $\lambda_k$")
+    ax3.plot(k, lam, color=t["band"], lw=0.9, zorder=1)
+    ax3.scatter(k, lam, s=13, color=t["ink"], zorder=2)
+    ax3.scatter([2], [lam[1]], s=40, facecolor=ORANGE, edgecolor=t["node_edge"],
+                linewidths=0.6, zorder=3)
+    ax3.annotate(rf"$\lambda_2 = {lam[1]:.3f}$", xy=(2, lam[1]), xytext=(2.8, lam[1] + 0.42),
+                 color=ORANGE if theme == "dark" else ORANGE_DARK, fontsize=10, ha="left",
+                 va="bottom", arrowprops=dict(arrowstyle="-", color=t["mid"], lw=0.6,
+                                              shrinkA=1, shrinkB=4))
+    ax3.set_xlim(0.4, n + 0.6)
+    ax3.set_ylim(0, 2.0)
+    ax3.set_yticks([0, 1, 2])
+    ax3.set_xticks([1] + list(range(4, n + 1, 4)))
+    ax3.set_xlabel("mode $k$", labelpad=1.5, color=t["ink"])
+    ax3.set_ylabel(r"eigenvalue $\lambda_k$", labelpad=1.5, color=t["ink"])
+    ax3.grid(axis="y", color=t["grid"], lw=0.6)
+    ax3.set_axisbelow(True)
 
-    # fiedler_value and hfer, up to this layer
-    ax3 = axes_in(fig, 5.05, 0.45, 2.55, 1.3)
-    lay = np.arange(L)
-    fied = np.array([g["fiedler"] for g in frames])
-    hfer = np.array([g["hfer"] for g in frames])
-    ax3.axvline(i, color=GRID, lw=1.0, zorder=0)
-    for series, col in ((fied, ORANGE), (hfer, BLUE)):
-        ax3.plot(lay, series, color=BAND, lw=1.0, zorder=1)
-        ax3.plot(lay[: i + 1], series[: i + 1], color=col, lw=1.6, zorder=2)
-        ax3.scatter([i], [series[i]], s=22, facecolor=col, edgecolor=INK, linewidths=0.5, zorder=3)
-    ax3.set_xlim(-0.8, L - 0.2)
-    ax3.set_ylim(0, 1.0)
-    ax3.set_yticks([0, 0.5, 1.0])
-    ax3.set_yticklabels(["0", "0.5", "1"])
-    ax3.set_xticks(sorted({0, (L - 1) // 3, 2 * (L - 1) // 3, L - 1}))
-    ax3.set_xlabel("layer", labelpad=1.5)
-    tr = blended_transform_factory(ax3.transAxes, ax3.transData)
-    ys = repel([fied[i], hfer[i]], 0.13, floor=0.06, ceil=0.97)
-    for (name, v, col), y in zip((("fiedler_value", fied[i], ORANGE_DARK),
-                                  ("hfer", hfer[i], BLUE)), ys):
-        ax3.text(1.03, y, code(name) + f" {v:.2f}", transform=tr, color=col, fontsize=9.5,
-                 ha="left", va="center", clip_on=False)
+    for a in (ax2, ax3):
+        a.set_facecolor(t["bg"])
+        a.tick_params(colors=t["ink"])
+        for s in a.spines.values():
+            s.set_edgecolor(t["ink"])
     return fig
 
 
 def make_hero():
-    cfg, runs = run_model()
-    run = runs[PROMPTS.index(HERO_PROMPT)]
-    frames = hero_frames(cfg, run)
-    tokens = run["token_text"]
-    umax = max(float(np.max(np.abs(f["u"]))) for f in frames)
-    images = [render(draw_hero(frames, i, tokens, cfg.hfer_cutoff_ratio, umax))
-              for i in range(len(frames))]
+    cache = hero_cache()
+    layer, head = hero_head(cache)
+    for theme, name in (("light", "hero.png"), ("dark", "hero-dark.png")):
+        fig = draw_hero(cache, theme)
+        path = ASSETS / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(path, dpi=RENDER_DPI, facecolor=fig.get_facecolor())
+        plt.close(fig)
+        with Image.open(path) as im:
+            im.convert("RGB").save(path, optimize=True)
+            size = im.size
+        print(f"  {name}: {size[0]}x{size[1]} px, layer {layer} head {head}")
 
+
+# ── logo: a graph glyph and the name, as SVG paths ───────────────────────────
+
+def _svg_path(path, dx: float, dy: float, scale: float) -> str:
+    """SVG path data of a matplotlib Path, y flipped, scaled and shifted."""
+    from matplotlib.path import Path as MPath
+
+    out = []
+    for verts, code in path.iter_segments(simplify=False, curves=True):
+        pts = [(dx + scale * x, dy - scale * y) for x, y in np.asarray(verts).reshape(-1, 2)]
+        p = " ".join(f"{x:.2f},{y:.2f}" for x, y in pts)
+        if code == MPath.MOVETO:
+            out.append(f"M{p}")
+        elif code == MPath.LINETO:
+            out.append(f"L{p}")
+        elif code == MPath.CURVE3:
+            out.append(f"Q{p}")
+        elif code == MPath.CURVE4:
+            out.append(f"C{p}")
+        elif code == MPath.CLOSEPOLY:
+            out.append("Z")
+    return "".join(out)
+
+
+def logo_svg(theme: str) -> str:
+    """Two tightly connected triples of tokens joined by one weak edge,
+    coloured by the sign of the Fiedler vector (the cut it finds), then the
+    name. Text is converted to outlines (DejaVu Sans Bold, shipped with
+    matplotlib), so the file renders the same everywhere."""
+    from matplotlib.font_manager import FontProperties
+    from matplotlib.textpath import TextPath
+
+    t = THEMES[theme]
+    nodes = np.array([[14, 16], [9, 40], [30, 30], [54, 30], [75, 40], [70, 16]], float)
+    strong = [(0, 1), (1, 2), (0, 2), (3, 4), (4, 5), (3, 5)]
+    W = np.zeros((6, 6))
+    for a, b in strong:
+        W[a, b] = W[b, a] = 1.0
+    W[2, 3] = W[3, 2] = 0.15
+    d = W.sum(1)
+    L = np.eye(6) - W / np.sqrt(np.outer(d, d))
+    u = np.linalg.eigh(L)[1][:, 1]
+    u = u if u[0] < 0 else -u                   # left group blue, right group orange
+    parts = []
+    for a, b in strong:
+        (x1, y1), (x2, y2) = nodes[a], nodes[b]
+        parts.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{t["ink"]}" '
+                     f'stroke-width="2.4" stroke-linecap="round"/>')
+    (x1, y1), (x2, y2) = nodes[2], nodes[3]
+    parts.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{t["ink"]}" '
+                 f'stroke-width="1.2" stroke-dasharray="2.5 2.5" stroke-linecap="round"/>')
+    for (x, y), v in zip(nodes, u):
+        colour = BLUE if v < 0 else ORANGE
+        parts.append(f'<circle cx="{x}" cy="{y}" r="6.2" fill="{colour}" '
+                     f'stroke="{t["ink"]}" stroke-width="1.6"/>')
+    font = FontProperties(family="DejaVu Sans", weight="bold")
+    name = TextPath((0, 0), "spectral", size=30, prop=font)
+    rest = TextPath((0, 0), "-trust", size=30, prop=font)
+    x0 = 96.0
+    width_name = name.get_extents().x1
+    parts.append(f'<path d="{_svg_path(name, x0, 39.5, 1.0)}" fill="{t["ink"]}"/>')
+    parts.append(f'<path d="{_svg_path(rest, x0 + width_name + 1.5, 39.5, 1.0)}" '
+                 f'fill="{ORANGE if theme == "light" else ORANGE}"/>')
+    total = x0 + width_name + 1.5 + rest.get_extents().x1 + 4
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {total:.0f} 56" '
+            f'width="{total:.0f}" height="56" role="img" aria-label="spectral-trust">'
+            f'<title>spectral-trust</title>{"".join(parts)}</svg>\n')
+
+
+def make_logo():
     ASSETS.mkdir(parents=True, exist_ok=True)
-    still = len(frames) // 2
-    images[still].save(ASSETS / "hero.png", optimize=True)
-
-    # One shared palette, so unchanged regions stay identical between frames.
-    # Swatches of the figure colours make sure each of them gets its own entry.
-    w, h = images[0].size
-    keys = [INK, GREY, BAND, GRID, ORANGE, ORANGE_DARK, BLUE, MID]
-    sample = Image.new("RGB", (w, h * 4 + 40 * len(keys)), "white")
-    for j, idx in enumerate(np.linspace(0, len(images) - 1, 4).astype(int)):
-        sample.paste(images[idx], (0, j * h))
-    for j, colour in enumerate(keys):
-        sample.paste(colour, (0, h * 4 + 40 * j, w, h * 4 + 40 * (j + 1)))
-    palette = sample.quantize(colors=128, method=Image.Quantize.MEDIANCUT)
-    gif = [im.quantize(palette=palette, dither=Image.Dither.NONE) for im in images]
-    durations = [700] * len(gif)               # about 1.4 frames per second
-    durations[-1] = 2000                       # hold the last layer
-    path = ASSETS / "hero.gif"
-    gif[0].save(path, save_all=True, append_images=gif[1:], duration=durations, loop=0,
-                optimize=False, disposal=1)
-    size = path.stat().st_size
-    print(f"  hero.gif: {len(gif)} frames, {images[0].width}x{images[0].height} px, "
-          f"{size / 1e6:.2f} MB; hero.png is layer {frames[still]['layer']}")
-    assert size < 3e6, "hero.gif must stay under 3 MB"
+    for theme, name in (("light", "logo.svg"), ("dark", "logo-dark.svg")):
+        (ASSETS / name).write_text(logo_svg(theme), encoding="utf-8")
+        print(f"  {name}")
 
 
 # ── per-head metrics, layers x heads ─────────────────────────────────────────
@@ -446,7 +566,8 @@ def make_speedup():
 
 # ── entry point ──────────────────────────────────────────────────────────────
 
-ASSET_MAKERS = {"hero": make_hero, "heads": make_heads, "speedup": make_speedup}
+ASSET_MAKERS = {"hero": make_hero, "logo": make_logo, "heads": make_heads,
+                "speedup": make_speedup}
 
 
 def main():

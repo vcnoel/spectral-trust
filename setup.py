@@ -35,6 +35,32 @@ setup(
         "tqdm",
         "accelerate"
     ],
+    # The core install imports neither TransformerLens nor nnsight; the
+    # adapters in spectral_trust.interop read their tensors duck-typed.
+    extras_require={
+        "tl": ["transformer_lens>=2.0"],
+        "nnsight": ["nnsight>=0.4"],
+        # The SVG views need nothing beyond numpy; the heatmap's matplotlib
+        # fallback uses Colormap.with_extremes (matplotlib 3.4).
+        "viz": ["matplotlib>=3.4"],
+        "docs": [
+            "mkdocs>=1.6",
+            "mkdocs-material>=9.5",
+            "mkdocstrings[python]>=0.26",
+        ],
+        "dev": [
+            "pytest",
+            "build",
+            "twine",
+            # readme_renderer 46 renders Markdown with comrak, which has no
+            # recent Windows wheels; 44 uses cmarkgfm.
+            "readme_renderer[md]; platform_system != 'Windows'",
+            "readme_renderer[md]<45; platform_system == 'Windows'",
+            "nbclient",
+            "nbformat",
+            "ipykernel",
+        ],
+    },
     entry_points={
         "console_scripts": [
             "gsp-cli=spectral_trust.cli:main",
@@ -46,6 +72,11 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/vcnoel/spectral-trust",
+    project_urls={
+        "Documentation": "https://vcnoel.github.io/spectral-trust/",
+        "Source": "https://github.com/vcnoel/spectral-trust",
+        "Changelog": "https://github.com/vcnoel/spectral-trust/blob/main/CHANGELOG.md",
+    },
     license="AGPL-3.0-or-later",
     license_files=["LICENSE"],
     classifiers=[

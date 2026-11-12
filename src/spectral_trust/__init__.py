@@ -36,6 +36,10 @@ from .fast import (
     gaussian_projection, jl_project,
     band_energies, band_entropy, band_filter_response,
 )
+from .cache import SpectralCache, LayerSpectra, HeadSpectra, GRAPH_METRIC_NAMES
+from .model import SpectralModel, compute_spectra
+from .interop import from_transformer_lens, from_nnsight, from_hf_outputs
+from . import viz
 
 __version__ = "0.4.0rc1"
 
@@ -73,5 +77,15 @@ __all__ = [
     "band_energies",
     "band_entropy",
     "band_filter_response",
+    "SpectralModel",
+    "SpectralCache",
+    "LayerSpectra",
+    "HeadSpectra",
+    "GRAPH_METRIC_NAMES",
+    "compute_spectra",
+    "from_transformer_lens",
+    "from_nnsight",
+    "from_hf_outputs",
+    "viz",
     "__version__",
 ]

@@ -1,26 +1,32 @@
-# spectral-trust
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vcnoel/spectral-trust/main/docs/assets/logo-dark.svg">
+    <img src="https://raw.githubusercontent.com/vcnoel/spectral-trust/main/docs/assets/logo.svg" height="56" alt="spectral-trust">
+  </picture>
+</p>
 
 [![PyPI](https://img.shields.io/pypi/v/spectral-trust)](https://pypi.org/project/spectral-trust/)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)](https://pypi.org/project/spectral-trust/)
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](https://github.com/vcnoel/spectral-trust/blob/main/LICENSE)
 [![tests](https://img.shields.io/github/actions/workflow/status/vcnoel/spectral-trust/tests.yml?branch=main&label=tests)](https://github.com/vcnoel/spectral-trust/actions/workflows/tests.yml)
+[![docs](https://img.shields.io/badge/docs-vcnoel.github.io-0072B2)](https://vcnoel.github.io/spectral-trust/)
 [![Open in Colab](https://img.shields.io/badge/Open%20in-Colab-F9AB00?logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/examples/quickstart.ipynb)
+
+**spectral-trust turns a transformer's attention into graphs over the tokens
+and measures them: the Laplacian spectrum of every head, and the frequency
+content of the residual stream on those graphs, from one forward pass.**
 
 <p align="center">
   <picture>
-    <source media="(prefers-reduced-motion: reduce)" srcset="https://raw.githubusercontent.com/vcnoel/spectral-trust/main/docs/assets/hero.png">
-    <img src="https://raw.githubusercontent.com/vcnoel/spectral-trust/main/docs/assets/hero.gif" width="900" alt="Qwen3-0.6B reading 'The cat sat on the mat because it was warm.', layer by layer: the attention graph over the tokens with nodes coloured by the Fiedler vector, the layer's Laplacian spectrum, and the Fiedler value and HFER across layers">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vcnoel/spectral-trust/main/docs/assets/hero-dark.png">
+    <img src="https://raw.githubusercontent.com/vcnoel/spectral-trust/main/docs/assets/hero.png" width="900" alt="Three lines of code load Qwen3-0.6B and run run_with_spectra on 'The cat sat on the mat because it was warm.' Below, their output: the attention graph of layer 0, head 2, with nodes coloured by the Fiedler vector, which separates 'The cat sat on the' from 'mat because it was warm.'; a heatmap of the per-head Fiedler value over 28 layers and 16 heads; and the Laplacian spectrum of that head, with lambda_2 = 0.044 marked">
   </picture>
 </p>
 
-<p align="center"><em>Qwen3-0.6B reads one sentence. For each layer: the head-averaged attention graph
-(edge width: symmetrised attention; node colour: Fiedler vector), its Laplacian spectrum, and
-<code>fiedler_value</code> and <code>hfer</code> up to that layer.</em></p>
-
-**Graph-spectral diagnostics for transformer attention: each layer's attention
-becomes a graph over the tokens, and spectral-trust reports its Laplacian
-spectrum and the frequency content of the residual stream on it, per layer or
-per head.**
+<p align="center"><em>The three lines above, on a CPU. Left, layer 0, head 2: edges are
+symmetrised attention, node colour is the Fiedler vector, which cuts the sentence
+after "the". Middle: the Fiedler value of every head, that head outlined.
+Right: its Laplacian spectrum.</em></p>
 
 ## Installation
 
@@ -28,9 +34,206 @@ per head.**
 pip install spectral-trust
 ```
 
-From source: `pip install -e .` in a clone of this repository.
+Extras: `spectral-trust[tl]` (TransformerLens), `spectral-trust[nnsight]`,
+`spectral-trust[docs]`, `spectral-trust[dev]`. From source: `pip install -e .`
+in a clone of this repository.
 
 ## Quickstart
+
+```python
+import spectral_trust as st
+
+model = st.SpectralModel.from_pretrained("Qwen/Qwen3-0.6B")
+cache = model.run_with_spectra("The cat sat on the mat because it was warm.")
+print(cache["blocks.10.attn.fiedler_value"])     # one value per head
+print(cache["blocks.10.graph.hfer"])             # the head-averaged graph
+cache.heatmap("fiedler_value").save("fiedler.html")
+```
+
+It runs on a CPU. `cache.layer(10).head(3)` gives every measurement of one
+head, `cache.to_dataframe()` a long table (layer, head, metric, value), and
+`cache.graph(10, head=3)`, `cache.heatmap(...)` and `cache.spectrum(10)`
+render inline in Jupyter or save as standalone HTML. A list of texts runs as
+a batch. The notebook
+[`examples/quickstart.ipynb`](https://github.com/vcnoel/spectral-trust/blob/main/examples/quickstart.ipynb)
+([open in Colab](https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/examples/quickstart.ipynb))
+walks through all of it.
+
+## Use it with TransformerLens or nnsight
+
+Measure a run you already have, with no second forward pass. From a
+TransformerLens cache:
+
+```python
+from transformer_lens.model_bridge import TransformerBridge
+import spectral_trust as st
+
+model = TransformerBridge.boot_transformers("gpt2")
+tokens = model.to_tokens("The cat sat on the mat because it was warm.")
+_, tl_cache = model.run_with_cache(tokens)
+cache = st.from_transformer_lens(tl_cache, model, tokens)
+```
+
+`HookedTransformer` caches (TransformerLens 2) work the same way. From
+tensors saved in an nnsight trace, which may follow any intervention:
+
+```python
+from nnsight import LanguageModel
+import spectral_trust as st
+
+prompt = "The cat sat on the mat because it was warm."
+lm = LanguageModel("gpt2", attn_implementation="eager", dispatch=True)
+attn, resid = [], []
+with lm.trace(prompt):
+    for block in lm.transformer.h:
+        attn.append(block.attn.output[1].save())    # attention weights
+        resid.append(block.output.save())           # block output
+cache = st.from_nnsight(attn, resid, model=lm, tokens=prompt)
+```
+
+On gpt2, the nnsight tensors give the values of `run_with_spectra`, and
+those of `TransformerBridge`, which computes attention itself, agree with
+them to 1e-4 relative (`tests/test_interop.py`).
+`st.from_hf_outputs(outputs, model.config)` does the same for a Hugging Face
+forward pass with `output_attentions=True`.
+
+## What spectral-trust adds
+
+TransformerLens and nnsight give access to a model's internals: hooks,
+caching, patching and other interventions. spectral-trust works one step
+later. It turns the attention weights into graphs and returns measurements
+of them. Every measurement is a function of one forward pass: no labels, no
+probes, no training.
+
+| | TransformerLens | nnsight | spectral-trust |
+|---|---|---|---|
+| Activations, hooks, caching | built in (`run_with_cache`, hook points) | built in (`.save()` on any module in a trace) | reads either library's tensors, or runs a Hugging Face forward pass |
+| Patching, ablation, steering | built in | built in | not provided: intervene there, then measure here |
+| Laplacian spectra of every head, from one call (batched eigendecompositions) | your code on `hook_pattern` | your code on the saved weights | `run_with_spectra` |
+| Attention-only metrics, with no hidden-state access (Fiedler value, spectral radius, eigenvalue entropy) | your code | your code | built in, tagged family `attention` |
+| Graph-signal metrics of the hidden states (Dirichlet energy, HFER, spectral entropy) | your code | your code | built in, tagged family `hybrid` |
+| Hybrid linear-attention models (Qwen3.5) | the hook name gives the layer | the module path gives the layer | true layer indices also from Hugging Face outputs, which return attention for the full-attention layers only |
+| Long contexts | your code | your code | row-anchored energies, exact top-band HFER, random projection, Chebyshev band energies |
+| Reads TransformerLens caches and nnsight traces | not applicable | not applicable | `from_transformer_lens`, `from_nnsight`, `from_hf_outputs` |
+
+## Features
+
+- **A TransformerLens-style API**: `SpectralModel.from_pretrained` loads a
+  Hugging Face causal LM with eager attention (or wraps a loaded one), and
+  `run_with_spectra` returns a `SpectralCache` keyed
+  `blocks.{layer}.{attn|resid|graph}.{metric}`, with layer and head views, a
+  long-format DataFrame, and `save` / `load` to one `.npz` file.
+- **Per-head spectra**: one Laplacian per head, five attention-only metrics
+  from one batched eigendecomposition, per-head hybrid metrics, and head
+  subsets with `heads=`.
+- **Head-averaged layer graphs**: three symmetrisations, uniform or
+  attention-weighted head aggregation, and the symmetric normalised
+  (default), random-walk or combinatorial Laplacian.
+- **Two metric families, tagged in every result**: attention-only metrics
+  and hybrid metrics that also read the hidden states.
+- **Interactive views**: attention graphs, layers x heads heatmaps and
+  spectra as self-contained SVG with tooltips, inline in Jupyter or saved as
+  HTML that opens offline.
+- **Adapters** for TransformerLens caches, nnsight traces and Hugging Face
+  outputs. Neither library is a dependency of the core install.
+- **Fast diagnostics** for long contexts: row-anchored energies with no
+  eigendecomposition, exact top-band HFER, a seeded random projection of the
+  hidden states, and Chebyshev band energies.
+- **Token spans, directed graphs and dynamics**: restrict any diagnostic to a
+  span of tokens, compute directed-Laplacian metrics, and take layer-to-layer
+  differences of any metric.
+- **Command line**: `gsp-cli` analyses one text or compares two, with plots.
+
+## Used in research
+
+- Bao, Qi, Liu, Arora, Sarfati, Boullé and Earls (2026).
+  [A Graph Signal Processing Perspective on Numerical Sequence Representations in LLM In-Context Learning](https://arxiv.org/abs/2608.03015).
+  arXiv:2608.03015. Cornell University, Goodfire AI and Imperial College
+  London. Adapts the library's Fiedler value, HFER and spectral entropy
+  diagnostics to numerical in-context learning.
+- Kim, Lutzeyer and Guo (2026).
+  [Attention-Graph Curvature for the Verification of Mathematical Reasoning](https://arxiv.org/abs/2610.16709).
+  arXiv:2610.16709, NeurIPS 2026 MATH-AI workshop. LIX, École Polytechnique.
+  Its spectral module is ported from spectral-trust 0.2.2.
+- Viganò, Melzi and Ovsjanikov (2026).
+  [Spectral Geometry of Attention: From Information Routing to Uncertainty](https://arxiv.org/abs/2610.06012).
+  arXiv:2610.06012. École Polytechnique and University of Milano-Bicocca.
+  Builds on the attention-as-graph-signal view.
+
+By the library's author:
+
+- [A Graph Signal Processing Framework for Hallucination Detection in Large Language Models](https://arxiv.org/abs/2510.19117). arXiv:2510.19117.
+- [Spectral Guardrails for Agents in the Wild: Detecting Tool Use Hallucinations via Attention Topology](https://arxiv.org/abs/2602.08082). arXiv:2602.08082.
+- [Geometry of Reason: Spectral Signatures of Valid Mathematical Reasoning](https://arxiv.org/abs/2601.00791). arXiv:2601.00791.
+- [Training-Free Spectral Fingerprints of Voice Processing in Transformers](https://arxiv.org/abs/2510.19131). arXiv:2510.19131.
+- [Spectral Archaeology: The Causal Topology of Model Evolution](https://arxiv.org/abs/2601.03424). arXiv:2601.03424.
+- [Catching Contamination Before Generation: Spectral Kill Switches for Agents](https://arxiv.org/abs/2511.05804). arXiv:2511.05804.
+
+## Documentation
+
+The documentation is at
+[vcnoel.github.io/spectral-trust](https://vcnoel.github.io/spectral-trust/):
+[getting started](https://vcnoel.github.io/spectral-trust/getting-started/),
+[concepts](https://vcnoel.github.io/spectral-trust/concepts/) (graphs from
+attention, the metric families, hybrid models),
+[tutorials](https://vcnoel.github.io/spectral-trust/tutorials/quickstart/) and
+the [API reference](https://vcnoel.github.io/spectral-trust/api/).
+
+## Citation
+
+If you use spectral-trust in your work, please cite the software (metadata in
+[CITATION.cff](https://github.com/vcnoel/spectral-trust/blob/main/CITATION.cff))
+and the graph signal processing framework paper:
+
+```bibtex
+@software{noel_spectral_trust,
+  author  = {No{\"e}l, Valentin},
+  title   = {spectral-trust: graph-spectral diagnostics for transformer attention},
+  version = {0.4.0rc1},
+  year    = {2026},
+  url     = {https://github.com/vcnoel/spectral-trust},
+  license = {AGPL-3.0-or-later}
+}
+
+@article{noel2025graph,
+  author  = {No{\"e}l, Valentin},
+  title   = {A Graph Signal Processing Framework for Hallucination Detection in Large Language Models},
+  journal = {arXiv preprint arXiv:2510.19117},
+  year    = {2025},
+  url     = {https://arxiv.org/abs/2510.19117}
+}
+```
+
+## The SpectralCache
+
+Keys follow TransformerLens' naming, with the model's own layer index:
+
+| Key | Value | Family | Computed by |
+|---|---|---|---|
+| `blocks.{l}.attn.{fiedler_value, connectivity_ratio, spectral_entropy_norm, hfer, spectral_radius}` | `[n_heads]` | attention | `per_head_metrics`, each head's graph |
+| `blocks.{l}.resid.{energy, smoothness_index, spectral_entropy, hfer}` | `[n_heads]` | hybrid | `per_head_hybrid_metrics`, the layer's residual stream on each head's graph |
+| `blocks.{l}.graph.{fiedler_value, spectral_radius, connectivity, eig_energy, eig_spectral_entropy, eig_hfer}` | float | attention | `analyze_layer` on the head-averaged graph |
+| `blocks.{l}.graph.{energy, smoothness_index, spectral_entropy, hfer}` | float | hybrid | the same call |
+| `blocks.{l}.attn.eigenvalues` | `[n_heads, seq]` | attention | each head's spectrum |
+| `blocks.{l}.graph.eigenvalues`, `.fiedler_vector`, `.spectral_masses` | `[seq]` | | the head-averaged graph |
+| `blocks.{l}.attn.pattern` | `[n_heads, seq, seq]` | | the raw attention, kept up to 64 MB (`keep_patterns`) |
+
+`attn.hfer` is the eigenvalue mass in the upper half of a head's spectrum;
+`resid.hfer` and `graph.hfer` are the residual stream's energy in the top
+modes. `metrics=` chooses what to compute (`["attn"]`, `["graph.hfer"]`, or
+a bare name for every namespace that has it), `hybrid=False` keeps the
+attention-only metrics, `heads=` and `layers=` select heads and layers (heads
+not computed are NaN), and `token_span=(start, end)` measures the induced
+subgraph of a span. Layer l is paired with `hidden_states[l + 1]`, as in
+`analyze_text`. A batch is right-padded, which leaves each real token's
+attention and hidden states unchanged in a causal LM, and every item is
+cropped to its own length before any measurement.
+
+## Lower-level API
+
+`SpectralModel` is built on functions that remain public.
+`GSPDiagnosticsFramework.analyze_text` returns one `SpectralDiagnostics` per
+layer, the `graph` namespace of the cache:
 
 ```python
 from spectral_trust import GSPConfig, GSPDiagnosticsFramework
@@ -44,21 +247,9 @@ for d in result["layer_diagnostics"]:
     print(d.layer, round(d.fiedler_value, 3), round(d.hfer, 3))
 ```
 
-This prints one line per layer: the layer index, the Fiedler value of the
-head-averaged attention graph, and the HFER of the residual stream on that
-graph. It runs on a CPU. `result["layer_diagnostics"]` holds one
-`SpectralDiagnostics` per layer with every metric in the metric-families
-table below. The notebook
-[`examples/quickstart.ipynb`](https://github.com/vcnoel/spectral-trust/blob/main/examples/quickstart.ipynb)
-([open in Colab](https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/examples/quickstart.ipynb))
-goes further: one layer with `analyze_layer`, per-head metrics with `heads=`,
-and the fast diagnostics.
-
-![Heatmaps of per-head fiedler_value, spectral_radius and hfer over the 28 layers and 16 heads of Qwen3-0.6B for one two-sentence prompt](https://raw.githubusercontent.com/vcnoel/spectral-trust/main/docs/assets/heads.png)
-
-*Every head of Qwen3-0.6B on one two-sentence prompt, from
-`per_head_metrics_all_layers(outputs.attentions)`: one cell per layer and
-head, attention-only metrics, all heads decomposed in one batched call.*
+`SpectralAnalyzer.analyze_layer(signals, laplacian, layer)` measures one
+graph, `GraphConstructor` builds it, and the per-head and fast functions
+below take attention tensors directly.
 
 ## Why graph-spectral diagnostics
 
@@ -74,29 +265,6 @@ ratio). Each layer costs one eigendecomposition, with no training and no
 labels, and with the default symmetric normalised Laplacian the spectrum lies
 in [0, 2] whatever the length of the input, so values are comparable across
 prompts.
-
-## Features
-
-- **Attention graphs per layer** from any Hugging Face causal LM that returns
-  attention weights: three symmetrisations, uniform or attention-weighted head
-  aggregation, and the symmetric normalised (default), random-walk or
-  combinatorial Laplacian.
-- **Two metric families, tagged in every result**: attention-only metrics
-  (Fiedler value, spectral radius, connectivity, eigenvalue energy, entropy
-  and HFER) and hybrid metrics that also read the hidden states (Dirichlet
-  energy, smoothness index, spectral entropy, HFER, spectral masses).
-- **Per-head diagnostics**: one Laplacian per head, five attention-only
-  metrics from one batched eigendecomposition, per-head hybrid metrics, and
-  head subsets with `heads=`.
-- **Fast diagnostics**: row-anchored energies with no eigendecomposition,
-  exact top-band HFER, a seeded random projection of the hidden states, and
-  Chebyshev band energies for long contexts.
-- **Token spans, directed graphs and dynamics**: restrict any diagnostic to a
-  span of tokens, compute directed-Laplacian metrics, and take layer-to-layer
-  differences of any metric.
-- **Probe features**: per-head metrics flattened into feature vectors, with
-  cross-layer differences.
-- **Command line**: `gsp-cli` analyses one text or compares two, with plots.
 
 ## Metric families
 
@@ -162,6 +330,12 @@ gsp-cli analyze --text "..." --model llama-3.2-1b --offline
 Hugging Face model id such as `Qwen/Qwen3-0.6B`.
 
 ## Per-head diagnostics
+
+![Heatmaps of per-head fiedler_value, spectral_radius and hfer over the 28 layers and 16 heads of Qwen3-0.6B for one two-sentence prompt](https://raw.githubusercontent.com/vcnoel/spectral-trust/main/docs/assets/heads.png)
+
+*Every head of Qwen3-0.6B on one two-sentence prompt, from
+`per_head_metrics_all_layers(outputs.attentions)`: one cell per layer and
+head, attention-only metrics, all heads decomposed in one batched call.*
 
 ### Head resolution matters
 
@@ -355,6 +529,10 @@ Unselected heads are dropped before any conversion or decomposition, and
 ## Repository layout
 
 - `src/spectral_trust/` — package source
+  - `model.py` — `SpectralModel` and `compute_spectra`, the high-level API
+  - `cache.py` — `SpectralCache`, its layer and head views, DataFrame export, save and load
+  - `interop.py` — `from_transformer_lens`, `from_nnsight`, `from_hf_outputs`
+  - `viz.py` — self-contained SVG views: `graph`, `heatmap`, `spectrum`
   - `graph.py` — attention-graph construction (symmetrization, aggregation, Laplacians)
   - `spectral.py` — eigendecomposition and diagnostics (`SpectralAnalyzer`, `SpectralDiagnostics`, `METRIC_FAMILIES`)
   - `per_head.py` — per-head spectral diagnostics (attention and hybrid), head subsets, and probe feature helpers
@@ -362,9 +540,9 @@ Unselected heads are dropped before any conversion or decomposition, and
   - `directed_topology.py` — directed Laplacian metrics, GPU Lanczos
   - `framework.py` — end-to-end orchestration (`GSPDiagnosticsFramework`)
   - `instrumentation.py` — model loading and tensor capture
+- `docs/` — the documentation site (`mkdocs.yml` at the root) and `make_assets.py`, which regenerates the figures in `docs/assets/` from the library's output
 - `examples/` — `quickstart.ipynb` and minimal scripts (hallucination differential analysis, head-masking ablation)
 - `benchmarks/` — latency and precision scaling scripts; `fast_vs_dense.py`, `end_to_end.py` and their `results.json` / `results.md`
-- `docs/make_assets.py` — regenerates the figures in `docs/assets/` from the library's output
 - `notebooks/` — demo notebook
 - `tests/` — unit tests, run by `.github/workflows/tests.yml`
 
@@ -387,12 +565,6 @@ Bug reports and pull requests are welcome. See
 [CONTRIBUTING.md](https://github.com/vcnoel/spectral-trust/blob/main/CONTRIBUTING.md)
 for the development setup, the tests and the code style, and the
 [code of conduct](https://github.com/vcnoel/spectral-trust/blob/main/CODE_OF_CONDUCT.md).
-
-## Citation
-
-If you use spectral-trust in your work, please cite the software with the
-metadata in
-[CITATION.cff](https://github.com/vcnoel/spectral-trust/blob/main/CITATION.cff).
 
 ## Changelog
 
