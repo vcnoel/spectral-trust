@@ -37,7 +37,7 @@ from .fast import (
     band_energies, band_entropy, band_filter_response,
 )
 
-__version__ = "0.4.0"
+__version__ = "0.4.0rc1"
 
 __all__ = [
     "GSPConfig",

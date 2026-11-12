@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.4.0
+## v0.4.0 (first published as release candidate 0.4.0rc1)
 
 Fast diagnostics, a per-head `rw` fix, and a dense default
 solver. Four changes alter results for existing callers; they are marked
