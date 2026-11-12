@@ -143,3 +143,14 @@ def test_feature_helpers():
                 - diags[0].metric("spectral_radius"))
     assert np.allclose(deltas[:4], expected, atol=1e-6)
     assert layer_delta_features(diags[:1]).shape == (0,)
+
+
+def test_keep_eigenvalues_returns_each_heads_spectrum():
+    attn = _attn(num_heads=3, seq=9)
+    d = per_head_metrics(attn, keep_eigenvalues=True, heads=[0, 2])
+    assert d.eigenvalues.shape == (2, 9)
+    assert np.allclose(d.eigenvalues[:, 1], d.metric("fiedler_value"))
+    assert np.allclose(d.eigenvalues[:, -1], d.metric("spectral_radius"))
+    assert np.all(np.diff(d.eigenvalues, axis=1) >= -1e-6)
+    assert per_head_metrics(attn).eigenvalues is None
+    assert "eigenvalues" not in d.to_dict()

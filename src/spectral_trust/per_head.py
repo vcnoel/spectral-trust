@@ -84,13 +84,16 @@ class PerHeadDiagnostics:
 
     ``values`` is [num_heads, len(metric_names)]. When only a subset of heads
     was computed (``heads=``), ``heads`` lists their indices in row order;
-    it is None when every head was computed.
+    it is None when every head was computed. ``eigenvalues`` holds each
+    head's ascending Laplacian spectrum, ``[num_heads, seq]``, when
+    :func:`per_head_metrics` was called with ``keep_eigenvalues=True``.
     """
     layer: int
     values: np.ndarray
     metric_names: List[str]
     family: str = PER_HEAD_METRIC_FAMILY
     heads: Optional[List[int]] = None
+    eigenvalues: Optional[np.ndarray] = None
 
     def metric(self, name: str) -> np.ndarray:
         """All heads' values for one metric, as a [num_heads] array."""
@@ -199,6 +202,7 @@ def per_head_metrics(
     token_span: Optional[Tuple[int, int]] = None,
     layer: int = -1,
     heads: HeadSelection = None,
+    keep_eigenvalues: bool = False,
 ) -> PerHeadDiagnostics:
     """
     Compute per-head spectral metrics for a single layer.
@@ -224,6 +228,9 @@ def per_head_metrics(
             Unselected heads are dropped before any conversion or
             decomposition. Rows of the result follow ascending head index
             and ``result.heads`` lists them.
+        keep_eigenvalues: also return each head's spectrum in
+            ``result.eigenvalues`` (``[heads, seq]``, ascending). The
+            spectrum is computed anyway; this only keeps it.
 
     Returns:
         :class:`PerHeadDiagnostics` with a ``[heads, 5]`` value matrix.
@@ -256,6 +263,8 @@ def per_head_metrics(
                             dtype=np.float32),
             metric_names=list(PER_HEAD_METRIC_NAMES),
             heads=selected,
+            eigenvalues=(np.zeros((num_heads, seq_len), dtype=np.float32)
+                         if keep_eigenvalues else None),
         )
 
     # One Laplacian per head (heads act as the batch dimension), then a single
@@ -305,6 +314,8 @@ def per_head_metrics(
         values=values.detach().cpu().numpy().astype(np.float32),
         metric_names=list(PER_HEAD_METRIC_NAMES),
         heads=selected,
+        eigenvalues=(eigenvalues.detach().cpu().numpy().astype(np.float32)
+                     if keep_eigenvalues else None),
     )
 
 
