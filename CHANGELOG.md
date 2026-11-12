@@ -78,7 +78,7 @@ rounding (`benchmarks/reproduce_v030.md`).
   move only by float32 rounding (at most 1.6e-7 relative in the
   reproduction check). Under each version's defaults, `analyze_layer` is
   2.4x to 25x faster than in 0.3.0 at S = 128 to 2048, and per-head hybrid
-  metrics 6.9x to 67x faster than a 0.3.0 loop over heads
+  metrics 6.0x to 67x faster than a 0.3.0 loop over heads
   (`benchmarks/end_to_end.py`).
 - Benchmarks: `benchmarks/fast_vs_dense.py`, `end_to_end.py` and
   `reproduce_v030.py`, with results in `benchmarks/results.md` and
