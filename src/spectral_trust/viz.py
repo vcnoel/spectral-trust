@@ -293,7 +293,7 @@ def graph(cache, layer: int, head: Optional[int] = None, text: int = 0,
                f"weight {W[i, j]:.4f} ({w:.0%} of the largest)")
         out.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" '
                    f'stroke="{INK}" stroke-opacity="{0.06 + 0.8 * w:.3f}" '
-                   f'stroke-width="{0.6 + 5.0 * w:.2f}" data-a="{i}" data-b="{j}">'
+                   f'stroke-width="{0.5 + 3.5 * w:.2f}" data-a="{i}" data-b="{j}">'
                    f'<title>{_esc(tip)}</title></line>')
     out.append("</g>")
     r_node = max(5.0, min(15.0, 260.0 / max(n, 1)))
@@ -422,8 +422,10 @@ def heatmap(cache, metric: str = "fiedler_value", text: int = 0,
     # colour bar
     bx, by, bh = left + nc * cell + 22, top, min(nr * cell, 220)
     gid = f"hg{next(_ids)}"
-    stops = "".join(f'<stop offset="{1 - k / 3:.3f}" stop-color="{s}"/>'
-                    for k, s in enumerate(HEAT_STOPS))
+    # top of the bar is the high end; SVG stop offsets must increase
+    top_down = HEAT_STOPS[::-1]
+    stops = "".join(f'<stop offset="{k / (len(top_down) - 1):.3f}" stop-color="{s}"/>'
+                    for k, s in enumerate(top_down))
     out.append(f'<defs><linearGradient id="{gid}" x1="0" y1="0" x2="0" y2="1">{stops}'
                f'</linearGradient></defs>')
     out.append(f'<rect x="{bx}" y="{by}" width="11" height="{bh:.1f}" fill="url(#{gid})" '
