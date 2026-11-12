@@ -1,0 +1,99 @@
+site_name: spectral-trust
+site_url: https://vcnoel.github.io/spectral-trust/
+site_description: Graph-spectral diagnostics for transformer attention
+site_author: Valentin Noël
+repo_url: https://github.com/vcnoel/spectral-trust
+repo_name: vcnoel/spectral-trust
+edit_uri: edit/main/docs/
+copyright: spectral-trust is released under the AGPL-3.0-or-later license.
+
+docs_dir: docs
+exclude_docs: |
+  make_assets.py
+  hooks.py
+  __pycache__/
+
+hooks:
+  - docs/hooks.py
+
+theme:
+  name: material
+  # system fonts: no request to a font CDN
+  font: false
+  icon:
+    logo: material/graph-outline
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Dark theme
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Light theme
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+    - search.highlight
+    - toc.follow
+
+extra_css:
+  - stylesheets/extra.css
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: google
+            docstring_options:
+              ignore_init_summary: true
+              warn_unknown_params: false
+              warn_missing_types: false
+            show_source: false
+            show_root_heading: true
+            show_root_full_path: false
+            show_symbol_type_heading: true
+            heading_level: 3
+            members_order: source
+            merge_init_into_class: true
+            separate_signature: true
+            show_signature_annotations: false
+            filters: ["!^_"]
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Concepts: concepts.md
+  - Tutorials:
+      - Quickstart: tutorials/quickstart.md
+      - Per-head analysis: tutorials/per-head.md
+      - TransformerLens and nnsight: tutorials/interop.md
+  - API reference: api.md
+  - Changelog: changelog.md
