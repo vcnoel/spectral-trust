@@ -442,7 +442,7 @@ class SpectralAnalyzer:
         
         # Single eigendecomposition (was previously called twice — once here, once inside _check_connectivity)
         eigenvalues, eigenvectors = self.compute_eigendecomposition(laplacian_np)
-        connectivity = bool(np.sum(eigenvalues < 1e-6) == 1)
+        connectivity = self.is_connected(eigenvalues, laplacian_np.shape[0])
 
         # Compute diagnostics: the energy once, the eigenbasis projection once
         energy = self.compute_dirichlet_energy(signals_np, laplacian_np)
@@ -472,10 +472,38 @@ class SpectralAnalyzer:
             eig_hfer=self.compute_eig_hfer(eigenvalues),
         )
 
+    @staticmethod
+    def zero_eigenvalue_tolerance(eigenvalues: np.ndarray, n: int) -> float:
+        """Threshold below which a Laplacian eigenvalue counts as zero.
+
+        A fixed 1e-6 is crossed by floating-point noise on unnormalised
+        ("none") graphs, whose eigenvalues scale with the node degrees. The
+        tolerance is sqrt(n) * eps * lambda_max, with eps of the eigenvalues'
+        dtype, and never drops below the previous 1e-6. On causal sink-heavy
+        graphs (n from 8 to 2048, float32, sym and none), the measured error of
+        the zero eigenvalue stayed below 0.46 of this tolerance. Float64 input
+        keeps the 0.3.0 threshold. For float32 normalised graphs the threshold
+        rises from 1e-6 to at most about 1e-5, which is below what float32 can
+        resolve for a Fiedler value at those sizes.
+        """
+        eigenvalues = np.asarray(eigenvalues)
+        if eigenvalues.size == 0:
+            return 1e-6
+        dtype = eigenvalues.dtype if np.issubdtype(eigenvalues.dtype, np.floating) else np.float64
+        lam_max = float(np.max(np.abs(eigenvalues)))
+        return max(1e-6, float(np.sqrt(max(int(n), 1))) * float(np.finfo(dtype).eps) * lam_max)
+
+    @classmethod
+    def is_connected(cls, eigenvalues: np.ndarray, n: int) -> bool:
+        """True when exactly one Laplacian eigenvalue is numerically zero."""
+        eigenvalues = np.asarray(eigenvalues)
+        tol = cls.zero_eigenvalue_tolerance(eigenvalues, n)
+        return bool(np.sum(eigenvalues < tol) == 1)
+
     def _check_connectivity(self, laplacian: np.ndarray) -> bool:
         """Retained for external callers. analyze_layer no longer calls this."""
         eigenvals, _ = self.compute_eigendecomposition(laplacian)
-        return np.sum(eigenvals < 1e-6) == 1
+        return self.is_connected(eigenvals, laplacian.shape[0])
 
 
 def calculate_spectral_velocity(metric_array: torch.Tensor) -> Tuple[torch.Tensor, float, int]:
