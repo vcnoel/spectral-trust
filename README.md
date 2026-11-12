@@ -1,14 +1,104 @@
 # spectral-trust
 
-**Graph-spectral diagnostics for transformer attention.**
+[![PyPI](https://img.shields.io/pypi/v/spectral-trust)](https://pypi.org/project/spectral-trust/)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)](https://pypi.org/project/spectral-trust/)
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](https://github.com/vcnoel/spectral-trust/blob/main/LICENSE)
+[![tests](https://img.shields.io/github/actions/workflow/status/vcnoel/spectral-trust/tests.yml?branch=main&label=tests)](https://github.com/vcnoel/spectral-trust/actions/workflows/tests.yml)
+[![Open in Colab](https://img.shields.io/badge/Open%20in-Colab-F9AB00?logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/examples/quickstart.ipynb)
 
-`spectral_trust` builds graphs from a transformer's attention patterns and
-computes spectral diagnostics on them (Laplacian eigenvalues, algebraic
-connectivity, Dirichlet energy). It is designed for research on internal-signal
-analysis of LLMs: hallucination detection, uncertainty quantification, and
-layer-wise routing diagnostics.
+<p align="center">
+  <picture>
+    <source media="(prefers-reduced-motion: reduce)" srcset="https://raw.githubusercontent.com/vcnoel/spectral-trust/main/docs/assets/hero.png">
+    <img src="https://raw.githubusercontent.com/vcnoel/spectral-trust/main/docs/assets/hero.gif" width="900" alt="Qwen3-0.6B reading 'The cat sat on the mat because it was warm.', layer by layer: the attention graph over the tokens with nodes coloured by the Fiedler vector, the layer's Laplacian spectrum, and the Fiedler value and HFER across layers">
+  </picture>
+</p>
 
-## Metric families: read this first
+<p align="center"><em>Qwen3-0.6B reads one sentence. For each layer: the head-averaged attention graph
+(edge width: symmetrised attention; node colour: Fiedler vector), its Laplacian spectrum, and
+<code>fiedler_value</code> and <code>hfer</code> up to that layer.</em></p>
+
+**Graph-spectral diagnostics for transformer attention: each layer's attention
+becomes a graph over the tokens, and spectral-trust reports its Laplacian
+spectrum and the frequency content of the residual stream on it, per layer or
+per head.**
+
+## Installation
+
+```bash
+pip install spectral-trust
+```
+
+From source: `pip install -e .` in a clone of this repository.
+
+## Quickstart
+
+```python
+from spectral_trust import GSPConfig, GSPDiagnosticsFramework
+
+config = GSPConfig(model_name="Qwen/Qwen3-0.6B", save_plots=False)
+with GSPDiagnosticsFramework(config) as framework:
+    framework.instrumenter.load_model(config.model_name)
+    result = framework.analyze_text("The cat sat on the mat because it was warm.", save_results=False)
+
+for d in result["layer_diagnostics"]:
+    print(d.layer, round(d.fiedler_value, 3), round(d.hfer, 3))
+```
+
+This prints one line per layer: the layer index, the Fiedler value of the
+head-averaged attention graph, and the HFER of the residual stream on that
+graph. It runs on a CPU. `result["layer_diagnostics"]` holds one
+`SpectralDiagnostics` per layer with every metric in the metric-families
+table below. The notebook
+[`examples/quickstart.ipynb`](https://github.com/vcnoel/spectral-trust/blob/main/examples/quickstart.ipynb)
+([open in Colab](https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/examples/quickstart.ipynb))
+goes further: one layer with `analyze_layer`, per-head metrics with `heads=`,
+and the fast diagnostics.
+
+![Heatmaps of per-head fiedler_value, spectral_radius and hfer over the 28 layers and 16 heads of Qwen3-0.6B for one two-sentence prompt](https://raw.githubusercontent.com/vcnoel/spectral-trust/main/docs/assets/heads.png)
+
+*Every head of Qwen3-0.6B on one two-sentence prompt, from
+`per_head_metrics_all_layers(outputs.attentions)`: one cell per layer and
+head, attention-only metrics, all heads decomposed in one batched call.*
+
+## Why graph-spectral diagnostics
+
+The attention weights of a transformer layer define a weighted graph on the
+tokens. The eigenvalues of that graph's Laplacian summarise how attention
+routes information. The second-smallest, the Fiedler value or algebraic
+connectivity, is zero when the graph falls apart into pieces that do not
+attend to each other, and small when a few weak edges hold it together. The
+eigenvectors form a frequency basis on the tokens: projecting the residual
+stream onto them measures how much of the hidden state changes sharply
+between tokens that attend to each other (HFER, the high-frequency energy
+ratio). Each layer costs one eigendecomposition, with no training and no
+labels, and with the default symmetric normalised Laplacian the spectrum lies
+in [0, 2] whatever the length of the input, so values are comparable across
+prompts.
+
+## Features
+
+- **Attention graphs per layer** from any Hugging Face causal LM that returns
+  attention weights: three symmetrisations, uniform or attention-weighted head
+  aggregation, and the symmetric normalised (default), random-walk or
+  combinatorial Laplacian.
+- **Two metric families, tagged in every result**: attention-only metrics
+  (Fiedler value, spectral radius, connectivity, eigenvalue energy, entropy
+  and HFER) and hybrid metrics that also read the hidden states (Dirichlet
+  energy, smoothness index, spectral entropy, HFER, spectral masses).
+- **Per-head diagnostics**: one Laplacian per head, five attention-only
+  metrics from one batched eigendecomposition, per-head hybrid metrics, and
+  head subsets with `heads=`.
+- **Fast diagnostics**: row-anchored energies with no eigendecomposition,
+  exact top-band HFER, a seeded random projection of the hidden states, and
+  Chebyshev band energies for long contexts.
+- **Token spans, directed graphs and dynamics**: restrict any diagnostic to a
+  span of tokens, compute directed-Laplacian metrics, and take layer-to-layer
+  differences of any metric.
+- **Probe features**: per-head metrics flattened into feature vectors, with
+  cross-layer differences.
+- **Command line**: `gsp-cli` analyses one text or compares two, with plots.
+
+## Metric families
 
 Every metric is a function of a specific tensor, and the distinction matters
 for both access requirements and interpretation. As of v0.3.0 each metric is
@@ -21,9 +111,8 @@ embedded in every result):
 | **hybrid** | attention weights **and** residual-stream states | `energy`, `smoothness_index`, `spectral_entropy`, `hfer`, `spectral_masses` | projects residual-stream vectors onto the attention eigenbasis; requires full internals and reflects residual-stream content, **not** attention topology alone |
 
 If you report results as "attention-only", use family-**attention** metrics.
-The hybrid metrics remain available and can be strong detectors, but they must
-be benchmarked against direct hidden-state probes at equal access, not against
-attention-only baselines.
+Results with the hybrid metrics should be compared with direct hidden-state
+probes at equal access, not with attention-only baselines.
 
 Note on terminology: what Hugging Face returns via `output_hidden_states` are
 **residual-stream snapshots** (block outputs). Module-internal activations
@@ -53,34 +142,7 @@ independent of sequence length, making metrics comparable across inputs
 - **Subgraph isolation** — restrict any diagnostic to a token span (e.g. a
   generated tool call).
 
-## Installation
-
-```bash
-pip install spectral_trust
-# or from source
-pip install -e .
-```
-
-## Quickstart
-
-### Python API
-
-```python
-from spectral_trust import GSPDiagnosticsFramework, GSPConfig, METRIC_FAMILIES
-
-config = GSPConfig(model_name="meta-llama/Llama-3.2-1B", device="cuda")
-with GSPDiagnosticsFramework(config) as framework:
-    framework.instrumenter.load_model("meta-llama/Llama-3.2-1B")
-    results = framework.analyze_text("The capital of France is Paris.")
-
-    last = results["layer_diagnostics"][-1]
-    print("fiedler:", last.fiedler_value)            # attention-only
-    print("eig_entropy:", last.eig_spectral_entropy) # attention-only
-    print("smoothness:", last.smoothness_index)      # hybrid (needs hidden states)
-    print(METRIC_FAMILIES["smoothness_index"])       # -> "hybrid"
-```
-
-### CLI
+## Command line
 
 ```bash
 # analyze one input
@@ -96,21 +158,20 @@ gsp-cli analyze --text "..." --runs 5 --temperature 0.7
 gsp-cli analyze --text "..." --model llama-3.2-1b --offline
 ```
 
+`gsp-cli list-models` prints the short model names; `--model` also takes a
+Hugging Face model id such as `Qwen/Qwen3-0.6B`.
+
+## Per-head diagnostics
+
 ### Head resolution matters
 
 Most attention-graph diagnostics (including earlier versions of this library)
-average attention over heads before building the graph. **Head-averaging is a
-signal destroyer.** Attention heads are specialized: the routing anomaly that
-accompanies a failure is typically carried by a few heads, and summing heads
-mixes it into a near-uniform background. Two independent lines of evidence:
-
-- In our tool-call hallucination experiments, per-head Fiedler values (one λ₂
-  per head per layer, no averaging) reached detection AUCs competitive with
-  supervised hidden-state probes, while the same metric computed on the
-  head-averaged graph was near chance under leakage-controlled evaluation.
-- LapEigvals (Binkowski et al., EMNLP 2025), the strongest published
-  attention-based hallucination detector, keeps per-head resolution
-  throughout — its features are per-layer, per-head top-k Laplacian values.
+average attention over heads before building the graph. Head averaging
+discards head-level structure. Attention heads are specialized: a routing
+pattern carried by a few heads is mixed into a near-uniform background when
+the heads are summed. LapEigvals (Binkowski et al., EMNLP 2025), an
+attention-based hallucination detector, keeps per-head resolution throughout:
+its features are per-layer, per-head top-k Laplacian values.
 
 Practical guidance: use head-averaged diagnostics (`aggregate_heads`) for
 qualitative layer-trajectory analysis and visualization, but for any
@@ -120,7 +181,7 @@ matrix separately, build one Laplacian per head, and concatenate per-head
 metric values as features. `head_aggregation="attention_weighted"` (mass-
 weighted averaging) softens but does not remove the aggregation loss.
 
-### Per-head diagnostics
+### Usage
 
 ```python
 import torch
@@ -150,7 +211,7 @@ and `spectral_radius`. All are family **attention** (attention weights only).
 `token_span` takes the induced subgraph *before* building the Laplacian, so
 the diagnostic is local to that span rather than to the whole sequence.
 
-### Graph construction options
+## Graph construction options
 
 - `normalization`: `"sym"` (default, length-invariant spectrum), `"rw"`,
   `"none"`.
@@ -161,7 +222,7 @@ the diagnostic is local to that span rather than to the whole sequence.
 - `remove_self_loops`: drop the diagonal before building the Laplacian
   (standard in spectral graph theory; changes the Fiedler scale).
 
-### Determinism and precision (v0.3.0)
+## Determinism and precision (v0.3.0)
 
 `DirectedTopologist.get_fiedler_value` now uses an **exact dense solve for
 graphs up to 512 nodes** (a few milliseconds on GPU) and a **seeded, deflated
@@ -172,6 +233,16 @@ are meant to detect. Callers who need bit-identical runs should stay on the
 exact path or pass a fixed `seed`.
 
 ## Fast diagnostics
+
+![Time per call under the 0.3.0 and 0.4.0 defaults for analyze_layer on one layer and for per-head hybrid metrics on 4 heads, at sequence lengths 128, 512 and 2048 and hidden sizes 1024 and 4096](https://raw.githubusercontent.com/vcnoel/spectral-trust/main/docs/assets/speedup.png)
+
+*Time per call under each version's defaults, from `benchmarks/end_to_end.py`
+(CPU, two threads, synthetic causal attention; best of three runs up to
+S = 512, one run above, on a laptop where repeat runs differed by up to about
+30% at S ≥ 1024). Left: `analyze_layer` on one head-averaged layer. Right: the
+hybrid metrics of 4 heads, timed in 0.3.0 as a loop of `analyze_layer`
+because it has no per-head hybrid path. The changes behind the difference are
+listed in the changelog.*
 
 The hybrid metrics decompose one S x S Laplacian per layer (O(S³)) and
 project d-dimensional signals onto it (O(S²d)). `spectral_trust.fast` and the
@@ -291,134 +362,41 @@ Unselected heads are dropped before any conversion or decomposition, and
   - `directed_topology.py` — directed Laplacian metrics, GPU Lanczos
   - `framework.py` — end-to-end orchestration (`GSPDiagnosticsFramework`)
   - `instrumentation.py` — model loading and tensor capture
-- `examples/` — minimal usage examples (hallucination differential analysis, head-masking ablation)
-- `benchmarks/` — latency and precision scaling scripts; `fast_vs_dense.py` and its `results.json` / `results.md`
+- `examples/` — `quickstart.ipynb` and minimal scripts (hallucination differential analysis, head-masking ablation)
+- `benchmarks/` — latency and precision scaling scripts; `fast_vs_dense.py`, `end_to_end.py` and their `results.json` / `results.md`
+- `docs/make_assets.py` — regenerates the figures in `docs/assets/` from the library's output
 - `notebooks/` — demo notebook
-- `tests/` — unit tests
+- `tests/` — unit tests, run by `.github/workflows/tests.yml`
 
 ## Model compatibility
 
 Works with any Hugging Face causal LM that exposes attention maps
 (`output_attentions=True`), including Llama 3.x, Mistral, Qwen 2.x/3.x, Gemma,
-and Phi. Hybrid models with linear-attention layers (e.g. Qwen3.5) expose
-attention only on their full-attention layers; diagnostics are computed on
-those layers.
+and Phi. Hybrid models with linear-attention layers (e.g. Qwen3.5) return
+attention weights for their full-attention layers only (Qwen3.5-0.8B: 6 of
+24 layers). `analyze_text` reads which layers these are from the model
+config (`layer_types`), pairs each attention tensor with the output of its
+own layer, and reports the true layer index (3, 7, 11, ... for Qwen3.5-0.8B).
+If a model's config does not say, pass
+`GSPConfig(attention_layer_map=[...])`; `attention_layer_indices` exposes
+the same mapping for your own pipelines.
+
+## Contributing
+
+Bug reports and pull requests are welcome. See
+[CONTRIBUTING.md](https://github.com/vcnoel/spectral-trust/blob/main/CONTRIBUTING.md)
+for the development setup, the tests and the code style, and the
+[code of conduct](https://github.com/vcnoel/spectral-trust/blob/main/CODE_OF_CONDUCT.md).
+
+## Citation
+
+If you use spectral-trust in your work, please cite the software with the
+metadata in
+[CITATION.cff](https://github.com/vcnoel/spectral-trust/blob/main/CITATION.cff).
 
 ## Changelog
 
-**v0.4.0** — fast diagnostics, a per-head `rw` fix, and a dense default
-solver. One change alters results for existing callers; it is marked
-*(behaviour change)*. With `normalization="sym"` and `eigen_solver="dense"`,
-and for the per-head attention metrics, 0.4.0 reproduces 0.3.0 to float32
-rounding (`benchmarks/reproduce_v030.md`).
-
-- *(behaviour change)* Default `eigen_solver` `"sparse"` → `"dense"`, in
-  `GSPConfig` and in the CLI. Above 50 tokens the sparse default kept 50 of
-  the S modes, so `hfer`, `spectral_entropy`, `spectral_masses`, the `eig_*`
-  metrics and the length of `eigenvalues` came from a truncated basis (its
-  HFER was 4x to 30x smaller than the full-basis value in the benchmark);
-  `fiedler_value`, `spectral_radius` and `connectivity` agree up to the
-  ARPACK tolerance. The sparse solve was also slower than the dense one at
-  every size measured. Callers at 50 tokens or fewer, or who already passed
-  `eigen_solver="dense"`, get the same results. Pass `eigen_solver="sparse"`
-  to reproduce the old default; it still logs the truncation warning.
-- *(behaviour change)* The CLI's `--normalization` default `"rw"` → `"sym"`,
-  matching `GSPConfig` since 0.3.0. Pass `--normalization rw` for the old
-  CLI results.
-- *(behaviour change)* `connectivity` counts an eigenvalue as zero below
-  `max(1e-6, sqrt(S) * eps * lambda_max)` instead of a fixed 1e-6, through
-  `SpectralAnalyzer.zero_eigenvalue_tolerance` and `is_connected`. Float32
-  noise on unnormalised (`"none"`) graphs crossed the fixed threshold and
-  reported connected graphs as disconnected. Float64 input keeps the old
-  threshold; float32 normalised graphs see it rise to at most about 1e-5.
-- The CLI's `data/probes.json` is now in the wheel and the sdist
-  (`package_data` and `MANIFEST.in`), so `gsp-cli diagnose` works after a
-  pip install. It was missing from 0.3.0.
-- **Row-anchored energies** (`fast.py`): `row_dirichlet_energy(W, X, rows)`
-  and `row_value_spread(A, V, rows)`, batched over heads, in torch on CPU or
-  GPU, with no eigendecomposition.
-- **Exact top-band HFER**: `top_band_hfer(L, X)` returns the full-basis HFER
-  of a symmetric Laplacian from the top `num_high_modes(S, cutoff_ratio)`
-  eigenpairs, equal to the dense path.
-- **Random projection**: `GSPConfig.project_dim` (default `None`) and
-  `project_seed` apply a seeded Gaussian Johnson-Lindenstrauss map to the
-  signals before the hybrid metrics; `gaussian_projection` and `jl_project`
-  are public.
-- **Chebyshev band energies**: `band_energies(L, X, edges, order)` with
-  Jackson-damped filters (or `method="dense"`), `band_entropy`, and
-  `band_filter_response` to read the filters off a spectrum.
-- **Head subsets**: `heads=` in `per_head_metrics` and
-  `per_head_metrics_all_layers` (indices, `(layer, head)` pairs, or boolean
-  masks), `heads_from_scores` for user-supplied scores, and
-  `PerHeadDiagnostics.heads`.
-- **Per-head hybrid metrics**: `per_head_hybrid_metrics` and
-  `per_head_hybrid_metrics_all_layers` (energy, smoothness, spectral entropy,
-  HFER on each head's full eigenbasis; family "hybrid"), with `heads=` and
-  `project_dim`.
-- *(fix)* `per_head_metrics` with `normalization="rw"` symmetrized
-  `I - D^{-1}W` before the eigensolve and so reported the spectrum of a
-  different matrix (λ_max 2.42 against the true 1.58 on a sink-dominated
-  graph). It now reports the rw operator's spectrum. Results with the
-  default `sym` normalization are unchanged.
-- *(fix)* One HFER mode-count rule everywhere: `num_high_modes(n, r) =
-  n - int((1 - r) n)`, the rule `compute_hfer` has always used (it differs
-  from `ceil(r n)` only by floating-point rounding, never at the default
-  0.1 below n = 5000). `compute_hfer`, `top_band_hfer` and the per-head
-  hybrid path all call it, and a `cutoff_ratio` outside [0, 1] now raises
-  `ValueError`; `compute_hfer` used to slice with a negative index and return
-  a wrong value.
-- *(fix)* Every scalar metric of `SpectralDiagnostics` is a plain Python
-  `float` (`fiedler_value`, `spectral_radius` and `smoothness_index` were
-  numpy scalars), so the fields serialise with `json` directly.
-- *(fix)* `analyze_layer` accepts a one-token graph (its `squeeze()` turned a
-  1 x 1 Laplacian into a 0-d array).
-- *(fix)* `band_energies` raises `ValueError` for a non-symmetric (`rw`)
-  operator instead of symmetrizing it, and handles an all-zero Laplacian.
-- *(performance)* The Dirichlet energy and the smoothness index are
-  trace-only sums, O(S²d), accumulated in float64; they no longer form the
-  d x d matrix `X^T L X` (O(S d²) time, d² memory) or evaluate the energy
-  twice. `analyze_layer` projects the signals onto the eigenbasis once
-  instead of three times (`compute_spectral_masses`). Energy and smoothness
-  move only by float32 rounding (at most 1.6e-7 relative in the
-  reproduction check). Under each version's defaults, `analyze_layer` is
-  2.4x to 25x faster than in 0.3.0 at S = 128 to 2048, and per-head hybrid
-  metrics 6.9x to 67x faster than a 0.3.0 loop over heads
-  (`benchmarks/end_to_end.py`).
-- Benchmarks: `benchmarks/fast_vs_dense.py`, `end_to_end.py` and
-  `reproduce_v030.py`, with results in `benchmarks/results.md` and
-  `benchmarks/reproduce_v030.md`.
-
-**v0.3.0** — first release since 0.2.2. Three of these changes alter results
-for existing callers; they are marked *(behaviour change)*.
-
-- **Per-head spectral diagnostics** (`per_head.py`): `per_head_metrics`,
-  `per_head_metrics_all_layers`, `stack_feature_vector`,
-  `layer_delta_features`. One Laplacian per head, five eigenvalue-only
-  metrics from a single batched eigendecomposition, optional token-span
-  restriction, and probe-ready feature vectors plus cross-layer dynamics.
-- **Metric provenance** (`METRIC_FAMILIES`, `SpectralDiagnostics.families`):
-  every metric declares whether it is computed from attention weights alone
-  ("attention") or from residual-stream states projected onto the attention
-  eigenbasis ("hybrid"). The energy / smoothness / entropy / HFER metrics are
-  hybrid and must not be reported as attention-only.
-- **New attention-only metrics**: `eig_energy`, `eig_spectral_entropy`,
-  `eig_hfer` — eigenvalue-only counterparts of the hybrid trio.
-- *(behaviour change)* Default Laplacian normalization `rw` → `sym`: spectrum
-  in [0, 2] independent of sequence length, and always the deterministic
-  symmetric solver path. Pass `normalization="rw"` to reproduce pre-0.3.0
-  numbers.
-- *(behaviour change)* `get_fiedler_value`: exact dense solve for graphs up to
-  512 nodes, seeded and null-deflated Lanczos above. Removes an unseeded
-  random Lanczos start (non-deterministic results) and a `>1e-6` eigenvalue
-  filter that discarded exactly the near-zero λ₂ regime the diagnostic is
-  meant to detect.
-- *(behaviour change)* Non-finite attention tensors now raise
-  `NonFiniteAttentionError` instead of propagating NaNs.
-- Documentation rewritten around the metric-family contract; informal
-  terminology removed from CLI output and the demo notebook.
-
-**v0.2.x** — directed topology metrics, spectral velocity, subgraph
-isolation, GPU Lanczos, sparse solver optimizations.
+Release notes are in [CHANGELOG.md](https://github.com/vcnoel/spectral-trust/blob/main/CHANGELOG.md).
 
 ## License
 

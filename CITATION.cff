@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use spectral-trust in your work, please cite the software as below."
+type: software
+title: "spectral-trust: graph-spectral diagnostics for transformer attention"
+version: 0.4.0rc1
+authors:
+  - family-names: "Noël"
+    given-names: "Valentin"
+license: AGPL-3.0-or-later
+repository-code: "https://github.com/vcnoel/spectral-trust"
+url: "https://github.com/vcnoel/spectral-trust"
+abstract: >-
+  A Python library that builds graphs from a transformer's attention weights
+  and computes spectral diagnostics on them: Laplacian eigenvalues, algebraic
+  connectivity (the Fiedler value), Dirichlet energy and the high-frequency
+  energy ratio of the residual stream, per layer or per head.
+keywords:
+  - graph signal processing
+  - spectral graph theory
+  - attention
+  - transformers
+  - interpretability

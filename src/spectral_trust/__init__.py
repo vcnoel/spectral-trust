@@ -12,7 +12,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from .config import GSPConfig
-from .framework import GSPDiagnosticsFramework
+from .framework import GSPDiagnosticsFramework, attention_layer_indices
 from .spectral import (
     SpectralDiagnostics, SpectralAnalyzer, calculate_spectral_velocity,
     METRIC_FAMILIES,
@@ -37,11 +37,12 @@ from .fast import (
     band_energies, band_entropy, band_filter_response,
 )
 
-__version__ = "0.4.0"
+__version__ = "0.4.0rc1"
 
 __all__ = [
     "GSPConfig",
     "GSPDiagnosticsFramework",
+    "attention_layer_indices",
     "SpectralDiagnostics",
     "SpectralAnalyzer",
     "calculate_spectral_velocity",
