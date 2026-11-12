@@ -1,14 +1,104 @@
 # spectral-trust
 
-**Graph-spectral diagnostics for transformer attention.**
+[![PyPI](https://img.shields.io/pypi/v/spectral-trust)](https://pypi.org/project/spectral-trust/)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)](https://pypi.org/project/spectral-trust/)
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](https://github.com/vcnoel/spectral-trust/blob/main/LICENSE)
+[![tests](https://img.shields.io/github/actions/workflow/status/vcnoel/spectral-trust/tests.yml?branch=main&label=tests)](https://github.com/vcnoel/spectral-trust/actions/workflows/tests.yml)
+[![Open in Colab](https://img.shields.io/badge/Open%20in-Colab-F9AB00?logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/examples/quickstart.ipynb)
 
-`spectral_trust` builds graphs from a transformer's attention patterns and
-computes spectral diagnostics on them (Laplacian eigenvalues, algebraic
-connectivity, Dirichlet energy). It is designed for research on internal-signal
-analysis of LLMs: hallucination detection, uncertainty quantification, and
-layer-wise routing diagnostics.
+<p align="center">
+  <picture>
+    <source media="(prefers-reduced-motion: reduce)" srcset="https://raw.githubusercontent.com/vcnoel/spectral-trust/main/docs/assets/hero.png">
+    <img src="https://raw.githubusercontent.com/vcnoel/spectral-trust/main/docs/assets/hero.gif" width="900" alt="Qwen3-0.6B reading 'The cat sat on the mat because it was warm.', layer by layer: the attention graph over the tokens with nodes coloured by the Fiedler vector, the layer's Laplacian spectrum, and the Fiedler value and HFER across layers">
+  </picture>
+</p>
 
-## Metric families: read this first
+<p align="center"><em>Qwen3-0.6B reads one sentence. For each layer: the head-averaged attention graph
+(edge width: symmetrised attention; node colour: Fiedler vector), its Laplacian spectrum, and
+<code>fiedler_value</code> and <code>hfer</code> up to that layer.</em></p>
+
+**Graph-spectral diagnostics for transformer attention: each layer's attention
+becomes a graph over the tokens, and spectral-trust reports its Laplacian
+spectrum and the frequency content of the residual stream on it, per layer or
+per head.**
+
+## Installation
+
+```bash
+pip install spectral-trust
+```
+
+From source: `pip install -e .` in a clone of this repository.
+
+## Quickstart
+
+```python
+from spectral_trust import GSPConfig, GSPDiagnosticsFramework
+
+config = GSPConfig(model_name="Qwen/Qwen3-0.6B", save_plots=False)
+with GSPDiagnosticsFramework(config) as framework:
+    framework.instrumenter.load_model(config.model_name)
+    result = framework.analyze_text("The cat sat on the mat because it was warm.", save_results=False)
+
+for d in result["layer_diagnostics"]:
+    print(d.layer, round(d.fiedler_value, 3), round(d.hfer, 3))
+```
+
+This prints one line per layer: the layer index, the Fiedler value of the
+head-averaged attention graph, and the HFER of the residual stream on that
+graph. It runs on a CPU. `result["layer_diagnostics"]` holds one
+`SpectralDiagnostics` per layer with every metric in the metric-families
+table below. The notebook
+[`examples/quickstart.ipynb`](https://github.com/vcnoel/spectral-trust/blob/main/examples/quickstart.ipynb)
+([open in Colab](https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/examples/quickstart.ipynb))
+goes further: one layer with `analyze_layer`, per-head metrics with `heads=`,
+and the fast diagnostics.
+
+![Per-layer fiedler_value, spectral_radius, eig_spectral_entropy, hfer, smoothness_index and spectral_entropy of Qwen3-0.6B for "The capital of France is Paris." and "The capital of France is Rome."](https://raw.githubusercontent.com/vcnoel/spectral-trust/main/docs/assets/metrics.png)
+
+*The same call on two prompts that differ in one token, on Qwen3-0.6B. Top
+row: attention-only metrics; bottom row: hybrid metrics. These are the values
+the library returns; the figure is not a detection result.*
+
+## Why graph-spectral diagnostics
+
+The attention weights of a transformer layer define a weighted graph on the
+tokens. The eigenvalues of that graph's Laplacian summarise how attention
+routes information. The second-smallest, the Fiedler value or algebraic
+connectivity, is zero when the graph falls apart into pieces that do not
+attend to each other, and small when a few weak edges hold it together. The
+eigenvectors form a frequency basis on the tokens: projecting the residual
+stream onto them measures how much of the hidden state changes sharply
+between tokens that attend to each other (HFER, the high-frequency energy
+ratio). Each layer costs one eigendecomposition, with no training and no
+labels, and with the default symmetric normalised Laplacian the spectrum lies
+in [0, 2] whatever the length of the input, so values are comparable across
+prompts.
+
+## Features
+
+- **Attention graphs per layer** from any Hugging Face causal LM that returns
+  attention weights: three symmetrisations, uniform or attention-weighted head
+  aggregation, and the symmetric normalised (default), random-walk or
+  combinatorial Laplacian.
+- **Two metric families, tagged in every result**: attention-only metrics
+  (Fiedler value, spectral radius, connectivity, eigenvalue energy, entropy
+  and HFER) and hybrid metrics that also read the hidden states (Dirichlet
+  energy, smoothness index, spectral entropy, HFER, spectral masses).
+- **Per-head diagnostics**: one Laplacian per head, five attention-only
+  metrics from one batched eigendecomposition, per-head hybrid metrics, and
+  head subsets with `heads=`.
+- **Fast diagnostics**: row-anchored energies with no eigendecomposition,
+  exact top-band HFER, a seeded random projection of the hidden states, and
+  Chebyshev band energies for long contexts.
+- **Token spans, directed graphs and dynamics**: restrict any diagnostic to a
+  span of tokens, compute directed-Laplacian metrics, and take layer-to-layer
+  differences of any metric.
+- **Probe features**: per-head metrics flattened into feature vectors, with
+  cross-layer differences.
+- **Command line**: `gsp-cli` analyses one text or compares two, with plots.
+
+## Metric families
 
 Every metric is a function of a specific tensor, and the distinction matters
 for both access requirements and interpretation. As of v0.3.0 each metric is
@@ -21,9 +111,8 @@ embedded in every result):
 | **hybrid** | attention weights **and** residual-stream states | `energy`, `smoothness_index`, `spectral_entropy`, `hfer`, `spectral_masses` | projects residual-stream vectors onto the attention eigenbasis; requires full internals and reflects residual-stream content, **not** attention topology alone |
 
 If you report results as "attention-only", use family-**attention** metrics.
-The hybrid metrics remain available and can be strong detectors, but they must
-be benchmarked against direct hidden-state probes at equal access, not against
-attention-only baselines.
+Results with the hybrid metrics should be compared with direct hidden-state
+probes at equal access, not with attention-only baselines.
 
 Note on terminology: what Hugging Face returns via `output_hidden_states` are
 **residual-stream snapshots** (block outputs). Module-internal activations
@@ -53,34 +142,7 @@ independent of sequence length, making metrics comparable across inputs
 - **Subgraph isolation** — restrict any diagnostic to a token span (e.g. a
   generated tool call).
 
-## Installation
-
-```bash
-pip install spectral_trust
-# or from source
-pip install -e .
-```
-
-## Quickstart
-
-### Python API
-
-```python
-from spectral_trust import GSPDiagnosticsFramework, GSPConfig, METRIC_FAMILIES
-
-config = GSPConfig(model_name="meta-llama/Llama-3.2-1B", device="cuda")
-with GSPDiagnosticsFramework(config) as framework:
-    framework.instrumenter.load_model("meta-llama/Llama-3.2-1B")
-    results = framework.analyze_text("The capital of France is Paris.")
-
-    last = results["layer_diagnostics"][-1]
-    print("fiedler:", last.fiedler_value)            # attention-only
-    print("eig_entropy:", last.eig_spectral_entropy) # attention-only
-    print("smoothness:", last.smoothness_index)      # hybrid (needs hidden states)
-    print(METRIC_FAMILIES["smoothness_index"])       # -> "hybrid"
-```
-
-### CLI
+## Command line
 
 ```bash
 # analyze one input
@@ -96,21 +158,20 @@ gsp-cli analyze --text "..." --runs 5 --temperature 0.7
 gsp-cli analyze --text "..." --model llama-3.2-1b --offline
 ```
 
+`gsp-cli list-models` prints the short model names; `--model` also takes a
+Hugging Face model id such as `Qwen/Qwen3-0.6B`.
+
+## Per-head diagnostics
+
 ### Head resolution matters
 
 Most attention-graph diagnostics (including earlier versions of this library)
-average attention over heads before building the graph. **Head-averaging is a
-signal destroyer.** Attention heads are specialized: the routing anomaly that
-accompanies a failure is typically carried by a few heads, and summing heads
-mixes it into a near-uniform background. Two independent lines of evidence:
-
-- In our tool-call hallucination experiments, per-head Fiedler values (one λ₂
-  per head per layer, no averaging) reached detection AUCs competitive with
-  supervised hidden-state probes, while the same metric computed on the
-  head-averaged graph was near chance under leakage-controlled evaluation.
-- LapEigvals (Binkowski et al., EMNLP 2025), the strongest published
-  attention-based hallucination detector, keeps per-head resolution
-  throughout — its features are per-layer, per-head top-k Laplacian values.
+average attention over heads before building the graph. Head averaging
+discards head-level structure. Attention heads are specialized: a routing
+pattern carried by a few heads is mixed into a near-uniform background when
+the heads are summed. LapEigvals (Binkowski et al., EMNLP 2025), an
+attention-based hallucination detector, keeps per-head resolution throughout:
+its features are per-layer, per-head top-k Laplacian values.
 
 Practical guidance: use head-averaged diagnostics (`aggregate_heads`) for
 qualitative layer-trajectory analysis and visualization, but for any
@@ -120,7 +181,7 @@ matrix separately, build one Laplacian per head, and concatenate per-head
 metric values as features. `head_aggregation="attention_weighted"` (mass-
 weighted averaging) softens but does not remove the aggregation loss.
 
-### Per-head diagnostics
+### Usage
 
 ```python
 import torch
@@ -150,7 +211,7 @@ and `spectral_radius`. All are family **attention** (attention weights only).
 `token_span` takes the induced subgraph *before* building the Laplacian, so
 the diagnostic is local to that span rather than to the whole sequence.
 
-### Graph construction options
+## Graph construction options
 
 - `normalization`: `"sym"` (default, length-invariant spectrum), `"rw"`,
   `"none"`.
@@ -161,7 +222,7 @@ the diagnostic is local to that span rather than to the whole sequence.
 - `remove_self_loops`: drop the diagonal before building the Laplacian
   (standard in spectral graph theory; changes the Fiedler scale).
 
-### Determinism and precision (v0.3.0)
+## Determinism and precision (v0.3.0)
 
 `DirectedTopologist.get_fiedler_value` now uses an **exact dense solve for
 graphs up to 512 nodes** (a few milliseconds on GPU) and a **seeded, deflated
@@ -172,6 +233,16 @@ are meant to detect. Callers who need bit-identical runs should stay on the
 exact path or pass a fixed `seed`.
 
 ## Fast diagnostics
+
+![Time per call under the 0.3.0 and 0.4.0 defaults for analyze_layer on one layer and for per-head hybrid metrics on 4 heads, at sequence lengths 128, 512 and 2048 and hidden sizes 1024 and 4096](https://raw.githubusercontent.com/vcnoel/spectral-trust/main/docs/assets/speedup.png)
+
+*Time per call under each version's defaults, from `benchmarks/end_to_end.py`
+(CPU, two threads, synthetic causal attention; best of three runs up to
+S = 512, one run above, on a laptop where repeat runs differed by up to about
+30% at S ≥ 1024). Left: `analyze_layer` on one head-averaged layer. Right: the
+hybrid metrics of 4 heads, timed in 0.3.0 as a loop of `analyze_layer`
+because it has no per-head hybrid path. The changes behind the difference are
+listed in the changelog.*
 
 The hybrid metrics decompose one S x S Laplacian per layer (O(S³)) and
 project d-dimensional signals onto it (O(S²d)). `spectral_trust.fast` and the
@@ -291,18 +362,36 @@ Unselected heads are dropped before any conversion or decomposition, and
   - `directed_topology.py` — directed Laplacian metrics, GPU Lanczos
   - `framework.py` — end-to-end orchestration (`GSPDiagnosticsFramework`)
   - `instrumentation.py` — model loading and tensor capture
-- `examples/` — minimal usage examples (hallucination differential analysis, head-masking ablation)
-- `benchmarks/` — latency and precision scaling scripts; `fast_vs_dense.py` and its `results.json` / `results.md`
+- `examples/` — `quickstart.ipynb` and minimal scripts (hallucination differential analysis, head-masking ablation)
+- `benchmarks/` — latency and precision scaling scripts; `fast_vs_dense.py`, `end_to_end.py` and their `results.json` / `results.md`
+- `docs/make_assets.py` — regenerates the figures in `docs/assets/` from the library's output
 - `notebooks/` — demo notebook
-- `tests/` — unit tests
+- `tests/` — unit tests, run by `.github/workflows/tests.yml`
 
 ## Model compatibility
 
 Works with any Hugging Face causal LM that exposes attention maps
 (`output_attentions=True`), including Llama 3.x, Mistral, Qwen 2.x/3.x, Gemma,
-and Phi. Hybrid models with linear-attention layers (e.g. Qwen3.5) expose
-attention only on their full-attention layers; diagnostics are computed on
-those layers.
+and Phi. Hybrid models with linear-attention layers (e.g. Qwen3.5) return
+attention weights for their full-attention layers only (Qwen3.5-0.8B: 6 of
+24 layers), and `analyze_text` numbers those layers 0, 1, 2, ... in order.
+Their attention-family metrics are computed on those layers. The hybrid
+metrics, however, pair the i-th attention tensor with `hidden_states[i + 1]`,
+which is not the output of that layer; for such models, call `analyze_layer`
+with the matching hidden states instead.
+
+## Contributing
+
+Bug reports and pull requests are welcome. See
+[CONTRIBUTING.md](https://github.com/vcnoel/spectral-trust/blob/main/CONTRIBUTING.md)
+for the development setup, the tests and the code style, and the
+[code of conduct](https://github.com/vcnoel/spectral-trust/blob/main/CODE_OF_CONDUCT.md).
+
+## Citation
+
+If you use spectral-trust in your work, please cite the software with the
+metadata in
+[CITATION.cff](https://github.com/vcnoel/spectral-trust/blob/main/CITATION.cff).
 
 ## Changelog
 
