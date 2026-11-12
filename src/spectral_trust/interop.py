@@ -152,8 +152,9 @@ def from_transformer_lens(
     for every layer, and ``blocks.{l}.hook_resid_post`` when present, which
     is the signal paired with layer l for the hybrid metrics.
 
-    >>> logits, tl_cache = model.run_with_cache(tokens)
-    >>> cache = st.from_transformer_lens(tl_cache, model, tokens)
+    Examples:
+        >>> logits, tl_cache = model.run_with_cache(tokens)
+        >>> cache = st.from_transformer_lens(tl_cache, model, tokens)
 
     Args:
         cache: the ``ActivationCache`` of ``run_with_cache`` (any mapping
@@ -262,14 +263,15 @@ def from_nnsight(
     The model must run eager attention, so that its attention modules return
     their weights. For GPT-2:
 
-    >>> from nnsight import LanguageModel
-    >>> lm = LanguageModel("gpt2", attn_implementation="eager", dispatch=True)
-    >>> attn, resid = [], []
-    >>> with lm.trace(prompt):
-    ...     for block in lm.transformer.h:
-    ...         attn.append(block.attn.output[1].save())   # weights [1, H, S, S]
-    ...         resid.append(block.output.save())          # block output [1, S, d]
-    >>> cache = st.from_nnsight(attn, resid, model=lm, tokens=prompt)
+    Examples:
+        >>> from nnsight import LanguageModel
+        >>> lm = LanguageModel("gpt2", attn_implementation="eager", dispatch=True)
+        >>> attn, resid = [], []
+        >>> with lm.trace(prompt):
+        ...     for block in lm.transformer.h:
+        ...         attn.append(block.attn.output[1].save())   # weights [1, H, S, S]
+        ...         resid.append(block.output.save())          # block output [1, S, d]
+        >>> cache = st.from_nnsight(attn, resid, model=lm, tokens=prompt)
 
     The module paths are the Hugging Face ones (``model.layers[i].self_attn``
     for Llama, Qwen and Mistral). Modules must be read in execution order
@@ -392,8 +394,9 @@ def from_hf_outputs(
 ) -> SpectralCache:
     """Spectral measurements from a Hugging Face model output.
 
-    >>> out = model(**inputs, output_attentions=True, output_hidden_states=True)
-    >>> cache = st.from_hf_outputs(out, model.config, inputs["input_ids"], tokenizer=tok)
+    Examples:
+        >>> out = model(**inputs, output_attentions=True, output_hidden_states=True)
+        >>> cache = st.from_hf_outputs(out, model.config, inputs["input_ids"], tokenizer=tok)
 
     Args:
         outputs: a ``ModelOutput`` (or a dict) with ``attentions`` and,

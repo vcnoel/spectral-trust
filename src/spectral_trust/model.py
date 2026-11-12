@@ -363,9 +363,10 @@ class SpectralModel:
     """A Hugging Face causal LM that returns spectral measurements of its
     attention graphs, in the style of TransformerLens' ``HookedTransformer``.
 
-    >>> model = SpectralModel.from_pretrained("Qwen/Qwen3-0.6B")
-    >>> cache = model.run_with_spectra("The cat sat on the mat because it was warm.")
-    >>> cache.layer(10).head(3)
+    Examples:
+        >>> model = SpectralModel.from_pretrained("Qwen/Qwen3-0.6B")
+        >>> cache = model.run_with_spectra("The cat sat on the mat because it was warm.")
+        >>> cache.layer(10).head(3)
 
     The model is used as it is: no weights are changed and no hooks are
     added; it is put in eval mode. Its attention must be the eager
