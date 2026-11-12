@@ -32,6 +32,21 @@ HF_HUB_OFFLINE=1 python -m pytest -q
 
 One test exercises a CUDA device and is skipped when none is available.
 
+Two groups of tests need more, and are skipped otherwise:
+
+```bash
+# the TransformerLens and nnsight adapters against run_with_spectra on gpt2
+pip install -e ".[tl,nnsight]"
+python -m pytest -q tests/test_interop.py
+
+# run_with_spectra on tiny random checkpoints (downloads them)
+SPECTRAL_TRUST_MODELS=all python -m pytest -q tests/test_model_matrix.py
+```
+
+`.github/workflows/models.yml` runs both. The documentation builds with
+`pip install -e ".[docs]"` and `mkdocs build --strict` (`mkdocs serve` to
+preview it); `.github/workflows/docs.yml` builds it on every pull request.
+
 Please add a test with every fix and every new metric. A regression test
 should fail on the code before the fix; its docstring says what was wrong.
 
