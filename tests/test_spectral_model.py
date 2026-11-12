@@ -324,9 +324,12 @@ def test_from_hf_outputs_crops_a_padded_batch(tiny_gpt2):
                              attention_mask=mask)
     ref = tiny_gpt2.run_with_spectra([TEXT, OTHER])
     assert got.tokens == ref.tokens
+    # A padded batch changes the matmul shapes, so float32 sums accumulate in another
+    # order: on Linux CI the hybrid energies differ by up to 1.7e-5 relative. Same
+    # tolerance as the other padded-batch comparisons in this file.
     for key in ref.keys():
         for a, b in zip(got[key], ref[key]):
-            _close(a, b, rtol=1e-5, atol=1e-6)
+            _close(a, b, rtol=1e-4, atol=1e-5)
 
 
 def test_a_left_padded_mask_is_refused(tiny_gpt2):
