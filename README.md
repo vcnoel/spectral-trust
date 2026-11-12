@@ -374,11 +374,12 @@ Works with any Hugging Face causal LM that exposes attention maps
 (`output_attentions=True`), including Llama 3.x, Mistral, Qwen 2.x/3.x, Gemma,
 and Phi. Hybrid models with linear-attention layers (e.g. Qwen3.5) return
 attention weights for their full-attention layers only (Qwen3.5-0.8B: 6 of
-24 layers), and `analyze_text` numbers those layers 0, 1, 2, ... in order.
-Their attention-family metrics are computed on those layers. The hybrid
-metrics, however, pair the i-th attention tensor with `hidden_states[i + 1]`,
-which is not the output of that layer; for such models, call `analyze_layer`
-with the matching hidden states instead.
+24 layers). `analyze_text` reads which layers these are from the model
+config (`layer_types`), pairs each attention tensor with the output of its
+own layer, and reports the true layer index (3, 7, 11, ... for Qwen3.5-0.8B).
+If a model's config does not say, pass
+`GSPConfig(attention_layer_map=[...])`; `attention_layer_indices` exposes
+the same mapping for your own pipelines.
 
 ## Contributing
 

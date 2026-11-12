@@ -3,7 +3,7 @@
 ## v0.4.0
 
 Fast diagnostics, a per-head `rw` fix, and a dense default
-solver. Three changes alter results for existing callers; they are marked
+solver. Four changes alter results for existing callers; they are marked
 *(behaviour change)*. With `normalization="sym"` and `eigen_solver="dense"`,
 and for the per-head attention metrics, 0.4.0 reproduces 0.3.0 to float32
 rounding (`benchmarks/reproduce_v030.md`).
@@ -27,6 +27,16 @@ rounding (`benchmarks/reproduce_v030.md`).
   noise on unnormalised (`"none"`) graphs crossed the fixed threshold and
   reported connected graphs as disconnected. Float64 input keeps the old
   threshold; float32 normalised graphs see it rise to at most about 1e-5.
+- *(behaviour change)* Hybrid models such as Qwen3.5, which return attention
+  for their full-attention layers only: `analyze_text` now pairs each
+  attention tensor with the output of its own layer and reports the true
+  layer index, read from `layer_types` in the model config. 0.3.0 numbered
+  the returned tensors 0, 1, 2, ... and paired tensor i with
+  `hidden_states[i + 1]`, so the hybrid metrics (`energy`,
+  `smoothness_index`, `spectral_entropy`, `hfer`) used another layer's
+  hidden states. New: `GSPConfig.attention_layer_map` and
+  `attention_layer_indices`. Models that return attention for every layer
+  are unchanged.
 - The CLI's `data/probes.json` is now in the wheel and the sdist
   (`package_data` and `MANIFEST.in`), so `gsp-cli diagnose` works after a
   pip install. It was missing from 0.3.0.
