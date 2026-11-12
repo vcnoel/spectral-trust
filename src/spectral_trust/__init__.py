@@ -26,9 +26,18 @@ from .per_head import (
     PerHeadDiagnostics, per_head_metrics, per_head_metrics_all_layers,
     stack_feature_vector, layer_delta_features,
     PER_HEAD_METRIC_NAMES, PER_HEAD_METRIC_FAMILY,
+    per_head_hybrid_metrics, per_head_hybrid_metrics_all_layers,
+    heads_from_scores,
+    PER_HEAD_HYBRID_METRIC_NAMES, PER_HEAD_HYBRID_METRIC_FAMILY,
+)
+from .fast import (
+    row_dirichlet_energy, row_value_spread,
+    top_band_hfer, num_high_modes,
+    gaussian_projection, jl_project,
+    band_energies, band_entropy, band_filter_response,
 )
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 __all__ = [
     "GSPConfig",
@@ -49,5 +58,19 @@ __all__ = [
     "layer_delta_features",
     "PER_HEAD_METRIC_NAMES",
     "PER_HEAD_METRIC_FAMILY",
+    "per_head_hybrid_metrics",
+    "per_head_hybrid_metrics_all_layers",
+    "heads_from_scores",
+    "PER_HEAD_HYBRID_METRIC_NAMES",
+    "PER_HEAD_HYBRID_METRIC_FAMILY",
+    "row_dirichlet_energy",
+    "row_value_spread",
+    "top_band_hfer",
+    "num_high_modes",
+    "gaussian_projection",
+    "jl_project",
+    "band_energies",
+    "band_entropy",
+    "band_filter_response",
     "__version__",
 ]

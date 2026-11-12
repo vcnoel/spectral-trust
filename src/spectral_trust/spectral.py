@@ -20,6 +20,7 @@ from scipy.sparse.linalg import eigsh, ArpackNoConvergence
 from scipy.linalg import eigh, eig
 import logging
 from .config import GSPConfig
+from .fast import gaussian_projection, num_high_modes
 
 logger = logging.getLogger(__name__)
 
@@ -88,9 +89,22 @@ class SpectralDiagnostics:
     #: metric name -> tensor family ("attention" | "hybrid")
     families: Dict[str, str] = None
 
+    #: Scalar metric fields, stored as plain Python floats (None if unset).
+    SCALAR_FIELDS = ("energy", "smoothness_index", "spectral_entropy", "hfer",
+                     "fiedler_value", "spectral_radius", "max_imaginary",
+                     "eig_energy", "eig_spectral_entropy", "eig_hfer")
+
     def __post_init__(self):
         if self.families is None:
             self.families = dict(METRIC_FAMILIES)
+        # Plain Python types, so that the fields themselves (not only
+        # to_dict) serialise with json and compare without numpy scalars.
+        self.layer = int(self.layer)
+        self.connectivity = bool(self.connectivity)
+        for name in self.SCALAR_FIELDS:
+            value = getattr(self, name)
+            if value is not None:
+                setattr(self, name, float(value))
 
     def to_dict(self) -> Dict[str, Any]:
         d = {
@@ -121,7 +135,32 @@ class SpectralAnalyzer:
     
     def __init__(self, config: GSPConfig):
         self.config = config
-    
+        self._projections: Dict[Tuple[int, int, int, str], np.ndarray] = {}
+
+    def project_signals(self, signals: np.ndarray) -> np.ndarray:
+        """
+        Apply the configured Johnson-Lindenstrauss projection
+        (``config.project_dim``) to ``[seq_len, d]`` signals. Returns the
+        signals unchanged when projection is off or ``project_dim >= d``.
+        The matrix is cached per (d, k, seed, dtype), so every layer of a
+        model shares one projection.
+        """
+        k = getattr(self.config, "project_dim", None)
+        if k is None:
+            return signals
+        if k <= 0:
+            raise ValueError(f"project_dim must be positive, got {k}")
+        dim = signals.shape[1]
+        if k >= dim:
+            return signals
+        seed = getattr(self.config, "project_seed", 0)
+        key = (dim, k, seed, signals.dtype.str)
+        R = self._projections.get(key)
+        if R is None:
+            R = gaussian_projection(dim, k, seed=seed, dtype=signals.dtype)
+            self._projections[key] = R
+        return signals @ R
+
     @staticmethod
     def _is_symmetric(matrix: np.ndarray, tol: float = 1e-6) -> bool:
         """True if the operator is symmetric to within `tol` (so eigh/eigsh are valid)."""
@@ -269,35 +308,51 @@ class SpectralAnalyzer:
 
     def compute_dirichlet_energy(self, signals: np.ndarray, laplacian: np.ndarray) -> float:
         """
-        Compute Dirichlet energy of signals on graph
+        Compute Dirichlet energy of signals on graph, ``tr(X^T L X)``.
+
+        Evaluated as ``sum(X * (L X))``: one S x S by S x d product, O(S^2 d)
+        time and O(S d) memory. The d x d matrix ``X^T L X`` is never formed
+        (before 0.4.0 it was, at O(S d^2) cost). Accumulated in float64.
+
         Args:
             signals: [seq_len, embedding_dim] signal matrix
             laplacian: [seq_len, seq_len] Laplacian matrix
         Returns:
             Total Dirichlet energy
         """
-        # Energy = Tr(X^T L X)
-        energy_matrix = np.dot(signals.T, np.dot(laplacian, signals))
-        energy = np.trace(energy_matrix)
-        return float(energy)
-    
-    def compute_smoothness_index(self, signals: np.ndarray, laplacian: np.ndarray) -> float:
+        return float(np.sum(signals * np.dot(laplacian, signals), dtype=np.float64))
+
+    def compute_smoothness_index(self, signals: np.ndarray, laplacian: np.ndarray,
+                                 energy: Optional[float] = None) -> float:
         """
-        Compute smoothness index (normalized energy)
+        Compute smoothness index (normalized energy),
+        ``tr(X^T L X) / ||X||_F^2``.
+
         Args:
             signals: [seq_len, embedding_dim] signal matrix
             laplacian: [seq_len, seq_len] Laplacian matrix
+            energy: the Dirichlet energy, if already computed (analyze_layer
+                passes it so that it is evaluated once)
         Returns:
             Smoothness index
         """
-        energy = self.compute_dirichlet_energy(signals, laplacian)
-        signal_norm = np.trace(np.dot(signals.T, signals))
-        
+        if energy is None:
+            energy = self.compute_dirichlet_energy(signals, laplacian)
+        signal_norm = float(np.sum(signals * signals, dtype=np.float64))
+
         if signal_norm < 1e-8:
             return 0.0
-        
+
         return energy / signal_norm
-    
+
+    @staticmethod
+    def compute_spectral_masses(signals: np.ndarray, eigenvectors: np.ndarray) -> np.ndarray:
+        """Energy of the signals in each eigenmode, ``||u_k^T X||^2``: the one
+        projection onto the eigenbasis that entropy, HFER and spectral masses
+        share."""
+        signal_hat = np.dot(eigenvectors.T, signals)  # [num_eigenvectors, embedding_dim]
+        return np.sum(signal_hat**2, axis=1)          # [num_eigenvectors]
+
     def compute_spectral_entropy(self, signals: np.ndarray, eigenvectors: np.ndarray) -> float:
         """
         Compute spectral entropy of signals
@@ -307,12 +362,12 @@ class SpectralAnalyzer:
         Returns:
             Spectral entropy
         """
-        # Project signals onto eigenbasis
-        signal_hat = np.dot(eigenvectors.T, signals)  # [num_eigenvectors, embedding_dim]
-        
-        # Compute spectral energies per frequency
-        spectral_energies = np.sum(signal_hat**2, axis=1)  # [num_eigenvectors]
-        
+        return self.spectral_entropy_from_masses(
+            self.compute_spectral_masses(signals, eigenvectors))
+
+    @staticmethod
+    def spectral_entropy_from_masses(spectral_energies: np.ndarray) -> float:
+        """Spectral entropy (natural log, unnormalised) of per-mode energies."""
         # Normalize to get probability distribution
         total_energy = np.sum(spectral_energies)
         if total_energy < 1e-8:
@@ -338,15 +393,17 @@ class SpectralAnalyzer:
         Returns:
             HFER value
         """
-        # Project signals onto eigenbasis
-        signal_hat = np.dot(eigenvectors.T, signals)  # [num_eigenvectors, embedding_dim]
-        
-        # Compute spectral energies per frequency
-        spectral_energies = np.sum(signal_hat**2, axis=1)  # [num_eigenvectors]
-        
+        return self.hfer_from_masses(
+            self.compute_spectral_masses(signals, eigenvectors), cutoff_ratio)
+
+    @staticmethod
+    def hfer_from_masses(spectral_energies: np.ndarray, cutoff_ratio: float) -> float:
+        """HFER of per-mode energies ordered by ascending eigenvalue: the
+        share of the top ``num_high_modes(n, cutoff_ratio)`` modes, the
+        library's single mode-count rule (see :func:`fast.num_high_modes`)."""
         # Determine cutoff index
-        num_eigenvectors = len(eigenvalues)
-        cutoff_index = int((1 - cutoff_ratio) * num_eigenvectors)
+        num_eigenvectors = len(spectral_energies)
+        cutoff_index = num_eigenvectors - num_high_modes(num_eigenvectors, cutoff_ratio)
         
         # Compute HFER
         total_energy = np.sum(spectral_energies)
@@ -371,25 +428,32 @@ class SpectralAnalyzer:
         """
         # Convert to numpy for numerical computations
         signals_np = signals.to(torch.float32).detach().cpu().numpy()
-        laplacian_np = laplacian.to(torch.float32).detach().cpu().numpy().squeeze()
+        laplacian_np = laplacian.to(torch.float32).detach().cpu().numpy()
+        # Drop a leading batch dimension of size 1 ([1, S, S] -> [S, S]).
+        # squeeze() would also collapse a 1 x 1 Laplacian to a 0-d array.
+        if laplacian_np.ndim > 2:
+            if int(np.prod(laplacian_np.shape[:-2])) != 1:
+                raise ValueError(
+                    f"expected one [S, S] Laplacian, got shape {laplacian_np.shape}")
+            laplacian_np = laplacian_np.reshape(laplacian_np.shape[-2:])
+        # Optional Johnson-Lindenstrauss projection (config.project_dim): only
+        # the hybrid metrics below read the signals.
+        signals_np = self.project_signals(signals_np)
         
         # Single eigendecomposition (was previously called twice — once here, once inside _check_connectivity)
         eigenvalues, eigenvectors = self.compute_eigendecomposition(laplacian_np)
-        connectivity = bool(np.sum(eigenvalues < 1e-6) == 1)
+        connectivity = self.is_connected(eigenvalues, laplacian_np.shape[0])
 
-        # Compute diagnostics
+        # Compute diagnostics: the energy once, the eigenbasis projection once
         energy = self.compute_dirichlet_energy(signals_np, laplacian_np)
-        smoothness_index = self.compute_smoothness_index(signals_np, laplacian_np)
-        spectral_entropy = self.compute_spectral_entropy(signals_np, eigenvectors)
-        hfer = self.compute_hfer(signals_np, eigenvectors, eigenvalues,
-                               self.config.hfer_cutoff_ratio)
+        smoothness_index = self.compute_smoothness_index(signals_np, laplacian_np,
+                                                         energy=energy)
+        spectral_masses = self.compute_spectral_masses(signals_np, eigenvectors)
+        spectral_entropy = self.spectral_entropy_from_masses(spectral_masses)
+        hfer = self.hfer_from_masses(spectral_masses, self.config.hfer_cutoff_ratio)
 
-        # Compute spectral masses
-        signal_hat = np.dot(eigenvectors.T, signals_np)
-        spectral_masses = np.sum(signal_hat**2, axis=1)
-
-        fiedler_value = eigenvalues[1] if len(eigenvalues) > 1 else 0.0
-        spectral_radius = eigenvalues[-1] if len(eigenvalues) > 0 else 0.0
+        fiedler_value = float(eigenvalues[1]) if len(eigenvalues) > 1 else 0.0
+        spectral_radius = float(eigenvalues[-1]) if len(eigenvalues) > 0 else 0.0
 
         return SpectralDiagnostics(
             layer=layer_idx,
@@ -408,10 +472,38 @@ class SpectralAnalyzer:
             eig_hfer=self.compute_eig_hfer(eigenvalues),
         )
 
+    @staticmethod
+    def zero_eigenvalue_tolerance(eigenvalues: np.ndarray, n: int) -> float:
+        """Threshold below which a Laplacian eigenvalue counts as zero.
+
+        A fixed 1e-6 is crossed by floating-point noise on unnormalised
+        ("none") graphs, whose eigenvalues scale with the node degrees. The
+        tolerance is sqrt(n) * eps * lambda_max, with eps of the eigenvalues'
+        dtype, and never drops below the previous 1e-6. On causal sink-heavy
+        graphs (n from 8 to 2048, float32, sym and none), the measured error of
+        the zero eigenvalue stayed below 0.46 of this tolerance. Float64 input
+        keeps the 0.3.0 threshold. For float32 normalised graphs the threshold
+        rises from 1e-6 to at most about 1e-5, which is below what float32 can
+        resolve for a Fiedler value at those sizes.
+        """
+        eigenvalues = np.asarray(eigenvalues)
+        if eigenvalues.size == 0:
+            return 1e-6
+        dtype = eigenvalues.dtype if np.issubdtype(eigenvalues.dtype, np.floating) else np.float64
+        lam_max = float(np.max(np.abs(eigenvalues)))
+        return max(1e-6, float(np.sqrt(max(int(n), 1))) * float(np.finfo(dtype).eps) * lam_max)
+
+    @classmethod
+    def is_connected(cls, eigenvalues: np.ndarray, n: int) -> bool:
+        """True when exactly one Laplacian eigenvalue is numerically zero."""
+        eigenvalues = np.asarray(eigenvalues)
+        tol = cls.zero_eigenvalue_tolerance(eigenvalues, n)
+        return bool(np.sum(eigenvalues < tol) == 1)
+
     def _check_connectivity(self, laplacian: np.ndarray) -> bool:
         """Retained for external callers. analyze_layer no longer calls this."""
         eigenvals, _ = self.compute_eigendecomposition(laplacian)
-        return np.sum(eigenvals < 1e-6) == 1
+        return self.is_connected(eigenvals, laplacian.shape[0])
 
 
 def calculate_spectral_velocity(metric_array: torch.Tensor) -> Tuple[torch.Tensor, float, int]:

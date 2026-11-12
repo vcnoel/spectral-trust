@@ -67,6 +67,42 @@ def test_token_span_restricts_graph():
     assert not np.allclose(span.values, full.values, atol=1e-3)
 
 
+def _sink_attention(num_heads=3, seq=40, seed=1):
+    """Causal softmax attention dominated by a sink token: degrees are very
+    uneven, which is where L_rw and its symmetrized surrogate part ways."""
+    g = torch.Generator().manual_seed(seed)
+    logits = 2.0 * torch.randn(num_heads, seq, seq, generator=g)
+    logits[..., 0] += 4.0
+    causal = torch.tril(torch.ones(seq, seq, dtype=torch.bool))
+    return torch.softmax(logits.masked_fill(~causal, float("-inf")), dim=-1)
+
+
+def test_rw_per_head_spectrum_is_the_rw_operator():
+    """Regression (0.4.0): normalization="rw" used to symmetrize I - D^{-1}W
+    before eigvalsh, i.e. it diagonalized a different matrix (lambda_max 2.42
+    against the true 1.58 on a sink graph). The per-head values must come
+    from the spectrum of the rw operator itself, as SpectralAnalyzer's
+    general eigensolver computes it."""
+    from spectral_trust import GraphConstructor, SpectralAnalyzer
+    cfg = GSPConfig(device="cpu", normalization="rw")
+    attn = _sink_attention()
+    got = per_head_metrics(attn, config=cfg)
+    gc = GraphConstructor(cfg)
+    an = SpectralAnalyzer(GSPConfig(device="cpu", normalization="rw",
+                                    eigen_solver="dense"))
+    for h in range(attn.shape[0]):
+        W = gc.symmetrize_attention(attn[h][None, None])[0]
+        L_rw = gc.construct_laplacian(W)[0].double().numpy()
+        assert not np.allclose(L_rw, L_rw.T, atol=1e-6)
+        vals, _ = an.compute_eigendecomposition(L_rw)    # general eig, real parts
+        vals = np.sort(vals)
+        n = vals.size
+        want = [vals[1], vals[1] / vals[-1],
+                -np.sum((p := np.maximum(vals / vals.sum(), 1e-12)) * np.log(p)) / np.log(n),
+                vals[n // 2:].sum() / vals.sum(), vals[-1]]
+        np.testing.assert_allclose(got.values[h], want, rtol=1e-4, atol=1e-5)
+
+
 def test_degenerate_sequence_is_zeroed():
     d = per_head_metrics(torch.rand(3, 2, 2))
     assert np.allclose(d.values, 0.0)

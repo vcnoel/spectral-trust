@@ -171,17 +171,128 @@ discarded exactly the near-zero λ₂ regime that connectivity-based diagnostics
 are meant to detect. Callers who need bit-identical runs should stay on the
 exact path or pass a fixed `seed`.
 
+## Fast diagnostics
+
+The hybrid metrics decompose one S x S Laplacian per layer (O(S³)) and
+project d-dimensional signals onto it (O(S²d)). `spectral_trust.fast` and the
+`heads=` option avoid, shrink or share that work. Timings and errors below
+come from `benchmarks/fast_vs_dense.py` (CPU, two threads, synthetic causal
+attention with a sink token; full tables in `benchmarks/results.md`).
+
+| Question | Use | Exact? | Measured |
+|---|---|---|---|
+| How far do a few tokens' states sit from what they attend to? | `row_dirichlet_energy(W, X, rows)`, `row_value_spread(A, V, rows)` | exact; a row-anchored quantity, related to the Laplacian energies in the docstring | no eigendecomposition, O(\|rows\| S d) |
+| HFER on the full basis | `top_band_hfer(L, X)` | exact: equals `eigen_solver="dense"` to ≤ 2e-8 in float32 | 1.9x to 3.9x faster than the dense HFER path |
+| Hybrid metrics for wide models | `GSPConfig(project_dim=k)` | estimate: energy and spectral masses unbiased, ratios O(1/√k) | 0.9x to 2.8x per layer; see the error table below |
+| Band energies on long contexts | `band_energies(L, X, edges, order)`, `band_entropy(E)` | approximation of the band energies; band entropy is a different quantity from `spectral_entropy` | faster than dense eigh at S = 4096 (below) |
+| Only some heads | `heads=` in the per-head functions | exact: equals the full computation sliced | cost proportional to the number of heads |
+
+**Row-anchored energies.** Use them when the question is about specific
+tokens, for instance a generated tool call or the final position. Both
+functions take `[H, S, S]` weights, so one call covers every head, and they
+run on the device of their inputs. Summed over all rows,
+`row_dirichlet_energy(W, X)` is twice the combinatorial Dirichlet energy
+`tr(X^T (D - W) X)`; the `sym` and `rw` identities are in the docstring.
+
+**HFER above 50 tokens.** `eigen_solver="sparse"` (the default before
+0.4.0; now `"dense"`) keeps 50 modes and divides the energy of the top 5 by
+the energy of those 50. On the
+benchmark's structured signals that ratio was 4x (S = 128) to 30x
+(S = 2048) smaller than the full-basis HFER, and the truncated solve was 1.7x
+to 6.5x slower than the dense one at every size measured. `top_band_hfer`
+returns the full-basis value: since the
+spectral energies of a symmetric Laplacian sum to `||X||_F²`, it needs only
+the top `num_high_modes(S, 0.1) = S - int(0.9 S)` eigenvectors, the same
+mode count as every other HFER path. It applies to `sym` and `none`; the `rw`
+eigenbasis is not orthonormal.
+
+**Random projection.** `project_dim=k` multiplies the signals by a seeded
+Gaussian matrix before the hybrid metrics; the attention metrics are
+untouched, and every layer shares one matrix, so layer trajectories keep
+their shape. Median and 99th-percentile relative errors over 200 seeds:
+
+| signals | k | energy | smoothness | HFER | entropy |
+|---|---|---|---|---|---|
+| i.i.d. Gaussian | 32 | 1.3% / 7.5% | 0.3% / 2.5% | 2.9% / 20% | 0.5% / 1.0% |
+| i.i.d. Gaussian | 256 | 0.4% / 2.7% | 0.1% / 0.9% | 1.0% / 6.4% | 0.1% / 0.1% |
+| residual-like | 32 | 11% / 47% | 7.1% / 42% | 7.0% / 44% | 10% / 43% |
+| residual-like | 256 | 4.1% / 17% | 2.0% / 12% | 1.8% / 9.9% | 3.2% / 13% |
+
+Residual-like signals (a large shared mean, a massive-activation token,
+decaying spectrum) have few effective dimensions, and the error then
+approaches its worst case, a standard deviation of `sqrt(2/k)`. Use the
+projection for screening and ranking at large d, and keep one seed across a
+study. Since 0.4.0 the energy is a trace-only sum, so inside `analyze_layer`
+the projection saves little time: 0.9x to 1.8x at k = 256 (up to 2.8x at
+k = 64, d = 4096), because at S ≥ 2048 the eigendecomposition dominates.
+Its clear gain is in band energies on long contexts, below.
+
+**Chebyshev band energies.** `band_energies(L, X, edges=8, order=64,
+lambda_max=2.0)` estimates the energy in eight eigenvalue bands from
+`order / 2` products with L. Each estimate is non-negative and they sum to
+`||X||_F²`; modes within about `π λ_max / (2 order)` of a band edge are
+shared between neighbouring bands. Pass `lambda_max=2.0` for `sym` so that the
+bands are the same for every input. At S = 4096 and d = 1024, order 32 was
+2.3x faster than the library's dense path, and order 64 on signals projected
+to 128 dimensions (`project_dim=128`) was 7.9x faster (3.9x faster than
+`torch.linalg.eigh`), with band fractions within 2e-4 and band entropy within
+1.5%. Projected, it already beats the library's dense path at S = 1024
+(2.5x). At S ≤ 1024 and full width it is slower than a dense solve; use
+`method="dense"` there. `band_entropy` is the entropy over B bands: a
+coarse-graining of the per-mode spectral entropy (with exact band energies,
+never larger than it), on a scale bounded by log B instead of log S. Do not
+mix the two.
+
+**Head subsets.** The attribution stays outside the library. Pass its scores
+as a `[layers, heads]` array:
+
+```python
+from spectral_trust import (
+    GSPConfig, GraphConstructor, heads_from_scores, per_head_metrics_all_layers,
+    per_head_hybrid_metrics_all_layers, row_dirichlet_energy, top_band_hfer,
+    band_energies, band_entropy,
+)
+
+out = model(input_ids, output_attentions=True, output_hidden_states=True)
+
+scores = attribution_scores                    # [layers, heads], from your method
+top = heads_from_scores(scores, k=20)          # [(layer, head), ...], top 20
+diags = per_head_metrics_all_layers(out.attentions, heads=top)
+hybrid = per_head_hybrid_metrics_all_layers(out.attentions, out.hidden_states,
+                                            heads=top)
+diags[12].heads                                # heads computed in layer 12
+# equivalently a boolean mask, e.g. heads=(scores >= threshold)
+
+# one layer's head-averaged graph and its signals
+gc = GraphConstructor(GSPConfig())
+W = gc.symmetrize_attention(out.attentions[12])[0]        # [heads, S, S]
+L = gc.construct_laplacian(W.mean(0, keepdim=True))[0]    # [S, S]
+X = out.hidden_states[13][0]                              # [S, d]
+
+per_head_energy = row_dirichlet_energy(W, X, rows=range(prompt_len, seq_len))
+hfer = top_band_hfer(L, X)                                # exact, full basis
+E, edges = band_energies(L, X, edges=8, order=64, lambda_max=2.0,
+                         project_dim=128)
+band_H = band_entropy(E)
+```
+
+`(layer, head)` pairs and `[layers, heads]` masks select per layer; plain
+indices or a `[heads]` mask select the same heads in every layer.
+Unselected heads are dropped before any conversion or decomposition, and
+`stack_feature_vector` concatenates the selected heads layer by layer.
+
 ## Repository layout
 
 - `src/spectral_trust/` — package source
   - `graph.py` — attention-graph construction (symmetrization, aggregation, Laplacians)
   - `spectral.py` — eigendecomposition and diagnostics (`SpectralAnalyzer`, `SpectralDiagnostics`, `METRIC_FAMILIES`)
-  - `per_head.py` — per-head spectral diagnostics and probe feature helpers
+  - `per_head.py` — per-head spectral diagnostics (attention and hybrid), head subsets, and probe feature helpers
+  - `fast.py` — row-anchored energies, top-band HFER, random projection, Chebyshev band energies
   - `directed_topology.py` — directed Laplacian metrics, GPU Lanczos
   - `framework.py` — end-to-end orchestration (`GSPDiagnosticsFramework`)
   - `instrumentation.py` — model loading and tensor capture
 - `examples/` — minimal usage examples (hallucination differential analysis, head-masking ablation)
-- `benchmarks/` — latency and precision scaling scripts
+- `benchmarks/` — latency and precision scaling scripts; `fast_vs_dense.py` and its `results.json` / `results.md`
 - `notebooks/` — demo notebook
 - `tests/` — unit tests
 
@@ -194,6 +305,88 @@ attention only on their full-attention layers; diagnostics are computed on
 those layers.
 
 ## Changelog
+
+**v0.4.0** — fast diagnostics, a per-head `rw` fix, and a dense default
+solver. One change alters results for existing callers; it is marked
+*(behaviour change)*. With `normalization="sym"` and `eigen_solver="dense"`,
+and for the per-head attention metrics, 0.4.0 reproduces 0.3.0 to float32
+rounding (`benchmarks/reproduce_v030.md`).
+
+- *(behaviour change)* Default `eigen_solver` `"sparse"` → `"dense"`, in
+  `GSPConfig` and in the CLI. Above 50 tokens the sparse default kept 50 of
+  the S modes, so `hfer`, `spectral_entropy`, `spectral_masses`, the `eig_*`
+  metrics and the length of `eigenvalues` came from a truncated basis (its
+  HFER was 4x to 30x smaller than the full-basis value in the benchmark);
+  `fiedler_value`, `spectral_radius` and `connectivity` agree up to the
+  ARPACK tolerance. The sparse solve was also slower than the dense one at
+  every size measured. Callers at 50 tokens or fewer, or who already passed
+  `eigen_solver="dense"`, get the same results. Pass `eigen_solver="sparse"`
+  to reproduce the old default; it still logs the truncation warning.
+- *(behaviour change)* The CLI's `--normalization` default `"rw"` → `"sym"`,
+  matching `GSPConfig` since 0.3.0. Pass `--normalization rw` for the old
+  CLI results.
+- *(behaviour change)* `connectivity` counts an eigenvalue as zero below
+  `max(1e-6, sqrt(S) * eps * lambda_max)` instead of a fixed 1e-6, through
+  `SpectralAnalyzer.zero_eigenvalue_tolerance` and `is_connected`. Float32
+  noise on unnormalised (`"none"`) graphs crossed the fixed threshold and
+  reported connected graphs as disconnected. Float64 input keeps the old
+  threshold; float32 normalised graphs see it rise to at most about 1e-5.
+- The CLI's `data/probes.json` is now in the wheel and the sdist
+  (`package_data` and `MANIFEST.in`), so `gsp-cli diagnose` works after a
+  pip install. It was missing from 0.3.0.
+- **Row-anchored energies** (`fast.py`): `row_dirichlet_energy(W, X, rows)`
+  and `row_value_spread(A, V, rows)`, batched over heads, in torch on CPU or
+  GPU, with no eigendecomposition.
+- **Exact top-band HFER**: `top_band_hfer(L, X)` returns the full-basis HFER
+  of a symmetric Laplacian from the top `num_high_modes(S, cutoff_ratio)`
+  eigenpairs, equal to the dense path.
+- **Random projection**: `GSPConfig.project_dim` (default `None`) and
+  `project_seed` apply a seeded Gaussian Johnson-Lindenstrauss map to the
+  signals before the hybrid metrics; `gaussian_projection` and `jl_project`
+  are public.
+- **Chebyshev band energies**: `band_energies(L, X, edges, order)` with
+  Jackson-damped filters (or `method="dense"`), `band_entropy`, and
+  `band_filter_response` to read the filters off a spectrum.
+- **Head subsets**: `heads=` in `per_head_metrics` and
+  `per_head_metrics_all_layers` (indices, `(layer, head)` pairs, or boolean
+  masks), `heads_from_scores` for user-supplied scores, and
+  `PerHeadDiagnostics.heads`.
+- **Per-head hybrid metrics**: `per_head_hybrid_metrics` and
+  `per_head_hybrid_metrics_all_layers` (energy, smoothness, spectral entropy,
+  HFER on each head's full eigenbasis; family "hybrid"), with `heads=` and
+  `project_dim`.
+- *(fix)* `per_head_metrics` with `normalization="rw"` symmetrized
+  `I - D^{-1}W` before the eigensolve and so reported the spectrum of a
+  different matrix (λ_max 2.42 against the true 1.58 on a sink-dominated
+  graph). It now reports the rw operator's spectrum. Results with the
+  default `sym` normalization are unchanged.
+- *(fix)* One HFER mode-count rule everywhere: `num_high_modes(n, r) =
+  n - int((1 - r) n)`, the rule `compute_hfer` has always used (it differs
+  from `ceil(r n)` only by floating-point rounding, never at the default
+  0.1 below n = 5000). `compute_hfer`, `top_band_hfer` and the per-head
+  hybrid path all call it, and a `cutoff_ratio` outside [0, 1] now raises
+  `ValueError`; `compute_hfer` used to slice with a negative index and return
+  a wrong value.
+- *(fix)* Every scalar metric of `SpectralDiagnostics` is a plain Python
+  `float` (`fiedler_value`, `spectral_radius` and `smoothness_index` were
+  numpy scalars), so the fields serialise with `json` directly.
+- *(fix)* `analyze_layer` accepts a one-token graph (its `squeeze()` turned a
+  1 x 1 Laplacian into a 0-d array).
+- *(fix)* `band_energies` raises `ValueError` for a non-symmetric (`rw`)
+  operator instead of symmetrizing it, and handles an all-zero Laplacian.
+- *(performance)* The Dirichlet energy and the smoothness index are
+  trace-only sums, O(S²d), accumulated in float64; they no longer form the
+  d x d matrix `X^T L X` (O(S d²) time, d² memory) or evaluate the energy
+  twice. `analyze_layer` projects the signals onto the eigenbasis once
+  instead of three times (`compute_spectral_masses`). Energy and smoothness
+  move only by float32 rounding (at most 1.6e-7 relative in the
+  reproduction check). Under each version's defaults, `analyze_layer` is
+  2.4x to 25x faster than in 0.3.0 at S = 128 to 2048, and per-head hybrid
+  metrics 6.9x to 67x faster than a 0.3.0 loop over heads
+  (`benchmarks/end_to_end.py`).
+- Benchmarks: `benchmarks/fast_vs_dense.py`, `end_to_end.py` and
+  `reproduce_v030.py`, with results in `benchmarks/results.md` and
+  `benchmarks/reproduce_v030.md`.
 
 **v0.3.0** — first release since 0.2.2. Three of these changes alter results
 for existing callers; they are marked *(behaviour change)*.

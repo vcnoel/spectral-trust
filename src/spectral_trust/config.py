@@ -32,12 +32,31 @@ class GSPConfig:
     # random-walk variants scale with T, a length confound); it is also a
     # symmetric operator, so the deterministic eigh/eigsh path is always used.
     normalization: str = "sym"  # sym (symmetric), rw (random walk), none
-    hfer_cutoff_ratio: float = 0.1  # High frequency cutoff as ratio of total eigenvectors
+    # HFER counts the top n - int((1 - hfer_cutoff_ratio) * n) of the n modes
+    # as high frequency (spectral_trust.fast.num_high_modes, the one rule
+    # every HFER path uses); must lie in [0, 1].
+    hfer_cutoff_ratio: float = 0.1
     
     # Spectral computation
-    num_eigenvalues: int = 50  # Number of eigenvalues to compute for spectral analysis
-    eigen_solver: str = "sparse"  # sparse (ARPACK), dense (full eigendecomposition)
+    # Default changed sparse -> dense in v0.4.0. "sparse" (ARPACK) keeps only
+    # num_eigenvalues modes once seq_len > 50 (half from each end of the
+    # spectrum), so HFER, spectral entropy and spectral masses are normalised
+    # over a truncated basis and are not comparable to a full computation (a
+    # warning is logged); it was also slower than the dense solve at every
+    # size benchmarked. "dense" is the full eigendecomposition.
+    num_eigenvalues: int = 50  # Modes kept by eigen_solver="sparse"
+    eigen_solver: str = "dense"  # dense (full eigendecomposition), sparse (ARPACK, truncated)
     lanczos_max_iter: int = 1000
+
+    # Random projection of the signals before the hybrid metrics (energy,
+    # smoothness_index, spectral_entropy, hfer, spectral_masses): a seeded
+    # Gaussian Johnson-Lindenstrauss map from the hidden size d to
+    # project_dim. Energy and spectral masses stay unbiased; the ratios carry
+    # an O(1/sqrt(project_dim)) error (see spectral_trust.fast). None
+    # disables it, and a width >= d leaves the signals unchanged. Attention
+    # metrics are not affected.
+    project_dim: Optional[int] = None
+    project_seed: int = 0
     
     # Evaluation parameters
     batch_size: int = 1

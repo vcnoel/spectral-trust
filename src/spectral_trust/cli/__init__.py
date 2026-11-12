@@ -344,10 +344,10 @@ def create_model_config(model_key: str, args) -> GSPConfig:
         verbose=getattr(args, 'verbose', False),
         num_layers_analyze=getattr(args, 'num_layers', None),
         num_eigenvalues=getattr(args, 'num_eigenvalues', 100),
-        eigen_solver=getattr(args, 'eigen_solver', 'sparse'),
+        eigen_solver=getattr(args, 'eigen_solver', 'dense'),
         head_aggregation=getattr(args, 'head_aggregation', 'uniform'),
         symmetrization=getattr(args, 'symmetrization', 'symmetric'),
-        normalization=getattr(args, 'normalization', 'rw'),
+        normalization=getattr(args, 'normalization', 'sym'),
         hfer_cutoff_ratio=getattr(args, 'hfer_cutoff', 0.1),
         remove_self_loops=getattr(args, 'remove_self_loops', False),
         local_files_only=getattr(args, 'offline', False),
@@ -526,7 +526,8 @@ def cmd_list_models(args):
         print(f"  {k:20} -> {v['name']}")
 
 def main():
-    print("DEBUG: [spectral-trust v0.2.0-RC1] CLI Main Initialized")
+    from .. import __version__
+    print(f"DEBUG: [spectral-trust v{__version__}] CLI Main Initialized")
     parser = argparse.ArgumentParser(description="Spectral Trust CLI")
     subparsers = parser.add_subparsers(dest='command', required=True)
     
@@ -547,7 +548,7 @@ def main():
     # GSP params
     p_analyze.add_argument('--head_aggregation', type=str, default='uniform')
     p_analyze.add_argument('--symmetrization', type=str, default='symmetric')
-    p_analyze.add_argument('--normalization', type=str, default='rw')
+    p_analyze.add_argument('--normalization', type=str, default='sym')
     p_analyze.add_argument('--hfer_cutoff', type=float, default=0.1)
     p_analyze.add_argument('--remove_self_loops', action='store_true', help='Remove self-loops (diagonal) from adjacency matrix')
     p_analyze.add_argument('--offline', action='store_true', help='Use local files only (no download)')
@@ -574,7 +575,7 @@ def main():
     # GSP params for compare
     p_compare.add_argument('--head_aggregation', type=str, default='uniform')
     p_compare.add_argument('--symmetrization', type=str, default='symmetric')
-    p_compare.add_argument('--normalization', type=str, default='rw')
+    p_compare.add_argument('--normalization', type=str, default='sym')
     p_compare.add_argument('--hfer_cutoff', type=float, default=0.1)
     p_compare.add_argument('--remove_self_loops', action='store_true', help='Remove self-loops (diagonal) from adjacency matrix')
     p_compare.add_argument('--plot', nargs='+', default=['all'], choices=['all', 'energy', 'hfer', 'entropy', 'fiedler', 'smoothness'], help='Metrics to plot')
