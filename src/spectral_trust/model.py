@@ -368,9 +368,10 @@ class SpectralModel:
     >>> cache.layer(10).head(3)
 
     The model is used as it is: no weights are changed and no hooks are
-    added. Its attention must be the eager implementation, the only one that
-    returns attention weights; :meth:`from_pretrained` loads it that way and
-    switches an already-loaded model to it.
+    added; it is put in eval mode. Its attention must be the eager
+    implementation, the only one that returns attention weights;
+    :meth:`from_pretrained` loads it that way and switches an already-loaded
+    model to it.
 
     Attributes:
         model: the wrapped ``PreTrainedModel``.

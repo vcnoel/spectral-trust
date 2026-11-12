@@ -329,6 +329,14 @@ def test_from_hf_outputs_crops_a_padded_batch(tiny_gpt2):
             _close(a, b, rtol=1e-5, atol=1e-6)
 
 
+def test_a_left_padded_mask_is_refused(tiny_gpt2):
+    out = _forward(tiny_gpt2, TEXT)
+    mask = torch.ones(1, 11, dtype=torch.long)
+    mask[0, :2] = 0
+    with pytest.raises(ValueError, match="left-padded"):
+        st.from_hf_outputs(out, tiny_gpt2.model.config, attention_mask=mask)
+
+
 def test_attention_only_outputs():
     a = torch.rand(1, 2, 6, 6).tril()
     a = a / a.sum(-1, keepdim=True)

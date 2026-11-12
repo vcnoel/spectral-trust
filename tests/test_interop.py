@@ -5,6 +5,8 @@ Skipped when transformer_lens or nnsight is not installed, or when gpt2 is
 neither in the local Hugging Face cache nor downloadable (the offline test
 job). Install the extras with ``pip install spectral-trust[tl,nnsight]``.
 """
+import os
+
 import numpy as np
 import pytest
 import torch
@@ -62,8 +64,10 @@ def _compare(got, ref, skip=lambda key: False):
 def reference():
     try:
         model = st.SpectralModel.from_pretrained(MODEL)
-    except OSError as exc:  # not cached and offline
-        pytest.skip(f"{MODEL} is not available: {exc}")
+    except Exception as exc:
+        if os.environ.get("HF_HUB_OFFLINE", "0") not in ("0", "", "false", "False"):
+            pytest.skip(f"{MODEL} is not in the local cache and the Hub is offline: {exc}")
+        raise
     ids = model.tokenizer(PROMPT)["input_ids"]
     return model, ids, model.run_with_spectra(PROMPT)
 

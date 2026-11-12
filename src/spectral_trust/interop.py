@@ -42,39 +42,48 @@ from .per_head import HeadSelection
 _PATTERN = re.compile(r"^blocks\.(\d+)\.attn\.hook_pattern$")
 
 
-def _tokens_from(tokens, tokenizer, batch: int, seq: int,
-                 to_str_tokens=None) -> Tuple[List[List[str]], Optional[List[List[int]]]]:
-    """Token strings (and ids, when known) for ``batch`` sequences.
+def _tokens_from(tokens, tokenizer, batch: int, seq: int, to_str_tokens=None,
+                 lengths: Optional[List[int]] = None
+                 ) -> Tuple[List[List[str]], Optional[List[List[int]]]]:
+    """Token strings (and ids, when known) for ``batch`` sequences, cropped
+    to ``lengths`` (the real length of each item of a right-padded batch).
 
     ``tokens`` is None (tokens labelled by position), text or a list of
     texts (tokenised with ``tokenizer``), token strings for one sequence or
     one list per sequence, or ids (``[seq]``, ``[batch, seq]``).
     """
+    want = list(lengths) if lengths is not None else [seq] * batch
     if tokens is None:
-        return [[f"[{i}]" for i in range(seq)] for _ in range(batch)], None
+        return [[f"[{i}]" for i in range(n)] for n in want], None
     if isinstance(tokens, str):
         tokens = [tokens]
+    from_text = False
     if torch.is_tensor(tokens):
         t = tokens if tokens.dim() == 2 else tokens.unsqueeze(0)
         ids = [[int(i) for i in row] for row in t.tolist()]
     elif all(isinstance(t, str) for t in tokens):
-        if batch == 1 and len(tokens) == seq and len(tokens) > 1:
+        if batch == 1 and len(tokens) == want[0] and len(tokens) > 1:
             return [list(tokens)], None                      # token strings
         if tokenizer is None:
             raise ValueError("text input needs the model's tokenizer; pass token "
                              "strings or ids instead")
-        ids = [_encode_to_length(tokenizer, t, seq) for t in tokens]
+        if len(tokens) != batch:
+            raise ValueError(f"{len(tokens)} texts for a batch of {batch}")
+        ids = [_encode_to_length(tokenizer, t, n) for t, n in zip(tokens, want)]
+        from_text = True
     elif all(isinstance(t, int) for t in tokens):
         ids = [[int(i) for i in tokens]]
     elif isinstance(tokens[0], (list, tuple)) and tokens[0] and isinstance(tokens[0][0], str):
-        return [list(t) for t in tokens], None
+        return [list(t)[:n] for t, n in zip(tokens, want)], None
     else:
         ids = [[int(i) for i in row] for row in tokens]
     if len(ids) != batch:
         raise ValueError(f"{len(ids)} token sequences for a batch of {batch}")
-    if any(len(row) != seq for row in ids):
-        raise ValueError(f"the token ids have {[len(r) for r in ids]} tokens but the "
-                         f"attention covers {seq}; pass the ids that were run")
+    if not from_text:
+        if any(len(row) != seq for row in ids):
+            raise ValueError(f"the token ids have {[len(r) for r in ids]} tokens but the "
+                             f"attention covers {seq}; pass the ids that were run")
+        ids = [row[:n] for row, n in zip(ids, want)]
     if to_str_tokens is not None:
         strs = [list(to_str_tokens(torch.tensor(row))) for row in ids]
     elif tokenizer is not None:
@@ -99,6 +108,22 @@ def _encode_to_length(tokenizer, text: str, seq: int) -> List[int]:
                      f"but the attention covers {seq}; pass the token ids that were run")
 
 
+def _lengths_from_mask(attention_mask) -> Optional[List[int]]:
+    """Real length of each item of a right-padded batch. A left-padded mask
+    raises: cropping keeps the first ``n`` tokens of each item."""
+    if attention_mask is None:
+        return None
+    mask = torch.as_tensor(_as_tensor(attention_mask)).to(torch.bool)
+    if mask.dim() == 1:
+        mask = mask.unsqueeze(0)
+    lengths = mask.sum(-1).tolist()
+    for row, n in zip(mask, lengths):
+        if not bool(row[:n].all()):
+            raise ValueError("the batch is left-padded; pad on the right (tokenizer."
+                             "padding_side = 'right') or pass one sequence at a time")
+    return [int(n) for n in lengths]
+
+
 def _cache_get(cache, key):
     try:
         return cache[key]
@@ -112,6 +137,7 @@ def from_transformer_lens(
     tokens=None,
     *,
     final_norm: bool = True,
+    attention_mask=None,
     config: Optional[GSPConfig] = None,
     metrics=None,
     layers: Optional[Sequence[int]] = None,
@@ -147,6 +173,9 @@ def from_transformer_lens(
             layer is paired with its ``hook_resid_post``, the residual stream
             before the final norm. ``cache.meta["signal_source"]`` records
             the choice.
+        attention_mask: ``[batch, seq]`` mask of a right-padded batch; each
+            item is cropped to its real length. Without it every item is
+            measured over the whole sequence.
         config, metrics, layers, heads, token_span, keep_patterns: as in
             :meth:`SpectralModel.run_with_spectra`.
         hybrid: compute the hybrid metrics; None (default) does when the
@@ -196,16 +225,18 @@ def from_transformer_lens(
     seq = first.shape[-1]
     tokenizer = getattr(model, "tokenizer", None)
     to_str = getattr(model, "to_str_tokens", None)
+    lengths = _lengths_from_mask(attention_mask)
     strs, ids = _tokens_from(tokens, tokenizer, batch, seq,
-                             to_str_tokens=to_str if callable(to_str) else None)
+                             to_str_tokens=to_str if callable(to_str) else None,
+                             lengths=lengths)
     name = getattr(cfg, "model_name", None) or getattr(cfg, "tokenizer_name", None)
     meta = {"model_name": name, "source": "from_transformer_lens",
             "token_ids": ids if ids is not None else [None] * batch,
             "texts": [None] * batch,
             "signal_source": {str(k): v for k, v in sources.items()} or None}
-    return compute_spectra(attentions, signals, tokens=strs, n_layers=n_layers,
-                           config=config, metrics=metrics, layers=layers, heads=heads,
-                           token_span=token_span, hybrid=hybrid,
+    return compute_spectra(attentions, signals, tokens=strs, lengths=lengths,
+                           n_layers=n_layers, config=config, metrics=metrics, layers=layers,
+                           heads=heads, token_span=token_span, hybrid=hybrid,
                            keep_patterns=keep_patterns, meta=meta)
 
 
@@ -217,6 +248,7 @@ def from_nnsight(
     tokens=None,
     layer_indices: Optional[Sequence[int]] = None,
     final_norm=None,
+    attention_mask=None,
     config: Optional[GSPConfig] = None,
     metrics=None,
     layers: Optional[Sequence[int]] = None,
@@ -268,6 +300,8 @@ def from_nnsight(
             place of its block output. That is what Hugging Face returns as
             the last hidden state, so the hybrid metrics of the last layer
             then equal :meth:`SpectralModel.run_with_spectra`.
+        attention_mask: ``[batch, seq]`` mask of a right-padded batch; each
+            item is cropped to its real length.
         config, metrics, layers, heads, token_span, keep_patterns: as in
             :meth:`SpectralModel.run_with_spectra`.
         hybrid: compute the hybrid metrics; None (default) does when
@@ -327,15 +361,17 @@ def from_nnsight(
     batch = first.shape[0] if first.dim() == 4 else 1
     seq = first.shape[-1]
     tokenizer = getattr(model, "tokenizer", None)
-    strs, ids = _tokens_from(tokens, tokenizer, batch, seq)
+    lengths = _lengths_from_mask(attention_mask)
+    strs, ids = _tokens_from(tokens, tokenizer, batch, seq, lengths=lengths)
     name = getattr(model_config, "_name_or_path", None)
     meta = {"model_name": name, "source": "from_nnsight",
             "token_ids": ids if ids is not None else [None] * batch,
             "texts": [tokens] if isinstance(tokens, str) else [None] * batch,
             "signal_source": {str(k): v for k, v in sources.items()} or None}
     return compute_spectra(attn_by_layer, signals if hybrid else None, tokens=strs,
-                           n_layers=n_layers, config=config, metrics=metrics, layers=layers,
-                           heads=heads, token_span=token_span, hybrid=hybrid,
+                           lengths=lengths, n_layers=n_layers, config=config,
+                           metrics=metrics, layers=layers, heads=heads,
+                           token_span=token_span, hybrid=hybrid,
                            keep_patterns=keep_patterns, meta=meta)
 
 
@@ -396,14 +432,8 @@ def from_hf_outputs(
     first = _as_tensor(attn[min(k for k, a in enumerate(attn) if a is not None)])
     batch = first.shape[0] if first.dim() == 4 else 1
     seq = first.shape[-1]
-    lengths = None
-    if attention_mask is not None:
-        lengths = [int(n) for n in torch.as_tensor(attention_mask).sum(-1).tolist()]
-    strs, ids = _tokens_from(tokens, tokenizer, batch, seq)
-    if lengths is not None:
-        strs = [s[:n] for s, n in zip(strs, lengths)]
-        if ids is not None:
-            ids = [i[:n] for i, n in zip(ids, lengths)]
+    lengths = _lengths_from_mask(attention_mask)
+    strs, ids = _tokens_from(tokens, tokenizer, batch, seq, lengths=lengths)
     n_layers = (len(hidden) - 1) if hidden else (_num_layers(model_config)
                                                 if model_config is not None else None)
     meta = {"model_name": getattr(model_config, "_name_or_path", None),
