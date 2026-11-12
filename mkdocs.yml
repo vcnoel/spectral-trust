@@ -20,8 +20,9 @@ theme:
   name: material
   # system fonts: no request to a font CDN
   font: false
+  logo: assets/mark.svg
+  favicon: assets/favicon.svg
   icon:
-    logo: material/graph-outline
     repo: fontawesome/brands/github
   palette:
     - media: "(prefers-color-scheme: light)"

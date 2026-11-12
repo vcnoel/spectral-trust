@@ -41,3 +41,4 @@ debug_log.txt
 experiments/*.csv
 experiments/*.pkl
 experiments/*.json
+docs/.cache/

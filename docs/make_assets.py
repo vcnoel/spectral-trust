@@ -1,7 +1,7 @@
 """Regenerate the README figures in docs/assets/ from the library's own output.
 
     python docs/make_assets.py                  # every asset
-    python docs/make_assets.py hero logo        # a subset of: hero, logo, heads, speedup
+    python docs/make_assets.py hero heads       # a subset of: hero, heads, speedup
     python docs/make_assets.py --no-tex         # matplotlib's STIX type instead of LaTeX
 
 hero      hero.png and hero-dark.png (light and dark themes): three lines of code and
@@ -10,8 +10,7 @@ hero      hero.png and hero-dark.png (light and dark themes): three lines of cod
           fiedler_value of every layer and head, and that head's Laplacian spectrum.
           The head is, among those with a Fiedler value below 0.1, the one whose
           Fiedler vector splits the tokens most evenly.
-logo      logo.svg and logo-dark.svg: a six-token graph split by its Fiedler vector,
-          and the name, with the text converted to outlines.
+(The logo, mark and favicon come from docs/make_logo.py.)
 heads     heads.png: per-head attention-only metrics on one prompt, one cell per
           (layer, head), from per_head_metrics_all_layers.
 speedup   speedup.png: time per call under the 0.3.0 and 0.4.0 defaults, read from
@@ -396,81 +395,6 @@ def make_hero():
         print(f"  {name}: {size[0]}x{size[1]} px, layer {layer} head {head}")
 
 
-# ── logo: a graph glyph and the name, as SVG paths ───────────────────────────
-
-def _svg_path(path, dx: float, dy: float, scale: float) -> str:
-    """SVG path data of a matplotlib Path, y flipped, scaled and shifted."""
-    from matplotlib.path import Path as MPath
-
-    out = []
-    for verts, code in path.iter_segments(simplify=False, curves=True):
-        pts = [(dx + scale * x, dy - scale * y) for x, y in np.asarray(verts).reshape(-1, 2)]
-        p = " ".join(f"{x:.2f},{y:.2f}" for x, y in pts)
-        if code == MPath.MOVETO:
-            out.append(f"M{p}")
-        elif code == MPath.LINETO:
-            out.append(f"L{p}")
-        elif code == MPath.CURVE3:
-            out.append(f"Q{p}")
-        elif code == MPath.CURVE4:
-            out.append(f"C{p}")
-        elif code == MPath.CLOSEPOLY:
-            out.append("Z")
-    return "".join(out)
-
-
-def logo_svg(theme: str) -> str:
-    """Two tightly connected triples of tokens joined by one weak edge,
-    coloured by the sign of the Fiedler vector (the cut it finds), then the
-    name. Text is converted to outlines (DejaVu Sans Bold, shipped with
-    matplotlib), so the file renders the same everywhere."""
-    from matplotlib.font_manager import FontProperties
-    from matplotlib.textpath import TextPath
-
-    t = THEMES[theme]
-    nodes = np.array([[14, 16], [9, 40], [30, 30], [54, 30], [75, 40], [70, 16]], float)
-    strong = [(0, 1), (1, 2), (0, 2), (3, 4), (4, 5), (3, 5)]
-    W = np.zeros((6, 6))
-    for a, b in strong:
-        W[a, b] = W[b, a] = 1.0
-    W[2, 3] = W[3, 2] = 0.15
-    d = W.sum(1)
-    L = np.eye(6) - W / np.sqrt(np.outer(d, d))
-    u = np.linalg.eigh(L)[1][:, 1]
-    u = u if u[0] < 0 else -u                   # left group blue, right group orange
-    parts = []
-    for a, b in strong:
-        (x1, y1), (x2, y2) = nodes[a], nodes[b]
-        parts.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{t["ink"]}" '
-                     f'stroke-width="2.4" stroke-linecap="round"/>')
-    (x1, y1), (x2, y2) = nodes[2], nodes[3]
-    parts.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{t["ink"]}" '
-                 f'stroke-width="1.2" stroke-dasharray="2.5 2.5" stroke-linecap="round"/>')
-    for (x, y), v in zip(nodes, u):
-        colour = BLUE if v < 0 else ORANGE
-        parts.append(f'<circle cx="{x}" cy="{y}" r="6.2" fill="{colour}" '
-                     f'stroke="{t["ink"]}" stroke-width="1.6"/>')
-    font = FontProperties(family="DejaVu Sans", weight="bold")
-    name = TextPath((0, 0), "spectral", size=30, prop=font)
-    rest = TextPath((0, 0), "-trust", size=30, prop=font)
-    x0 = 96.0
-    width_name = name.get_extents().x1
-    parts.append(f'<path d="{_svg_path(name, x0, 39.5, 1.0)}" fill="{t["ink"]}"/>')
-    parts.append(f'<path d="{_svg_path(rest, x0 + width_name + 1.5, 39.5, 1.0)}" '
-                 f'fill="{ORANGE if theme == "light" else ORANGE}"/>')
-    total = x0 + width_name + 1.5 + rest.get_extents().x1 + 4
-    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {total:.0f} 56" '
-            f'width="{total:.0f}" height="56" role="img" aria-label="spectral-trust">'
-            f'<title>spectral-trust</title>{"".join(parts)}</svg>\n')
-
-
-def make_logo():
-    ASSETS.mkdir(parents=True, exist_ok=True)
-    for theme, name in (("light", "logo.svg"), ("dark", "logo-dark.svg")):
-        (ASSETS / name).write_text(logo_svg(theme), encoding="utf-8")
-        print(f"  {name}")
-
-
 # ── per-head metrics, layers x heads ─────────────────────────────────────────
 
 HEAD_METRICS = ("fiedler_value", "spectral_radius", "hfer")
@@ -566,8 +490,7 @@ def make_speedup():
 
 # ── entry point ──────────────────────────────────────────────────────────────
 
-ASSET_MAKERS = {"hero": make_hero, "logo": make_logo, "heads": make_heads,
-                "speedup": make_speedup}
+ASSET_MAKERS = {"hero": make_hero, "heads": make_heads, "speedup": make_speedup}
 
 
 def main():
