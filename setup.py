@@ -22,6 +22,8 @@ setup(
     version="0.4.0",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
+    package_data={"spectral_trust.cli": ["data/*.json"]},
+    include_package_data=True,
     install_requires=[
         "numpy",
         "pandas",
