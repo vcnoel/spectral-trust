@@ -322,6 +322,18 @@ rounding (`benchmarks/reproduce_v030.md`).
   every size measured. Callers at 50 tokens or fewer, or who already passed
   `eigen_solver="dense"`, get the same results. Pass `eigen_solver="sparse"`
   to reproduce the old default; it still logs the truncation warning.
+- *(behaviour change)* The CLI's `--normalization` default `"rw"` → `"sym"`,
+  matching `GSPConfig` since 0.3.0. Pass `--normalization rw` for the old
+  CLI results.
+- *(behaviour change)* `connectivity` counts an eigenvalue as zero below
+  `max(1e-6, sqrt(S) * eps * lambda_max)` instead of a fixed 1e-6, through
+  `SpectralAnalyzer.zero_eigenvalue_tolerance` and `is_connected`. Float32
+  noise on unnormalised (`"none"`) graphs crossed the fixed threshold and
+  reported connected graphs as disconnected. Float64 input keeps the old
+  threshold; float32 normalised graphs see it rise to at most about 1e-5.
+- The CLI's `data/probes.json` is now in the wheel and the sdist
+  (`package_data` and `MANIFEST.in`), so `gsp-cli diagnose` works after a
+  pip install. It was missing from 0.3.0.
 - **Row-anchored energies** (`fast.py`): `row_dirichlet_energy(W, X, rows)`
   and `row_value_spread(A, V, rows)`, batched over heads, in torch on CPU or
   GPU, with no eigendecomposition.
