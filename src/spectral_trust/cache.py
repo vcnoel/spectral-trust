@@ -493,8 +493,12 @@ class SpectralCache:
                   for ns in NAMESPACE_METRICS}
         ns_txt = ", ".join(f"{ns}={n}" for ns, n in counts.items() if n)
         lens = [len(t) for t in self._tokens]
-        tok = (f"{lens[0]} tokens" if not self.is_batch
-               else f"{self.n_texts} texts, {min(lens)}-{max(lens)} tokens")
+        if not self.is_batch:
+            tok = f"{lens[0]} tokens"
+        elif min(lens) == max(lens):
+            tok = f"{self.n_texts} texts of {lens[0]} tokens"
+        else:
+            tok = f"{self.n_texts} texts, {min(lens)}-{max(lens)} tokens"
         name = f"{self.model_name!r}, " if self.model_name else ""
         heads = f"{self.n_heads} heads"
         if self.meta.get("heads") is not None:
