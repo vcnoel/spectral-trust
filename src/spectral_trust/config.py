@@ -93,3 +93,7 @@ class GSPConfig:
     directed: bool = False
     calc_velocity: bool = False
     subgraph_indices: Optional[list] = None
+    # Layer index of each attention tensor the model returns. None reads it
+    # from the model config (layer_types) when the model returns attention for
+    # only some layers, as hybrid linear-attention models do.
+    attention_layer_map: Optional[list] = None

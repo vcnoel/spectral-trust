@@ -30,6 +30,48 @@ from .directed_topology import DirectedTopologist
 
 logger = logging.getLogger(__name__)
 
+_NO_ATTENTION_WEIGHTS = ("linear", "mamba", "ssm", "recurrent", "conv")
+
+
+def attention_layer_indices(model_config, n_attentions: int, n_hidden_states: int,
+                            override: Optional[List[int]] = None) -> List[int]:
+    """Layer index of each attention tensor a model returns.
+
+    Most models return one attention tensor per layer, and tensor i belongs to
+    layer i. Hybrid models (for example Qwen3.5, with linear-attention layers)
+    return attention for their full-attention layers only. Their position in
+    the model is then read from ``layer_types`` in the model config (or its
+    ``text_config``): every layer whose type does not name a linear,
+    state-space, recurrent or convolutional mixer. ``override`` takes
+    precedence. The hidden state paired with layer l is
+    ``hidden_states[l + 1]``, the output of that layer.
+    """
+    if override is not None:
+        idx = [int(i) for i in override]
+        if len(idx) != n_attentions:
+            raise ValueError(
+                f"attention_layer_map has {len(idx)} entries for {n_attentions} attention tensors")
+        return idx
+    n_layers = n_hidden_states - 1
+    if n_attentions == n_layers:
+        return list(range(n_attentions))
+    layer_types = None
+    for cfg in (model_config, getattr(model_config, "text_config", None)):
+        types = getattr(cfg, "layer_types", None) if cfg is not None else None
+        if types:
+            layer_types = list(types)
+            break
+    if layer_types is not None and len(layer_types) == n_layers:
+        idx = [i for i, t in enumerate(layer_types)
+               if not any(s in str(t).lower() for s in _NO_ATTENTION_WEIGHTS)]
+        if len(idx) == n_attentions:
+            return idx
+    raise ValueError(
+        f"The model returned {n_attentions} attention tensors for {n_layers} layers, and its "
+        "config does not say which layers they belong to. Pass "
+        "GSPConfig(attention_layer_map=[...]) with the layer index of each attention tensor.")
+
+
 class GSPDiagnosticsFramework:
     """Main framework for GSP-based LLM diagnostics"""
     
@@ -79,16 +121,22 @@ class GSPDiagnosticsFramework:
         attentions = [a.to(torch.float32).cpu() for a in model_outputs['attentions']]
         hidden_states = [h.to(torch.float32).cpu() for h in model_outputs['hidden_states']]
         
-        # Analyze each layer
+        # Analyze each layer. layer_map[k] is the model layer of attention
+        # tensor k, so hybrid models pair each tensor with its own layer.
         layer_diagnostics = []
+        model_config = getattr(getattr(self.instrumenter, "model", None), "config", None)
+        layer_map = attention_layer_indices(
+            model_config, len(attentions), len(hidden_states),
+            getattr(self.config, "attention_layer_map", None))
         num_layers = len(attentions)
-        
+
         if self.config.num_layers_analyze is not None:
             num_layers = min(num_layers, self.config.num_layers_analyze)
-        
-        for layer_idx in tqdm(range(num_layers), desc="Analyzing layers"):
+
+        for k in tqdm(range(num_layers), desc="Analyzing layers"):
+            layer_idx = layer_map[k]
             # Get layer attention and hidden states
-            attention = attentions[layer_idx]  # [batch, heads, seq_len, seq_len]
+            attention = attentions[k]  # [batch, heads, seq_len, seq_len]
             signals = hidden_states[layer_idx + 1]  # [batch, seq_len, hidden_dim]
             
             # Remove batch dimension (assuming batch_size=1)
@@ -200,11 +248,11 @@ class GSPDiagnosticsFramework:
                 result = self.analyze_text(text, save_results=False)
                 
                 # Extract summary statistics per text
-                for layer_idx, diag in enumerate(result['layer_diagnostics']):
+                for diag in result['layer_diagnostics']:
                     row = {
                         'text_id': i,
                         'text': text,
-                        'layer': layer_idx,
+                        'layer': diag.layer,
                         'energy': diag.energy,
                         'smoothness_index': diag.smoothness_index,
                         'spectral_entropy': diag.spectral_entropy,
@@ -332,7 +380,7 @@ class GSPDiagnosticsFramework:
         
         # Top-Left: Fiedler Value
         axes[0, 0].plot(layers, fiedlers, 'orange', marker='o', linewidth=2, markersize=6)
-        axes[0, 0].set_title('Fiedler Value ($\lambda_2$)')
+        axes[0, 0].set_title(r'Fiedler Value ($\lambda_2$)')
         axes[0, 0].set_xlabel('Layer')
         axes[0, 0].set_ylabel('Spectral Gap')
         axes[0, 0].grid(True, alpha=0.3)
