@@ -1,7 +1,7 @@
 """Regenerate the README figures in docs/assets/ from the library's own output.
 
     python docs/make_assets.py                  # every asset
-    python docs/make_assets.py hero metrics     # a subset of: hero, metrics, speedup
+    python docs/make_assets.py hero heads       # a subset of: hero, heads, speedup
     python docs/make_assets.py --no-tex         # matplotlib's STIX type instead of LaTeX
 
 hero      hero.gif, and hero.png as a still fallback. Qwen/Qwen3-0.6B reads one prompt;
@@ -9,7 +9,8 @@ hero      hero.gif, and hero.png as a still fallback. Qwen/Qwen3-0.6B reads one 
           (one node per token, edge width = symmetrised attention), its Fiedler vector
           as node colour, the layer's Laplacian spectrum, and fiedler_value and hfer
           up to that layer.
-metrics   metrics.png: per-layer metrics for two prompts that differ in one token.
+heads     heads.png: per-head attention-only metrics on one prompt, one cell per
+          (layer, head), from per_head_metrics_all_layers.
 speedup   speedup.png: time per call under the 0.3.0 and 0.4.0 defaults, read from
           benchmarks/results.json (written by benchmarks/end_to_end.py).
 
@@ -42,7 +43,6 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import torch  # noqa: E402
 from matplotlib.colors import LinearSegmentedColormap, Normalize  # noqa: E402
-from matplotlib.lines import Line2D  # noqa: E402
 from matplotlib.transforms import blended_transform_factory  # noqa: E402
 from PIL import Image  # noqa: E402
 
@@ -52,8 +52,9 @@ RESULTS = ROOT / "benchmarks" / "results.json"
 
 MODEL = "Qwen/Qwen3-0.6B"
 HERO_PROMPT = "The cat sat on the mat because it was warm."
-PAIR = ("The capital of France is Paris.", "The capital of France is Rome.")
-PROMPTS = (HERO_PROMPT, *PAIR)    # one model load for every asset
+HEAD_PROMPT = ("The cat sat on the mat because it was warm. Later the dog came in, lay down "
+               "next to it, and both of them slept until the sun went down.")
+PROMPTS = (HERO_PROMPT, HEAD_PROMPT)    # one model load for every asset
 
 # Palette: orange the measured series, blue the second series or a reference,
 # greys for context; INK for text and axes.
@@ -350,49 +351,46 @@ def make_hero():
     assert size < 3e6, "hero.gif must stay under 3 MB"
 
 
-# ── per-layer metrics of two prompts ─────────────────────────────────────────
+# ── per-head metrics, layers x heads ─────────────────────────────────────────
 
-METRICS = [  # (field, family) in reading order, attention-only metrics first
-    ("fiedler_value", "attention"), ("spectral_radius", "attention"),
-    ("eig_spectral_entropy", "attention"),
-    ("hfer", "hybrid"), ("smoothness_index", "hybrid"), ("spectral_entropy", "hybrid"),
-]
+HEAD_METRICS = ("fiedler_value", "spectral_radius", "hfer")
+HEAT = LinearSegmentedColormap.from_list("heat", ["#FFFFFF", ORANGE, ORANGE_DARK, "#3D1F00"])
 
 
-def make_metrics():
-    from spectral_trust import METRIC_FAMILIES
+def make_heads():
+    from spectral_trust import PER_HEAD_METRIC_FAMILY, PER_HEAD_METRIC_NAMES, per_head_metrics_all_layers
 
     cfg, runs = run_model()
-    runs = [runs[PROMPTS.index(p)] for p in PAIR]
-    assert len(runs[0]["token_text"]) == len(runs[1]["token_text"])
-    fig = plt.figure(figsize=(9.0, 4.5), dpi=RENDER_DPI)
-    cols, w, h = (0.95, 3.85, 6.75), 2.05, 1.45
-    rows = (2.62, 0.52)
-    for j, (name, family) in enumerate(METRICS):
-        assert METRIC_FAMILIES[name] == family, name
-        ax = axes_in(fig, cols[j % 3], rows[j // 3], w, h)
-        for res, col, lw, z in ((runs[0], ORANGE, 2.2, 2), (runs[1], BLUE, 1.0, 3)):
-            vals = [getattr(d, name) for d in res["layer_diagnostics"]]
-            ax.plot(range(len(vals)), vals, color=col, lw=lw, zorder=z)
-        n = len(runs[0]["layer_diagnostics"])
-        ax.set_xlim(-0.5, n - 0.5)
-        ax.set_xticks(sorted({0, (n - 1) // 3, 2 * (n - 1) // 3, n - 1}))
-        ax.grid(axis="y", color=GRID, lw=0.5)
-        ax.set_axisbelow(True)
-        ax.set_ylabel(code(name))
-        if j >= 3:
-            ax.set_xlabel("layer", labelpad=1.5)
-    text_in(fig, 0.12, rows[0] + h / 2, "attention only", rotation=90, color=MID, fontsize=9.5,
-            ha="center", va="center")
-    text_in(fig, 0.12, rows[1] + h / 2, "attention and hidden states", rotation=90, color=MID,
-            fontsize=9.5, ha="center", va="center")
-    handles = [Line2D([], [], color=ORANGE, lw=2.2), Line2D([], [], color=BLUE, lw=1.0)]
-    W, H = fig.get_size_inches()
-    fig.legend(handles, [esc(t) for t in PAIR], loc="lower left", ncol=2, frameon=False,
-               bbox_to_anchor=(0.95 / W, 4.24 / H), borderaxespad=0, borderpad=0,
-               handlelength=1.6, handletextpad=0.5, columnspacing=2.0)
-    save_png(fig, ASSETS / "metrics.png")
-    print("  metrics.png")
+    res = runs[PROMPTS.index(HEAD_PROMPT)]
+    attns = [a.to(torch.float32) for a in res["model_outputs"]["attentions"]]
+    per_layer = per_head_metrics_all_layers(attns, config=cfg)
+    n_layers, n_heads = len(per_layer), per_layer[0].values.shape[0]
+    fig = plt.figure(figsize=(9.0, 4.3), dpi=RENDER_DPI)
+    w, h, gap, left, bottom = 2.25, 3.05, 0.62, 0.62, 0.78
+    for j, name in enumerate(HEAD_METRICS):
+        assert name in PER_HEAD_METRIC_NAMES and PER_HEAD_METRIC_FAMILY == "attention", name
+        grid = np.stack([d.metric(name) for d in per_layer])          # [layers, heads]
+        ax = axes_in(fig, left + j * (w + gap), bottom, w, h)
+        lo, hi = np.percentile(grid, [1, 99])
+        im = ax.imshow(grid, cmap=HEAT, norm=Normalize(lo, hi), aspect="auto",
+                       interpolation="nearest", origin="upper")
+        ax.set_xticks(sorted({0, n_heads // 3, 2 * n_heads // 3, n_heads - 1}))
+        ax.set_yticks(sorted({0, (n_layers - 1) // 3, 2 * (n_layers - 1) // 3, n_layers - 1}))
+        ax.set_xlabel("head", labelpad=1.5)
+        if j == 0:
+            ax.set_ylabel("layer")
+        for side in ("top", "right"):
+            ax.spines[side].set_visible(True)
+        ax.text(0.0, 1.03, code(name), transform=ax.transAxes, ha="left", va="bottom",
+                fontsize=10)
+        cax = axes_in(fig, left + j * (w + gap), 0.22, w, 0.09)
+        cb = fig.colorbar(im, cax=cax, orientation="horizontal")
+        cb.outline.set_linewidth(0.5)
+        cb.ax.tick_params(labelsize=8, length=2, pad=1.5)
+        cb.locator = matplotlib.ticker.MaxNLocator(4)
+        cb.update_ticks()
+    save_png(fig, ASSETS / "heads.png")
+    print(f"  heads.png ({n_layers} layers x {n_heads} heads)")
 
 
 # ── 0.3.0 against 0.4.0 ──────────────────────────────────────────────────────
@@ -448,7 +446,7 @@ def make_speedup():
 
 # ── entry point ──────────────────────────────────────────────────────────────
 
-ASSET_MAKERS = {"hero": make_hero, "metrics": make_metrics, "speedup": make_speedup}
+ASSET_MAKERS = {"hero": make_hero, "heads": make_heads, "speedup": make_speedup}
 
 
 def main():

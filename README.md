@@ -54,11 +54,11 @@ table below. The notebook
 goes further: one layer with `analyze_layer`, per-head metrics with `heads=`,
 and the fast diagnostics.
 
-![Per-layer fiedler_value, spectral_radius, eig_spectral_entropy, hfer, smoothness_index and spectral_entropy of Qwen3-0.6B for "The capital of France is Paris." and "The capital of France is Rome."](https://raw.githubusercontent.com/vcnoel/spectral-trust/main/docs/assets/metrics.png)
+![Heatmaps of per-head fiedler_value, spectral_radius and hfer over the 28 layers and 16 heads of Qwen3-0.6B for one two-sentence prompt](https://raw.githubusercontent.com/vcnoel/spectral-trust/main/docs/assets/heads.png)
 
-*The same call on two prompts that differ in one token, on Qwen3-0.6B. Top
-row: attention-only metrics; bottom row: hybrid metrics. These are the values
-the library returns; the figure is not a detection result.*
+*Every head of Qwen3-0.6B on one two-sentence prompt, from
+`per_head_metrics_all_layers(outputs.attentions)`: one cell per layer and
+head, attention-only metrics, all heads decomposed in one batched call.*
 
 ## Why graph-spectral diagnostics
 
