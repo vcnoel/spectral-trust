@@ -48,7 +48,7 @@ theme:
     - toc.follow
 
 extra_css:
-  - stylesheets/extra.css
+  - stylesheets/site.css
 
 plugins:
   - search
