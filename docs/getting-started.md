@@ -43,7 +43,8 @@ symmetrisation and uniform head averaging.
 ## Run it
 
 ```python
-cache = model.run_with_spectra("The cat sat on the mat because it was warm.")
+text = "The cat sat on the mat because it was warm."
+cache = model.run_with_spectra(text)
 cache
 # SpectralCache('Qwen/Qwen3-0.6B', 11 tokens, layers 0-27, 16 heads,
 #               metrics: attn=5, resid=4, graph=10)
