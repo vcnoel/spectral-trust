@@ -53,8 +53,9 @@ should fail on the code before the fix; its docstring says what was wrong.
 ## Code style
 
 - PEP 8, four-space indentation, lines up to about 100 characters.
-- Every source file under `src/spectral_trust/` starts with the AGPL notice
-  used by the existing files.
+- Every source file under `src/spectral_trust/` starts with the two-line
+  notice used by the existing files: the copyright line and
+  `SPDX-License-Identifier: Apache-2.0`.
 - Public functions have type hints and a docstring that states tensor shapes
   (for example `[heads, seq, seq]`), the normalisations it supports and what
   it returns.
@@ -81,6 +82,6 @@ should fail on the code before the fix; its docstring says what was wrong.
 5. Open a pull request into `main` describing the change and how you tested
    it.
 
-Contributions are accepted under the project's license, AGPL-3.0-or-later.
+Contributions are accepted under the project's license, Apache-2.0.
 Everyone taking part is expected to follow the
 [code of conduct](CODE_OF_CONDUCT.md).

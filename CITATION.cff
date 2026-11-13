@@ -6,7 +6,7 @@ version: 0.4.1
 authors:
   - family-names: "Noël"
     given-names: "Valentin"
-license: AGPL-3.0-or-later
+license: Apache-2.0
 repository-code: "https://github.com/vcnoel/spectral-trust"
 url: "https://github.com/vcnoel/spectral-trust"
 abstract: >-

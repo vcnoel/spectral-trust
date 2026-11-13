@@ -1,15 +1,5 @@
-﻿# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
-#
-# You should have received a copy of the GNU Affero General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+﻿# Copyright 2025-2026 Valentin Noël
+# SPDX-License-Identifier: Apache-2.0
 
 from setuptools import setup, find_packages
 import pathlib
@@ -77,12 +67,12 @@ setup(
         "Source": "https://github.com/vcnoel/spectral-trust",
         "Changelog": "https://github.com/vcnoel/spectral-trust/blob/main/CHANGELOG.md",
     },
-    license="AGPL-3.0-or-later",
+    license="Apache-2.0",
     license_files=["LICENSE"],
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+        "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python :: 3",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
