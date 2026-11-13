@@ -15,19 +15,22 @@ changes for existing calls.
   take `num_workers`: layers are decomposed at once, each on one CPU
   thread, with identical results in layer order. At 28 layers, 16 heads and
   256 tokens on a 24-thread CPU, 8 workers took the attention metrics from
-  0.51 s to 0.13 s (4.0x) and the hybrid metrics from 1.23 s to 0.40 s
-  (3.1x).
+  0.55 s to 0.15 s (3.7x) and the hybrid metrics from 1.30 s to 0.38 s
+  (3.4x).
 - `per_head_metrics` and `per_head_hybrid_metrics` (and their `_all_layers`
   versions) take `device`. The default stays the CPU, which is faster for
   many small eigenproblems; `"cuda"` decomposes on the GPU. They never read
   `GSPConfig.device`, and the docstrings now say so (it defaults to
   `"cuda"` when one is available, which suggested otherwise).
-- Thread count after concurrent per-head calls. Each call runs its
-  eigendecomposition on one intra-op thread and restores the count. Torch
-  also uses the last count set as the default of threads created later, so
-  a thread that started while another was inside a per-head call inherited
-  one thread and, if it finished last, left one thread as that default. The
-  last of concurrent calls now restores the count the first one found.
+- Per-head calls change only their own thread's count. Each call runs its
+  eigendecomposition on one intra-op thread and restores the count after.
+  `torch.set_num_threads` also sets the count that threads created later
+  start with, so in 0.4.0 a thread created during a per-head call started
+  with one thread and kept it, and could leave one thread as the default
+  for the rest of the process. The calls now put that default back at once,
+  from a short-lived helper thread, so threads created meanwhile (including
+  the `num_workers` workers) start at the process default, and the default
+  is unchanged afterwards. The cost is about 0.4 ms per call.
 - The `per_head_hybrid_metrics` docstring said its values match
   `analyze_layer` on each head. They agree to float32 rounding: energy and
   smoothness index to about 1e-6 relative, HFER and spectral entropy, which

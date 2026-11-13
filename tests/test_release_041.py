@@ -116,27 +116,41 @@ def test_layer_workers_give_the_same_results_and_keep_the_thread_count():
 
 
 @pytest.mark.skipif(torch.get_num_threads() < 2, reason="needs more than one thread")
-def test_thread_that_inherits_one_thread_does_not_leave_it_as_the_default():
-    # Thread B starts while the main thread is inside a per-head call, so it
-    # inherits a count of 1, and it finishes last. Before 0.4.1 its restore
-    # set 1 as the default of every thread created afterwards.
+def test_per_head_calls_change_only_their_own_thread():
+    # Inside a per-head call the calling thread runs on one thread. A thread
+    # created meanwhile starts at the process default, not at one, and keeps
+    # it through calls of its own, whatever the order in which they end.
+    # Before 0.4.1 was released, such a thread started at one and could leave
+    # one as the default of every later thread (seen on a 2-thread CI runner
+    # after num_workers=4).
     n0 = torch.get_num_threads()
-    inside, b_entered, main_left = threading.Event(), threading.Event(), threading.Event()
+    main_in, x_in, main_left, x_done = (threading.Event() for _ in range(4))
+    seen = {}
 
-    def b():
-        inside.wait()
+    def x():
+        main_in.wait()
+        seen["start"] = torch.get_num_threads()
         with ph._one_intraop_thread():
-            b_entered.set()
-            main_left.wait()
+            seen["inside"] = torch.get_num_threads()
+            x_in.set()
+            main_left.wait()                    # main leaves first, x last
+        with ph._one_intraop_thread():
+            pass
+        seen["end"] = torch.get_num_threads()
+        x_done.set()
 
-    t = threading.Thread(target=b)
+    t = threading.Thread(target=x)
     t.start()
     with ph._one_intraop_thread():
-        inside.set()
-        b_entered.wait()
+        seen["main_inside"] = torch.get_num_threads()
+        main_in.set()
+        x_in.wait()
     main_left.set()
+    x_done.wait()
     t.join()
     try:
+        assert seen["main_inside"] == 1 and seen["inside"] == 1
+        assert seen["start"] == n0 and seen["end"] == n0
         assert torch.get_num_threads() == n0
         assert _fresh_thread_count() == n0
     finally:
