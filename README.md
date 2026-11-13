@@ -189,7 +189,7 @@ and the graph signal processing framework paper:
 @software{noel_spectral_trust,
   author  = {No{\"e}l, Valentin},
   title   = {spectral-trust: graph-spectral diagnostics for transformer attention},
-  version = {0.4.0},
+  version = {0.4.1},
   year    = {2026},
   url     = {https://github.com/vcnoel/spectral-trust},
   license = {AGPL-3.0-or-later}
