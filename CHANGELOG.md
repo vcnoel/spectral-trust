@@ -2,10 +2,14 @@
 
 ## v0.4.1
 
-A per-column metric, parallel layers for the per-head functions, an
-explicit device for them, and a corrected tolerance statement. No result
-changes for existing calls.
+A new licence, a per-column metric, parallel layers for the per-head
+functions, an explicit device for them, and a corrected tolerance
+statement. No result changes for existing calls.
 
+- *(licence change)* spectral-trust is released under the Apache License
+  2.0 from this version, instead of AGPL-3.0-or-later, so it can be used in
+  academic and commercial work, open or closed source. Versions up to 0.4.0
+  remain under AGPL-3.0-or-later.
 - New `per_column_metrics(signals, laplacian, config)`: energy, smoothness
   index, spectral entropy and HFER of every column of a signal matrix (one
   SAE feature, neuron or probe projection per column) from one

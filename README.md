@@ -7,7 +7,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/spectral-trust)](https://pypi.org/project/spectral-trust/)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)](https://pypi.org/project/spectral-trust/)
-[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](https://github.com/vcnoel/spectral-trust/blob/main/LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](https://github.com/vcnoel/spectral-trust/blob/main/LICENSE)
 [![tests](https://img.shields.io/github/actions/workflow/status/vcnoel/spectral-trust/tests.yml?branch=main&label=tests)](https://github.com/vcnoel/spectral-trust/actions/workflows/tests.yml)
 [![docs](https://img.shields.io/badge/docs-vcnoel.github.io-0072B2)](https://vcnoel.github.io/spectral-trust/)
 [![Open in Colab](https://img.shields.io/badge/Open%20in-Colab-F9AB00?logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/examples/quickstart.ipynb)
@@ -192,7 +192,7 @@ and the graph signal processing framework paper:
   version = {0.4.1},
   year    = {2026},
   url     = {https://github.com/vcnoel/spectral-trust},
-  license = {AGPL-3.0-or-later}
+  license = {Apache-2.0}
 }
 
 @article{noel2025graph,
@@ -572,5 +572,7 @@ Release notes are in [CHANGELOG.md](https://github.com/vcnoel/spectral-trust/blo
 
 ## License
 
-GNU Affero General Public License v3.0 (AGPL-3.0). For commercial use or
-closed-source integration, contact the author for a commercial license.
+Apache License 2.0, from version 0.4.1. You can use, modify and redistribute
+spectral-trust, in academic or commercial work, open or closed source, under
+the terms in [LICENSE](https://github.com/vcnoel/spectral-trust/blob/main/LICENSE).
+Versions up to 0.4.0 were released under AGPL-3.0-or-later.
