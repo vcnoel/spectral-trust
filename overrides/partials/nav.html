@@ -1,0 +1,41 @@
+{#-
+  Material's primary navigation, with the links of https://vcnoel.github.io/
+  added at the end of the drawer for narrow screens, where the top bar has no
+  room for them.
+-#}
+{% import "partials/nav-item.html" as item with context %}
+{% set class = "md-nav md-nav--primary" %}
+{% if "navigation.tabs" in features %}
+  {% set class = class ~ " md-nav--lifted" %}
+{% endif %}
+{% if "toc.integrate" in features %}
+  {% set class = class ~ " md-nav--integrated" %}
+{% endif %}
+<nav class="{{ class }}" aria-label="{{ lang.t('nav') }}" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="{{ config.extra.homepage | d(nav.homepage.url, true) | url }}" title="{{ config.site_name | e }}" class="md-nav__button md-logo" aria-label="{{ config.site_name }}" data-md-component="logo">
+      {% include "partials/logo.html" %}
+    </a>
+    {{ config.site_name }}
+  </label>
+  {% if config.repo_url %}
+    <div class="md-nav__source">
+      {% include "partials/source.html" %}
+    </div>
+  {% endif %}
+  <ul class="md-nav__list" data-md-scrollfix>
+    {% for nav_item in nav.items %}
+      {% set path = "__nav_" ~ loop.index %}
+      {{ item.render(nav_item, path, 1) }}
+    {% endfor %}
+  </ul>
+  <div class="st-drawer-site">
+    <p class="st-drawer-site__title">Valentin Noël</p>
+    <ul>
+      <li><a href="https://vcnoel.github.io/">Home</a></li>
+      <li><a href="https://vcnoel.github.io/#research">Research</a></li>
+      <li><a href="https://vcnoel.github.io/posts/">Blog</a></li>
+      <li><a href="https://vcnoel.github.io/assets/cv/Valentin_Noel_CV.pdf" type="application/pdf">CV</a></li>
+    </ul>
+  </div>
+</nav>

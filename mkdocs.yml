@@ -18,27 +18,20 @@ hooks:
 
 theme:
   name: material
-  # system fonts: no request to a font CDN
+  # The top bar, footer and theme toggle of https://vcnoel.github.io/ (overrides/main.html).
+  custom_dir: overrides
+  # The site's fonts are loaded by overrides/main.html, so Material loads none.
   font: false
   logo: assets/mark.svg
   favicon: assets/favicon.svg
   icon:
     repo: fontawesome/brands/github
+  # One Material palette. Light and dark come from the site's tokens in
+  # docs/stylesheets/site.css, switched by the site's own toggle.
   palette:
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
-      primary: custom
-      accent: custom
-      toggle:
-        icon: material/weather-night
-        name: Dark theme
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
-      primary: custom
-      accent: custom
-      toggle:
-        icon: material/weather-sunny
-        name: Light theme
+    scheme: default
+    primary: custom
+    accent: custom
   features:
     - navigation.sections
     - navigation.top
@@ -48,7 +41,10 @@ theme:
     - toc.follow
 
 extra_css:
-  - stylesheets/extra.css
+  - stylesheets/site.css
+
+extra:
+  generator: false
 
 plugins:
   - search
