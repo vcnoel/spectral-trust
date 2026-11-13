@@ -82,10 +82,41 @@ HeadSelection = Union[None, Sequence[int], Sequence[Tuple[int, int]],
 
 Device = Union[str, torch.device]
 
-# Bookkeeping for _one_intraop_thread, shared by every thread of the process.
+# Serialises the short sections that touch torch's default thread count.
 _THREADS_LOCK = threading.Lock()
-_THREADS_ACTIVE = 0
-_THREADS_OUTER = 1
+
+
+def _set_own_threads(n: int, default: Optional[int] = None) -> int:
+    """Set the calling thread's intra-op count to ``n`` and leave unchanged
+    the count torch gives threads created later; return that default.
+
+    ``torch.set_num_threads`` does two things: it sets the calling thread's
+    count, and it sets the count every thread created afterwards starts
+    with. A helper thread, which starts at the current default, reads it
+    before the call and writes it back after, so only the calling thread
+    changes. ``default`` skips the read when it is already known. On a
+    torch build whose count is truly global the helper also resets the
+    caller, which costs speed, never correctness.
+    """
+    if default is not None and n == default:
+        torch.set_num_threads(n)
+        return default
+    box: Dict[str, int] = {}
+    ready, done = threading.Event(), threading.Event()
+
+    def helper():
+        box["default"] = torch.get_num_threads() if default is None else default
+        ready.set()
+        done.wait()
+        torch.set_num_threads(box["default"])
+
+    t = threading.Thread(target=helper, daemon=True)
+    t.start()
+    ready.wait()
+    torch.set_num_threads(n)
+    done.set()
+    t.join()
+    return box["default"]
 
 
 @contextmanager
@@ -94,31 +125,20 @@ def _one_intraop_thread():
 
     A batch of small symmetric eigenproblems is slower with more threads,
     which oversubscribe the cores (measured at 32 heads and a 250-token span:
-    36 ms on one thread, 1.2 s on 24). ``torch.set_num_threads`` changes the
-    calling thread's count, and torch also keeps the last value set as the
-    count of threads created afterwards. So each call restores its own
-    thread's count, and the last of several concurrent calls to finish also
-    restores the count the first one found: a thread that started while
-    another was inside this block inherited one thread, and would otherwise
-    keep it, and leave it as the default for later threads.
+    36 ms on one thread, 1.2 s on 24). Only the calling thread changes, and
+    it gets its own count back: threads created meanwhile, including the
+    workers of ``num_workers``, start at the process default, and that
+    default is the same afterwards. Before this, a thread created during a
+    per-head call started with one thread and kept it.
     """
-    global _THREADS_ACTIVE, _THREADS_OUTER
     prev = torch.get_num_threads()
     with _THREADS_LOCK:
-        if _THREADS_ACTIVE == 0:
-            _THREADS_OUTER = prev
-        _THREADS_ACTIVE += 1
-    torch.set_num_threads(1)
+        default = _set_own_threads(1)
     try:
         yield
     finally:
         with _THREADS_LOCK:
-            _THREADS_ACTIVE -= 1
-            last = _THREADS_ACTIVE == 0
-            # a count of 1 here can be the inherited one; give the first
-            # caller's count back to this thread and to later threads
-            restore = _THREADS_OUTER if (last and prev == 1) else prev
-        torch.set_num_threads(restore)
+            _set_own_threads(prev, default)
 
 
 def _cpu_threads(device: torch.device):
