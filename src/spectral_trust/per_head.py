@@ -36,6 +36,9 @@ attribution method ranked highest. The attribution stays outside the
 library: pass its scores through :func:`heads_from_scores`, or pass a
 boolean mask or ``(layer, head)`` pairs directly.
 """
+import threading
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass, replace
 from functools import lru_cache
 from typing import Dict, List, Optional, Sequence, Tuple, Union
@@ -76,6 +79,61 @@ PER_HEAD_HYBRID_METRIC_FAMILY = "hybrid"
 #: Accepted forms of a head selection (see :func:`per_head_metrics`).
 HeadSelection = Union[None, Sequence[int], Sequence[Tuple[int, int]],
                       np.ndarray, torch.Tensor]
+
+Device = Union[str, torch.device]
+
+# Bookkeeping for _one_intraop_thread, shared by every thread of the process.
+_THREADS_LOCK = threading.Lock()
+_THREADS_ACTIVE = 0
+_THREADS_OUTER = 1
+
+
+@contextmanager
+def _one_intraop_thread():
+    """Run the enclosed CPU eigendecompositions on one intra-op thread.
+
+    A batch of small symmetric eigenproblems is slower with more threads,
+    which oversubscribe the cores (measured at 32 heads and a 250-token span:
+    36 ms on one thread, 1.2 s on 24). ``torch.set_num_threads`` changes the
+    calling thread's count, and torch also keeps the last value set as the
+    count of threads created afterwards. So each call restores its own
+    thread's count, and the last of several concurrent calls to finish also
+    restores the count the first one found: a thread that started while
+    another was inside this block inherited one thread, and would otherwise
+    keep it, and leave it as the default for later threads.
+    """
+    global _THREADS_ACTIVE, _THREADS_OUTER
+    prev = torch.get_num_threads()
+    with _THREADS_LOCK:
+        if _THREADS_ACTIVE == 0:
+            _THREADS_OUTER = prev
+        _THREADS_ACTIVE += 1
+    torch.set_num_threads(1)
+    try:
+        yield
+    finally:
+        with _THREADS_LOCK:
+            _THREADS_ACTIVE -= 1
+            last = _THREADS_ACTIVE == 0
+            # a count of 1 here can be the inherited one; give the first
+            # caller's count back to this thread and to later threads
+            restore = _THREADS_OUTER if (last and prev == 1) else prev
+        torch.set_num_threads(restore)
+
+
+def _cpu_threads(device: torch.device):
+    """One intra-op thread for CPU work, nothing for a GPU."""
+    return _one_intraop_thread() if device.type == "cpu" else nullcontext()
+
+
+def _map_layers(fn, items, num_workers: int):
+    """``[fn(i, item) for i, item in enumerate(items)]``, on ``num_workers``
+    threads when it is above 1, in layer order either way."""
+    items = list(items)
+    if num_workers is None or int(num_workers) <= 1 or len(items) <= 1:
+        return [fn(i, item) for i, item in enumerate(items)]
+    with ThreadPoolExecutor(max_workers=int(num_workers)) as pool:
+        return list(pool.map(lambda pair: fn(*pair), enumerate(items)))
 
 
 @dataclass
@@ -203,6 +261,7 @@ def per_head_metrics(
     layer: int = -1,
     heads: HeadSelection = None,
     keep_eigenvalues: bool = False,
+    device: Device = "cpu",
 ) -> PerHeadDiagnostics:
     """
     Compute per-head spectral metrics for a single layer.
@@ -231,10 +290,18 @@ def per_head_metrics(
         keep_eigenvalues: also return each head's spectrum in
             ``result.eigenvalues`` (``[heads, seq]``, ascending). The
             spectrum is computed anyway; this only keeps it.
+        device: where the Laplacians are built and decomposed. The default
+            is the CPU whatever ``config.device`` says, because the batched
+            symmetric eigensolver on CUDA is very slow for many small
+            matrices (measured 1.9 s against 0.1 s for 32 heads x 16 layers
+            at a 90-token span on one consumer GPU). Pass ``"cuda"`` to
+            decompose on the GPU, which can pay off for long spans.
+            ``config.device`` is not read here.
 
     Returns:
         :class:`PerHeadDiagnostics` with a ``[heads, 5]`` value matrix.
     """
+    device = torch.device(device)
     attention = _layer_attention(attention)
     selected = _resolve_heads(heads, layer, attention.shape[0])
     attention = _select_heads(attention, selected)
@@ -249,11 +316,9 @@ def per_head_metrics(
     if token_span is not None:
         start, end = token_span
         attention = attention[:, start:end, start:end]
-    # Decompose on the CPU. The batched symmetric eigensolver on CUDA is
-    # very slow for many small matrices (measured 1.9 s against 0.1 s for
-    # 32 heads x 16 layers at a 90-token span on one consumer GPU), and the
-    # block moved here is a few hundred kilobytes.
-    attn = attention.detach().to(device="cpu", dtype=torch.float32)
+    # Decompose on the CPU by default (see ``device`` above); the block moved
+    # here is a few hundred kilobytes.
+    attn = attention.detach().to(device=device, dtype=torch.float32)
 
     num_heads, seq_len, _ = attn.shape
     if seq_len < 3 or num_heads == 0:
@@ -280,16 +345,8 @@ def per_head_metrics(
         gc = GraphConstructor(replace(cfg, normalization="sym"))
     laplacian = gc.construct_laplacian(adjacency)
     laplacian = 0.5 * (laplacian + laplacian.transpose(-2, -1))
-    # One thread: a batch of small symmetric eigenproblems is slower with more
-    # threads, which oversubscribe the cores (measured at 32 heads and a
-    # 250-token span: 36 ms on one thread, 1.2 s on 24). The caller's thread
-    # count is restored afterwards.
-    prev_threads = torch.get_num_threads()
-    torch.set_num_threads(1)
-    try:
+    with _cpu_threads(device):          # one thread on the CPU, see the helper
         eigenvalues = torch.linalg.eigvalsh(laplacian).clamp(min=0.0)  # [H, S]
-    finally:
-        torch.set_num_threads(prev_threads)
 
     lam2 = eigenvalues[:, 1]
     lam_max = eigenvalues[:, -1]
@@ -324,6 +381,8 @@ def per_head_metrics_all_layers(
     config: Optional[GSPConfig] = None,
     token_span: Optional[Tuple[int, int]] = None,
     heads: HeadSelection = None,
+    device: Device = "cpu",
+    num_workers: int = 1,
 ) -> List[PerHeadDiagnostics]:
     """
     Per-head metrics for every layer.
@@ -332,17 +391,21 @@ def per_head_metrics_all_layers(
         attentions: sequence of per-layer attention tensors, each
             ``[heads, seq, seq]`` or ``[1, heads, seq, seq]`` — i.e. exactly
             what ``model(..., output_attentions=True).attentions`` returns.
-        config, token_span: as in :func:`per_head_metrics`.
+        config, token_span, device: as in :func:`per_head_metrics`.
         heads: as in :func:`per_head_metrics`, resolved per layer: ``(layer,
             head)`` pairs (e.g. from :func:`heads_from_scores`) or a
             ``[layers, heads]`` mask select different heads in each layer,
             plain indices or a ``[heads]`` mask the same heads everywhere.
+        num_workers: layers decomposed at once, each on one CPU thread. The
+            results are the same and in layer order for any value. Use
+            this rather than calling :func:`per_head_metrics` from your own
+            threads.
     """
-    return [
-        per_head_metrics(layer_attn, config=config,
-                         token_span=token_span, layer=idx, heads=heads)
-        for idx, layer_attn in enumerate(attentions)
-    ]
+    return _map_layers(
+        lambda idx, layer_attn: per_head_metrics(
+            layer_attn, config=config, token_span=token_span, layer=idx,
+            heads=heads, device=device),
+        attentions, num_workers)
 
 
 @lru_cache(maxsize=8)
@@ -357,6 +420,7 @@ def per_head_hybrid_metrics(
     token_span: Optional[Tuple[int, int]] = None,
     layer: int = -1,
     heads: HeadSelection = None,
+    device: Device = "cpu",
 ) -> PerHeadDiagnostics:
     """
     Per-head hybrid metrics for one layer: the layer's residual-stream
@@ -367,17 +431,29 @@ def per_head_hybrid_metrics(
     ``energy = tr(X^T L_h X)``, ``smoothness_index = energy / ||X||_F^2``,
     and ``spectral_entropy`` / ``hfer`` follow
     :class:`~spectral_trust.spectral.SpectralAnalyzer` on the full
-    eigenbasis of ``L_h`` (never truncated). Values match
-    ``SpectralAnalyzer(eigen_solver="dense").analyze_layer`` run on each
-    head's Laplacian. ``config.project_dim`` applies the same
-    Johnson-Lindenstrauss projection to ``X`` first.
+    eigenbasis of ``L_h`` (never truncated). ``config.project_dim`` applies
+    the same Johnson-Lindenstrauss projection to ``X`` first.
+
+    Values agree with ``SpectralAnalyzer(eigen_solver="dense").analyze_layer``
+    run on each head's Laplacian to float32 rounding, which is not the same
+    for every metric. Energy and smoothness index agree to about 1e-6
+    relative. HFER and spectral entropy depend on the eigenvectors, which
+    the two paths compute with different float32 solvers (torch here, scipy
+    there): for nearly degenerate modes the vectors are fixed only to float32
+    precision. Measured on Qwen3.5-2B attention (128 tokens, one-column SAE
+    feature signals), HFER differed by up to 8e-5 and spectral entropy by up
+    to 1.2e-3, absolute. Both are float32 roundings of the same quantity: on
+    a sample of those graphs each path was as close to a float64 solve as to
+    the other.
 
     Args:
         attention: ``[heads, seq, seq]`` (or ``[1, heads, seq, seq]``).
         signals: ``[seq, d]`` (or ``[1, seq, d]``), the residual-stream
             states paired with this layer (``hidden_states[layer + 1]`` in
             the Hugging Face convention, as in the framework).
-        config, token_span, layer, heads: as in :func:`per_head_metrics`.
+        config, token_span, layer, heads, device: as in
+            :func:`per_head_metrics`. With ``normalization="rw"`` the
+            general eigensolver runs on the CPU whatever ``device`` says.
 
     Returns:
         :class:`PerHeadDiagnostics` with family ``"hybrid"`` and a
@@ -401,14 +477,17 @@ def per_head_hybrid_metrics(
         start, end = token_span
         attention = attention[:, start:end, start:end]
         signals = signals[start:end]
-    attn = attention.detach().to(device="cpu", dtype=torch.float32)
-    X = signals.detach().to(device="cpu", dtype=torch.float32)
+    device = torch.device(device)
+    if cfg.normalization == "rw":
+        device = torch.device("cpu")        # the general eigensolver is scipy's
+    attn = attention.detach().to(device=device, dtype=torch.float32)
+    X = signals.detach().to(device=device, dtype=torch.float32)
     k = cfg.project_dim
     if k is not None:
         if k <= 0:
             raise ValueError(f"project_dim must be positive, got {k}")
         if k < X.shape[1]:
-            X = X @ _projection(X.shape[1], int(k), int(cfg.project_seed))
+            X = X @ _projection(X.shape[1], int(k), int(cfg.project_seed)).to(device)
 
     num_heads, seq_len, _ = attn.shape
     names = list(PER_HEAD_HYBRID_METRIC_NAMES)
@@ -439,12 +518,8 @@ def per_head_hybrid_metrics(
         smoothness = (energy / signal_norm if signal_norm >= 1e-8
                       else torch.zeros_like(energy))
         sym = 0.5 * (laplacian + laplacian.transpose(-2, -1))
-        prev_threads = torch.get_num_threads()
-        torch.set_num_threads(1)     # see per_head_metrics
-        try:
+        with _cpu_threads(device):      # one thread on the CPU, see the helper
             _, vecs = torch.linalg.eigh(sym)                          # [H, S, S]
-        finally:
-            torch.set_num_threads(prev_threads)
         masses = ((vecs.transpose(-2, -1) @ X) ** 2).sum(dim=-1)      # [H, S]
         total = masses.sum(dim=-1)
         probs = (masses / total.unsqueeze(-1).clamp(min=1e-30)).clamp(min=1e-12)
@@ -455,7 +530,7 @@ def per_head_hybrid_metrics(
         entropy = torch.where(empty, torch.zeros_like(entropy), entropy)
         hfer = torch.where(empty, torch.zeros_like(hfer), hfer)
         values = torch.stack([energy, smoothness, entropy, hfer], dim=-1) \
-            .numpy().astype(np.float32)
+            .cpu().numpy().astype(np.float32)
     return PerHeadDiagnostics(layer=layer, values=values, metric_names=names,
                               family=PER_HEAD_HYBRID_METRIC_FAMILY, heads=selected)
 
@@ -466,6 +541,8 @@ def per_head_hybrid_metrics_all_layers(
     config: Optional[GSPConfig] = None,
     token_span: Optional[Tuple[int, int]] = None,
     heads: HeadSelection = None,
+    device: Device = "cpu",
+    num_workers: int = 1,
 ) -> List[PerHeadDiagnostics]:
     """
     :func:`per_head_hybrid_metrics` for every layer.
@@ -473,7 +550,8 @@ def per_head_hybrid_metrics_all_layers(
     ``hidden_states`` may have one more entry than ``attentions`` (the Hugging
     Face convention, embeddings first): layer i is then paired with
     ``hidden_states[i + 1]``, as in the framework. With equal lengths layer i
-    is paired with ``hidden_states[i]``.
+    is paired with ``hidden_states[i]``. ``num_workers`` is as in
+    :func:`per_head_metrics_all_layers`.
     """
     n, m = len(attentions), len(hidden_states)
     if m == n + 1:
@@ -483,12 +561,11 @@ def per_head_hybrid_metrics_all_layers(
     else:
         raise ValueError(
             f"need len(hidden_states) == len(attentions) (+1); got {m} and {n}")
-    return [
-        per_head_hybrid_metrics(layer_attn, hidden_states[idx + offset],
-                                config=config, token_span=token_span,
-                                layer=idx, heads=heads)
-        for idx, layer_attn in enumerate(attentions)
-    ]
+    return _map_layers(
+        lambda idx, layer_attn: per_head_hybrid_metrics(
+            layer_attn, hidden_states[idx + offset], config=config,
+            token_span=token_span, layer=idx, heads=heads, device=device),
+        attentions, num_workers)
 
 
 def stack_feature_vector(

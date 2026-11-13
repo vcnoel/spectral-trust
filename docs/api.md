@@ -53,6 +53,12 @@ as st`), except where a module path is shown.
 
 ::: spectral_trust.layer_delta_features
 
+## Per-column diagnostics
+
+::: spectral_trust.per_column_metrics
+
+::: spectral_trust.ColumnDiagnostics
+
 ## Graphs and layer diagnostics
 
 ::: spectral_trust.GSPConfig

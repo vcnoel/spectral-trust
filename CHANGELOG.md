@@ -1,5 +1,40 @@
 # Changelog
 
+## v0.4.1
+
+A per-column metric, parallel layers for the per-head functions, an
+explicit device for them, and a corrected tolerance statement. No result
+changes for existing calls.
+
+- New `per_column_metrics(signals, laplacian, config)`: energy, smoothness
+  index, spectral entropy and HFER of every column of a signal matrix (one
+  SAE feature, neuron or probe projection per column) from one
+  eigendecomposition. Column `j` gets what `analyze_layer` reports for
+  `signals[:, j:j+1]` alone. Returns a `ColumnDiagnostics`.
+- `per_head_metrics_all_layers` and `per_head_hybrid_metrics_all_layers`
+  take `num_workers`: layers are decomposed at once, each on one CPU
+  thread, with identical results in layer order. At 28 layers, 16 heads and
+  256 tokens on a 24-thread CPU, 8 workers took the attention metrics from
+  0.51 s to 0.13 s (4.0x) and the hybrid metrics from 1.23 s to 0.40 s
+  (3.1x).
+- `per_head_metrics` and `per_head_hybrid_metrics` (and their `_all_layers`
+  versions) take `device`. The default stays the CPU, which is faster for
+  many small eigenproblems; `"cuda"` decomposes on the GPU. They never read
+  `GSPConfig.device`, and the docstrings now say so (it defaults to
+  `"cuda"` when one is available, which suggested otherwise).
+- Thread count after concurrent per-head calls. Each call runs its
+  eigendecomposition on one intra-op thread and restores the count. Torch
+  also uses the last count set as the default of threads created later, so
+  a thread that started while another was inside a per-head call inherited
+  one thread and, if it finished last, left one thread as that default. The
+  last of concurrent calls now restores the count the first one found.
+- The `per_head_hybrid_metrics` docstring said its values match
+  `analyze_layer` on each head. They agree to float32 rounding: energy and
+  smoothness index to about 1e-6 relative, HFER and spectral entropy, which
+  depend on eigenvectors computed by different float32 solvers (torch and
+  scipy), up to 8e-5 and 1.2e-3 absolute on Qwen3.5-2B attention with
+  one-column signals. Both are equally close to a float64 solve.
+
 ## v0.4.0
 
 A TransformerLens-style API (`SpectralModel`, `SpectralCache`), adapters
