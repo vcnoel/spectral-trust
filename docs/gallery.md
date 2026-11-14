@@ -1,7 +1,8 @@
 # Animated gallery
 
 New in 0.4.2: one call writes a video, a GIF or an interactive page of a
-`SpectralCache`. The file suffix picks the format.
+`SpectralCache`. The file suffix picks the format. The videos on this page
+were rendered by `docs/make_gallery.py` on Qwen3-0.6B.
 
 ```python
 import spectral_trust as st
@@ -9,7 +10,7 @@ import spectral_trust as st
 model = st.SpectralModel.from_pretrained("Qwen/Qwen3-0.6B")
 cache = model.run_with_spectra("The cat sat on the mat because it was warm.")
 
-cache.animate("embedding3d", "hero.mp4")                 # or st.viz.animate(cache, ...)
+cache.animate("waterfall", "waterfall.mp4")              # or st.viz.animate(cache, ...)
 ```
 
 | Suffix | Output | Default size and rate |
@@ -29,6 +30,13 @@ default). Output is deterministic for a fixed `seed`. Rendering runs on the CPU,
 and ffmpeg uses two threads (`threads=`).
 
 ## flow
+
+<video controls muted loop playsinline preload="none" width="100%" poster="https://vcnoel.github.io/media/spectral-trust/0.4.2/flow-poster.png" aria-label="flow view of Qwen3-0.6B reading an email with an injected instruction">
+  <source src="https://vcnoel.github.io/media/spectral-trust/0.4.2/flow.webm" type="video/webm">
+  <source src="https://vcnoel.github.io/media/spectral-trust/0.4.2/flow.mp4" type="video/mp4">
+</video>
+
+[Open the interactive page](https://vcnoel.github.io/media/spectral-trust/0.4.2/flow.html) (orbit and hover).
 
 ```python
 pair = model.run_with_spectra([clean, injected])
@@ -75,6 +83,11 @@ hovered, and its slider moves through the layers.
 
 ## waterfall
 
+<video controls muted loop playsinline preload="none" width="100%" poster="https://vcnoel.github.io/media/spectral-trust/0.4.2/waterfall-poster.png" aria-label="waterfall of graph-frequency energy by layer, Qwen3-0.6B">
+  <source src="https://vcnoel.github.io/media/spectral-trust/0.4.2/waterfall.webm" type="video/webm">
+  <source src="https://vcnoel.github.io/media/spectral-trust/0.4.2/waterfall.mp4" type="video/mp4">
+</video>
+
 ```python
 cache.animate("waterfall", "waterfall.mp4")
 ```
@@ -86,6 +99,11 @@ top modes) is shaded orange, and a small inset traces HFER by layer.
 `scale="sqrt"` or `"log"` brings out the small modes.
 
 ## compare
+
+<video controls muted loop playsinline preload="none" width="100%" poster="https://vcnoel.github.io/media/spectral-trust/0.4.2/compare-poster.png" aria-label="clean and injected prompts compared layer by layer, Qwen3-0.6B">
+  <source src="https://vcnoel.github.io/media/spectral-trust/0.4.2/compare.webm" type="video/webm">
+  <source src="https://vcnoel.github.io/media/spectral-trust/0.4.2/compare.mp4" type="video/mp4">
+</video>
 
 ```python
 pair = model.run_with_spectra([clean, injected])
@@ -101,6 +119,11 @@ the share of the edge weight they hold. Below, the Fiedler value and HFER of
 both prompts are traced through depth.
 
 ## graph_movie
+
+<video controls muted loop playsinline preload="none" width="100%" poster="https://vcnoel.github.io/media/spectral-trust/0.4.2/graph_movie-poster.png" aria-label="token graph of each layer of Qwen3-0.6B">
+  <source src="https://vcnoel.github.io/media/spectral-trust/0.4.2/graph_movie.webm" type="video/webm">
+  <source src="https://vcnoel.github.io/media/spectral-trust/0.4.2/graph_movie.mp4" type="video/mp4">
+</video>
 
 ```python
 cache.animate("graph_movie", "graph.mp4", layout="circle")   # or "force", "spectral"
