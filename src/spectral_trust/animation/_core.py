@@ -63,7 +63,7 @@ THEMES: Dict[str, Theme] = {
     "dark": Theme(
         "dark", bg="#0F1115", surface="#161A20", surface2="#1C2129", ink="#ECEBE7",
         ink2="#C8C5BD", muted="#9C978D", faint="#20252D", rule="#353B45", edge="#C8C5BD",
-        node_mid="#4A505A", node_line="#0F1115", neg=OKABE_ITO["sky"],
+        node_mid="#C8C5BD", node_line="#0F1115", neg=OKABE_ITO["sky"],
         pos=OKABE_ITO["orange"], alert="#E8661A", accent=OKABE_ITO["green"]),
 }
 
@@ -522,8 +522,10 @@ def need_imageio():
 
 
 class FrameWriter:
-    """Streams RGB frames to ffmpeg through imageio. The encoder runs on at
-    most ``threads`` threads; GIFs get a palette computed over all frames."""
+    """Streams RGB frames to ffmpeg: ``.mp4`` (H.264) and ``.webm`` (VP9)
+    through imageio's ffmpeg writer, ``.gif`` through imageio-ffmpeg's frame
+    writer (imageio's refuses GIF) with a palette computed over all frames.
+    The encoder runs on at most ``threads`` threads."""
 
     def __init__(self, path: Path, fps: float, threads: int = 2, gif_colors: int = 128,
                  crf: Optional[int] = None):
@@ -531,6 +533,9 @@ class FrameWriter:
         self.path = Path(path)
         ext = self.path.suffix.lower()
         t = str(max(int(threads), 1))
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._w = self._gif = None
+        self._fps, self._colors, self._t = fps, int(gif_colors), t
         if ext == ".mp4":
             kw = dict(codec="libx264", pixelformat="yuv420p", output_params=[
                 "-crf", str(18 if crf is None else crf), "-preset", "medium",
@@ -540,22 +545,37 @@ class FrameWriter:
                 "-crf", str(32 if crf is None else crf), "-b:v", "0", "-deadline", "good",
                 "-cpu-used", "2", "-row-mt", "1", "-threads", t])
         elif ext == ".gif":
-            vf = (f"split[a][b];[a]palettegen=max_colors={int(gif_colors)}:stats_mode=full"
-                  f"[p];[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle")
-            kw = dict(codec="gif", pixelformat="pal8",
-                      output_params=["-vf", vf, "-loop", "0", "-threads", t])
+            return                                 # opened on the first frame (needs its size)
         else:
             raise ValueError(f"unsupported video suffix {ext!r}; use one of {VIDEO_SUFFIXES}")
-        self.path.parent.mkdir(parents=True, exist_ok=True)
         self._w = iio.get_writer(str(self.path), format="FFMPEG", mode="I", fps=fps,
                                  quality=None, macro_block_size=1,
                                  ffmpeg_log_level="error", **kw)
 
+    def _open_gif(self, h: int, w: int):
+        import imageio_ffmpeg
+
+        vf = (f"split[a][b];[a]palettegen=max_colors={self._colors}:stats_mode=full[p];"
+              "[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle")
+        self._gif = imageio_ffmpeg.write_frames(
+            str(self.path), (w, h), pix_fmt_in="rgb24", pix_fmt_out="pal8", fps=self._fps,
+            quality=None, codec="gif", macro_block_size=1, ffmpeg_log_level="error",
+            output_params=["-vf", vf, "-loop", "0", "-threads", self._t])
+        self._gif.send(None)
+
     def append(self, frame: np.ndarray):
-        self._w.append_data(frame)
+        if self._w is not None:
+            self._w.append_data(frame)
+            return
+        if self._gif is None:
+            self._open_gif(*frame.shape[:2])
+        self._gif.send(np.ascontiguousarray(frame, dtype=np.uint8))
 
     def close(self):
-        self._w.close()
+        if self._w is not None:
+            self._w.close()
+        if self._gif is not None:
+            self._gif.close()
 
 
 #: plotly.js version of the ``plotlyjs="cdn"`` script tag.
@@ -563,7 +583,17 @@ PLOTLY_JS_VERSION = "3.1.0"
 PLOTLY_CDN = f"https://cdn.plot.ly/plotly-{PLOTLY_JS_VERSION}.min.js"
 
 
+def _plotly_available() -> bool:
+    try:
+        import plotly.offline  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
 def _plotly_script(plotlyjs: str) -> str:
+    if plotlyjs == "auto":
+        plotlyjs = "embed" if _plotly_available() else "cdn"
     if plotlyjs == "cdn":
         return f'<script src="{PLOTLY_CDN}" charset="utf-8"></script>'
     if plotlyjs == "embed":
@@ -578,7 +608,8 @@ def _plotly_script(plotlyjs: str) -> str:
     p = Path(plotlyjs)
     if p.is_file():
         return f"<script>{p.read_text(encoding='utf-8')}</script>"
-    raise ValueError("plotlyjs must be 'cdn', 'embed', a URL or the path of plotly.min.js")
+    raise ValueError("plotlyjs must be 'auto', 'cdn', 'embed', a URL or the path of "
+                     "plotly.min.js")
 
 
 def _json_default(o):
@@ -591,7 +622,7 @@ def _json_default(o):
     raise TypeError(type(o).__name__)
 
 
-def write_plotly_html(path: Path, fig: dict, title: str, theme: Theme, plotlyjs: str = "cdn",
+def write_plotly_html(path: Path, fig: dict, title: str, theme: Theme, plotlyjs: str = "auto",
                       note: str = "") -> Path:
     """A standalone page that draws ``fig`` (a plotly figure as a dict with
     ``data``, ``layout`` and optional ``frames``) with plotly.js."""

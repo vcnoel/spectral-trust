@@ -259,7 +259,7 @@ class Compare(Scene):
 
 
 def compare_html(cache, path, theme, *, other=None, texts=(0, 1), layers=None,
-                 labels=("clean", "injected"), plotlyjs: str = "cdn", title=None, **_ignored):
+                 labels=("clean", "injected"), plotlyjs: str = "auto", title=None, **_ignored):
     """Interactive version: both graphs and the two trajectories, with a
     layer slider; hover a node for its token and Fiedler entry."""
     d = CompareData(cache, other, texts, layers, labels)
@@ -344,16 +344,22 @@ def compare_html(cache, path, theme, *, other=None, texts=(0, 1), layers=None,
         xaxis2=dict(hidden, domain=[0.52, 1]), yaxis2=dict(hidden, domain=[0.36, 1],
                                                            scaleanchor="x2"),
         xaxis3=dict(axd, domain=[0, 0.46], anchor="y3", title={"text": "layer"}),
-        yaxis3=dict(axd, domain=[0.08, 0.27], anchor="x3", title={"text": "λ₂"}),
+        yaxis3=dict(axd, domain=[0.08, 0.27], anchor="x3"),
         xaxis4=dict(axd, domain=[0.54, 1], anchor="y4", title={"text": "layer"}),
-        yaxis4=dict(axd, domain=[0.08, 0.27], anchor="x4", title={"text": "HFER"}),
+        yaxis4=dict(axd, domain=[0.08, 0.27], anchor="x4"),
         updatemenus=menus, sliders=sliders,
         annotations=[{"text": f"<b>{d.labels[0]}</b>", "x": 0.0, "y": 1.0, "xref": "paper",
                       "yref": "paper", "showarrow": False, "xanchor": "left",
                       "font": {"color": theme.ink, "size": 15}},
                      {"text": f"<b>{d.labels[1]}</b>", "x": 0.52, "y": 1.0, "xref": "paper",
                       "yref": "paper", "showarrow": False, "xanchor": "left",
-                      "font": {"color": theme.alert, "size": 15}}])
+                      "font": {"color": theme.alert, "size": 15}},
+                     {"text": "Fiedler value λ₂", "x": 0.0, "y": 0.29, "xref": "paper",
+                      "yref": "paper", "showarrow": False, "xanchor": "left",
+                      "font": {"color": theme.ink2, "size": 13}},
+                     {"text": "HFER", "x": 0.54, "y": 0.29, "xref": "paper", "yref": "paper",
+                      "showarrow": False, "xanchor": "left",
+                      "font": {"color": theme.ink2, "size": 13}}])
     layout["margin"]["b"] = 110
     for s in layout["sliders"]:
         s["y"] = -0.04

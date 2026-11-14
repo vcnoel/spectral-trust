@@ -272,7 +272,7 @@ class Waterfall(Scene):
 
 
 def waterfall_html(cache, path, theme, *, layers=None, text: int = 0, scale: str = "linear",
-                   plotlyjs: str = "cdn", title: Optional[str] = None, **_ignored):
+                   plotlyjs: str = "auto", title: Optional[str] = None, **_ignored):
     """Interactive surface: layer x mode x energy share, HFER band in orange."""
     d = WaterfallData(cache, layers, text, scale)
     L, S = len(d.layers), d.S

@@ -103,7 +103,7 @@ def make_scene(cache, kind: str, *, size: Tuple[int, int] = (1280, 720), dpi: in
 def animate(cache, kind: str = "embedding3d", out: Union[str, Path] = "spectral.mp4", *,
             fps: Optional[float] = None, duration: Optional[float] = None,
             theme: Union[str, Theme] = "light", size: Optional[Tuple[int, int]] = None,
-            dpi: int = 100, seed: int = 0, wordmark: bool = False, plotlyjs: str = "cdn",
+            dpi: int = 100, seed: int = 0, wordmark: bool = False, plotlyjs: str = "auto",
             threads: int = 2, font=None, progress: bool = False, **options) -> Path:
     """Write an animated (``.mp4``, ``.webm``, ``.gif``) or interactive
     (``.html``) view of ``cache`` to ``out`` and return its path.
@@ -125,9 +125,12 @@ def animate(cache, kind: str = "embedding3d", out: Union[str, Path] = "spectral.
         seed: seed of the layouts that use one (``graph_movie`` force
             layout); output is deterministic for a fixed seed.
         wordmark: draw a small "spectral-trust" wordmark in a corner.
-        plotlyjs: for ``.html``: ``"cdn"`` (a pinned plotly.js from
-            cdn.plot.ly), ``"embed"`` (plotly.js copied into the page from
-            the plotly package, works offline), a URL, or a local file.
+        plotlyjs: for ``.html``: ``"auto"`` (embed when the plotly package
+            is installed, else the CDN), ``"embed"`` (plotly.js copied into
+            the page from the plotly package: one self-contained file that
+            works offline, about 5 MB), ``"cdn"`` (a pinned plotly.js from
+            cdn.plot.ly, a small page that needs the network), a URL, or
+            the path of a local plotly.min.js.
         threads: encoder threads (ffmpeg).
         font: font family list (default Inter, Segoe UI, Helvetica, Arial).
         progress: print frame progress.

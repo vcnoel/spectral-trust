@@ -230,7 +230,7 @@ class Embedding3D(Scene):
 
 
 def embedding3d_html(cache, path, theme, *, layers=None, text: int = 0,
-                     align: str = "procrustes", plotlyjs: str = "cdn", steps: int = 6,
+                     align: str = "procrustes", plotlyjs: str = "auto", steps: int = 6,
                      title: Optional[str] = None, azim: float = -58.0, elev: float = 20.0,
                      frame_ms: int = 70, **_ignored):
     """Interactive version: rotate, zoom and hover; play morphs the layers."""
@@ -282,8 +282,8 @@ def embedding3d_html(cache, path, theme, *, layers=None, text: int = 0,
                 names.append(name)
                 labels.append(str(d.layers[li]))
     a, e_ = math.radians(azim), math.radians(elev)
-    eye = {"x": 1.9 * math.cos(e_) * math.cos(a), "y": 1.9 * math.cos(e_) * math.sin(a),
-           "z": 1.9 * math.sin(e_)}
+    eye = {"x": 1.35 * math.cos(e_) * math.cos(a), "y": 1.35 * math.cos(e_) * math.sin(a),
+           "z": 1.35 * math.sin(e_)}
     axis = {"visible": False, "range": [-R, R], "showspikes": False}
     menus, sliders = plotly_player(names, labels, theme, frame_ms=frame_ms, redraw=True)
     layout = plotly_layout(
