@@ -31,8 +31,11 @@ setup(
         "tl": ["transformer_lens>=2.0"],
         "nnsight": ["nnsight>=0.4"],
         # The SVG views need nothing beyond numpy; the heatmap's matplotlib
-        # fallback uses Colormap.with_extremes (matplotlib 3.4).
-        "viz": ["matplotlib>=3.4"],
+        # fallback uses Colormap.with_extremes (matplotlib 3.4). The animated
+        # views (viz.animate) encode .mp4, .webm and .gif with the ffmpeg
+        # binary that imageio-ffmpeg ships; their .html pages load plotly.js
+        # from a pinned CDN, or embed it when the plotly package is present.
+        "viz": ["matplotlib>=3.4", "imageio>=2.9", "imageio-ffmpeg>=0.4.5"],
         "docs": [
             "mkdocs>=1.6",
             "mkdocs-material>=9.5",
