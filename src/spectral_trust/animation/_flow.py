@@ -602,6 +602,7 @@ def _catmull(P: np.ndarray, t: np.ndarray) -> np.ndarray:
 
 _CSS = """html,body{margin:0;height:100%;background:__BG__;overflow:hidden;font-family:__FONT__}
 #c{position:fixed;inset:0;display:block}#ov{position:fixed;inset:0;pointer-events:none}
+#hd,#ly,#lg{text-shadow:0 0 3px __BG__,0 0 6px __BG__,0 0 10px __BG__}
 #hd{position:fixed;left:40px;top:28px;pointer-events:none}
 #hd h1{margin:0;font-size:26px;font-weight:600;color:__INK__;letter-spacing:-0.01em}
 #hd p{margin:6px 0 0;font-size:15px;color:__MUTED__}
