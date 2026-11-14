@@ -10,6 +10,8 @@ copyright: spectral-trust is released under the Apache-2.0 license.
 docs_dir: docs
 exclude_docs: |
   make_assets.py
+  make_gallery.py
+  gallery_out/
   hooks.py
   __pycache__/
 
@@ -92,5 +94,6 @@ nav:
       - Quickstart: tutorials/quickstart.md
       - Per-head analysis: tutorials/per-head.md
       - TransformerLens and nnsight: tutorials/interop.md
+  - Animated gallery: gallery.md
   - API reference: api.md
   - Changelog: changelog.md

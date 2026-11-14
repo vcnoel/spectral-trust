@@ -42,3 +42,6 @@ experiments/*.csv
 experiments/*.pkl
 experiments/*.json
 docs/.cache/
+
+# Rendered animation gallery (docs/make_gallery.py)
+docs/gallery_out/
