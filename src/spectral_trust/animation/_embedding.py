@@ -9,7 +9,7 @@ from typing import Optional
 import numpy as np
 
 from ._core import (
-    Camera, Canvas, LabelPlacer, display_token, hex_rgb, hexa, layer_positions, mix, plotly_layout,
+    Camera, Canvas, LabelPlacer, display_token, hex_rgb, hexa, layer_positions, plotly_layout,
     plotly_player, r4, rgba, smooth_track, smoothstep, split_position, write_plotly_html,
 )
 from ._data import (
@@ -66,8 +66,7 @@ class Embedding3D(Scene):
                  elev: float = 16.0, align: str = "procrustes", edges: bool = True,
                  labels: bool = True, title: Optional[str] = None,
                  subtitle: Optional[str] = None, hold: float = 0.2, per_layer: float = 0.6,
-                 wordmark: bool = False,
-                 seed: int = 0):
+                 floor: bool = False, wordmark: bool = False, seed: int = 0):
         self.data = d = EmbeddingData(cache, layers, text, align)
         L = len(d.layers)
         if duration is None:
@@ -78,7 +77,7 @@ class Embedding3D(Scene):
         outro = int(round(min(1.2, 0.1 * duration) * fps))
         self.pos = layer_positions(n, L, intro, outro, hold, ease=smoothstep)
         self.orbit, self.azim0, self.elev0 = float(orbit), float(azim), float(elev)
-        self.edges, self.show_labels = bool(edges), bool(labels)
+        self.edges, self.show_labels, self.floor = bool(edges), bool(labels), bool(floor)
         self.title = title if title is not None else "Attention as geometry"
         self.subtitle = subtitle if subtitle is not None else (
             f"{model_label(d.cache)} reading “{prompt_label(d.cache, 70)}”")
@@ -98,37 +97,33 @@ class Embedding3D(Scene):
         return self.azim0 + self.orbit * t, self.elev0 + 5.0 * math.sin(2 * math.pi * t)
 
     def _plan(self):
-        """Framing of every frame. The floor sits just under the current
-        cloud and its ring just around it; the zoom and the centre fit the
-        cloud, the ring and room for labels, then a running minimum and a
-        Gaussian make the camera move smoothly without ever overflowing."""
+        """Framing of every frame. The zoom and the centre fit the cloud,
+        its floor shadows and room for labels; a running minimum and a
+        Gaussian then make the camera move smoothly without ever
+        overflowing. The floor sits just under the current cloud."""
         cv, d, n = self.cv, self.data, self.n_frames
         lab_w = max(cv.text_size(t, self.label_fs, "medium")[0] for t in d.tokens)
         lab_h = cv.text_size("Ag", self.label_fs, "medium")[1]
-        x0, x1 = self.margin + 0.75 * lab_w, cv.W - self.margin - 0.75 * lab_w
-        y0, y1 = self.top + 1.8 * lab_h, self.bottom - cv.px(34, 22) - 1.4 * lab_h
-        floors, rings = np.zeros(n), np.zeros(n)
+        x0, x1 = self.margin + 0.6 * lab_w, cv.W - self.margin - 0.6 * lab_w
+        y0, y1 = self.top + 1.3 * lab_h, self.bottom - cv.px(30, 20) - 1.0 * lab_h
+        floors = np.zeros(n)
         for f in range(n):
             X, *_ = d.at(self.pos[f])
-            floors[f] = float(X[:, 2].min()) - 0.2
-            rings[f] = float(np.max(np.hypot(X[:, 0], X[:, 1]))) * 0.85
-        sig = 0.6 * self.fps
+            floors[f] = float(X[:, 2].min()) - 0.12
+        sig = 0.45 * self.fps
         self.floors = smooth_track(floors, sig, low=True)
-        self.rings = smooth_track(rings, sig, low=False)
-        th = np.linspace(0, 2 * np.pi, 48, endpoint=False)
         scale, cx, cy = np.zeros(n), np.zeros(n), np.zeros(n)
         for f in range(n):
             X, *_ = d.at(self.pos[f])
             az, el = self._camera_angles(f)
             cam = Camera(az, el, self.dist, 1.0, (0.0, 0.0))
-            ring = np.stack([self.rings[f] * np.cos(th), self.rings[f] * np.sin(th),
-                             np.full_like(th, self.floors[f])], 1)
-            q, _, _ = cam.project(np.concatenate([X, ring]))
+            feet = X.copy()
+            feet[:, 2] = self.floors[f] if self.floor else X[:, 2]
+            q, _, _ = cam.project(np.concatenate([X, feet]))
             lo, hi = q.min(0), q.max(0)
-            mid = (lo + hi) / 2
             scale[f] = min((x1 - x0) / max(hi[0] - lo[0], 1e-9),
                            (y1 - y0) / max(hi[1] - lo[1], 1e-9))
-            cx[f], cy[f] = mid
+            cx[f], cy[f] = (lo + hi) / 2
         self.scales = smooth_track(scale, sig, low=True)
         # the centre is in world-projected units: screen = c - scale * mid
         self.mids = np.stack([smooth_track(cx, sig), smooth_track(cy, sig)], 1)
@@ -152,23 +147,17 @@ class Embedding3D(Scene):
         dn = (depth - depth.min()) / (np.ptp(depth) or 1.0)
         fog = 1.0 - 0.45 * dn
 
-        # floor: two rings, a drop line and a shadow per token
-        th_ = np.linspace(0, 2 * np.pi, 97)
-        segs = []
-        floor, rr0 = float(self.floors[f]), float(self.rings[f])
-        for rr in (rr0,):
-            ring = np.stack([rr * np.cos(th_), rr * np.sin(th_), np.full_like(th_, floor)], 1)
-            segs.append(cam.project(ring)[0])
-        cv.lines(segs, [th.rule], [cv.px(1.1, 0.8)], z=1)
-        foot = X.copy()
-        foot[:, 2] = floor
-        fxy, _, fk = cam.project(foot)
-        drops = [[tuple(a), tuple(b)] for a, b in zip(xy, fxy)]
-        cv.lines(drops, rgba(hex_rgb(th.rule), 0.9 * fog), cv.px(1.0, 0.7), z=1.5)
+        # floor: a drop line and a shadow per token
         r_node = cv.px(9.5, 5.5) * k
-        sh = rgba(hex_rgb(th.rule), 0.95 * fog)
-        cv.ellipses(fxy, 1.5 * r_node * fk / k, 1.5 * r_node * fk / k * max(math.sin(cam.elev), 0.15),
-                    sh, z=2)
+        if self.floor:
+            foot = X.copy()
+            foot[:, 2] = float(self.floors[f])
+            fxy, _, fk = cam.project(foot)
+            drops = [[tuple(a), tuple(b)] for a, b in zip(xy, fxy)]
+            cv.lines(drops, rgba(hex_rgb(th.rule), 0.9 * fog), cv.px(1.0, 0.7), z=1.5)
+            w_sh = 1.5 * r_node * fk / k
+            cv.ellipses(fxy, w_sh, w_sh * max(math.sin(cam.elev), 0.15),
+                        rgba(hex_rgb(th.rule), 0.95 * fog), z=2)
 
         cols = d.colours(th, i, j, e)
         # edges: the normalised weights the Laplacian sees, strongest on top

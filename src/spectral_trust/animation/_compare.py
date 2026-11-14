@@ -263,7 +263,6 @@ def compare_html(cache, path, theme, *, other=None, texts=(0, 1), layers=None,
     """Interactive version: both graphs and the two trajectories, with a
     layer slider; hover a node for its token and Fiedler entry."""
     d = CompareData(cache, other, texts, layers, labels)
-    L = len(d.layers)
     pos = circle_positions(d.n, 0.0, 0.0, 1.0)
     pos[:, 1] *= -1                                    # plotly's y points up
 

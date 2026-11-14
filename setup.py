@@ -12,7 +12,12 @@ setup(
     version="0.4.1",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
-    package_data={"spectral_trust.cli": ["data/*.json"]},
+    package_data={
+        "spectral_trust.cli": ["data/*.json"],
+        # three.js r160 (MIT, see its LICENSE) for the flow view's pages
+        "spectral_trust.animation": ["assets/three/*.js", "assets/three/LICENSE",
+                                     "assets/three/addons/*/*.js"],
+    },
     include_package_data=True,
     install_requires=[
         "numpy",

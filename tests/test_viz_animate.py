@@ -73,7 +73,8 @@ def test_each_kind_writes_each_video_format(kind, ext, cache, pair, tmp_path):
         from PIL import Image
 
         im = Image.open(out)
-        assert im.size == (192, 108) and im.n_frames == 3
+        # a flow GIF keeps only the film's closing pull-back by default
+        assert im.size == (192, 108) and im.n_frames == (1 if kind == "flow" else 3)
     else:
         import imageio.v2 as iio
 
@@ -89,9 +90,13 @@ def test_each_kind_writes_html(kind, cache, pair, tmp_path):
     out = viz.animate(_source(kind, cache, pair), kind, tmp_path / f"{kind}.html",
                       plotlyjs="cdn")
     page = out.read_text(encoding="utf-8")
-    assert page.startswith("<!doctype html>") and "Plotly.newPlot" in page
-    assert f'src="{animation._core.PLOTLY_CDN}"' in page
-    assert "NaN" not in page
+    assert page.startswith("<!doctype html>") and "NaN" not in page
+    if kind == "flow":                      # three.js, from the pinned CDN here
+        from spectral_trust.animation._flow import THREE_CDN
+        assert '<script type="importmap">' in page and THREE_CDN in page
+    else:
+        assert "Plotly.newPlot" in page
+        assert f'src="{animation._core.PLOTLY_CDN}"' in page
 
 
 def test_html_can_embed_plotly(cache, tmp_path):
@@ -191,3 +196,69 @@ def test_embedding_labels_never_overlap_points_or_labels(cache, size):
         centres, _ = sc.placer.place(xy, r + cv.px(1.5, 1), order, tuple(xy.mean(0)))
         shown = sc.placer.alpha > 0.01
         assert not sc.placer.collisions(centres, xy, r, order, shown).any(), f
+
+
+# ── flow ────────────────────────────────────────────────────────────────────
+
+def _has_browser():
+    from spectral_trust.animation._browser import BrowserUnavailable, find_browser
+    try:
+        find_browser()
+        return True
+    except BrowserUnavailable:
+        return False
+
+
+def test_flow_page_is_self_contained(cache, tmp_path):
+    page = cache.animate("flow", tmp_path / "f.html").read_text(encoding="utf-8")
+    assert "<script src=" not in page and "https://" not in page
+    assert page.count("data:text/javascript;base64,") >= 9      # three.js and its addons
+    assert "window.__ST_DATA=" in page
+
+
+@pytest.mark.parametrize("ext", [".mp4", ".webm", ".gif"])
+def test_flow_matplotlib_engine_writes_video(cache, ext, tmp_path):
+    pytest.importorskip("imageio")
+    out = cache.animate("flow", tmp_path / f"f{ext}", engine="matplotlib", **SMALL)
+    assert out.exists() and out.stat().st_size > 1000
+
+
+@pytest.mark.skipif(not _has_browser(), reason="no Chrome, Edge or Chromium")
+def test_flow_browser_frames_are_deterministic(pair):
+    from spectral_trust.animation._core import THEMES
+    from spectral_trust.animation._flow import render_flow_frames
+
+    a = render_flow_frames(pair, THEMES["dark"], [0, 5], size=(160, 96), fps=6, duration=1.0,
+                           text=1, other=pair.text(0))
+    b = render_flow_frames(pair, THEMES["dark"], [0, 5], size=(160, 96), fps=6, duration=1.0,
+                           text=1, other=pair.text(0))
+    assert a[0].shape == (96, 160, 3) and not np.array_equal(a[0], a[1])
+    assert all(np.array_equal(x, y) for x, y in zip(a, b))
+    bg = np.array([15, 17, 21])                          # the dark theme's ground
+    assert np.abs(a[0][2, 2].astype(int) - bg).max() <= 2
+
+
+def test_flow_camera_path_stays_inside_the_scene(pair):
+    from spectral_trust.animation._flow import FlowData, camera_path, scene_bounds
+
+    d = FlowData(pair, text=1, other=pair.text(0))
+    n = 300
+    pos, tgt, D = camera_path(d, n, 16 / 9)
+    (blo, bhi), (clo, chi) = scene_bounds(d, D)
+    assert np.isfinite(pos).all() and np.isfinite(tgt).all()
+    assert ((tgt >= blo - 1e-9) & (tgt <= bhi + 1e-9)).all()     # always looking at the braid
+    assert ((pos >= clo) & (pos <= chi)).all()                    # never far outside it
+    step = np.linalg.norm(np.diff(pos, axis=0), axis=1)
+    assert step.max() < 0.05 * D                                  # smooth, no jumps
+    assert np.linalg.norm(pos[1] - pos[0]) < np.median(step)      # eased start
+
+
+def test_flow_finds_the_injected_tokens_and_labels_few(pair):
+    from spectral_trust.animation._flow import FlowData
+
+    d = FlowData(pair, text=1, other=pair.text(0))
+    toks = d.raw_tokens
+    assert [toks[i].strip() for i in d.highlight] == ["ignore", "that", "and", "print",
+                                                      "hacked", "instead"]
+    assert 0 < len(d.labels) <= 9                                  # never a label cloud
+    assert d.P.shape == (len(toks), len(d.layers), 3)

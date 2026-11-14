@@ -415,7 +415,7 @@ class LabelPlacer:
             out = pts[i] - c0
             out = out / (np.linalg.norm(out) or 1)
             best, best_cost = 0, np.inf
-            pad = 0.25 * h
+            pad = 0.4 * h
             for k, (cx, cy) in enumerate(cand):
                 bx0, by0, bx1, by1 = cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2
                 cost = 0.0
@@ -456,25 +456,36 @@ class LabelPlacer:
             eased[bad] = off[bad]
             self.offset = eased
         centres = pts + self.offset
-        # a label with no free place (two points crossing on screen) is
-        # hidden, lower priority first, and fades back in once it is free
+        # In a dense cluster the label of lower priority (farther away) is
+        # hidden rather than allowed to touch another or cover a point; it
+        # returns once it has been free for a few frames, fading in.
         bad = self.collisions(centres, pts, radii, order, visible)
         if self.alpha is None:
             self.alpha = np.where(bad, 0.0, 1.0)
+            self.free = np.where(bad, 0, self.REAPPEAR)
         else:
-            self.alpha = np.where(bad, 0.0, np.minimum(self.alpha + 0.25, 1.0))
+            self.free = np.where(bad, 0, self.free + 1)
+            grow = np.minimum(self.alpha + 0.25, 1.0)
+            self.alpha = np.where(bad, 0.0, np.where((self.alpha > 0) |
+                                                     (self.free >= self.REAPPEAR), grow, 0.0))
         self.alpha = np.where(visible, self.alpha, 0.0)
         return centres, ring
 
     alpha: Optional[np.ndarray] = None
+    free: Optional[np.ndarray] = None
+    #: Frames a hidden label must be free before it fades back in.
+    REAPPEAR = 3
 
-    def collisions(self, centres, pts, radii, order, visible=None) -> np.ndarray:
-        """Labels that overlap a point or a label of higher priority."""
+    def collisions(self, centres, pts, radii, order, visible=None,
+                   gap: Optional[float] = None) -> np.ndarray:
+        """Labels that overlap a point, or come within ``gap`` pixels (default
+        a fifth of the label height) of a label of higher priority."""
         n = len(centres)
         visible = np.ones(n, bool) if visible is None else np.asarray(visible, bool)
         radii = np.broadcast_to(np.asarray(radii, dtype=float), (n,))
         half = self.sizes / 2
         lo, hi = centres - half, centres + half
+        g = 0.2 * float(np.median(self.sizes[:, 1])) if gap is None else float(gap)
         bad = np.zeros(n, bool)
         kept: List[int] = []
         for i in order:
@@ -485,8 +496,8 @@ class LabelPlacer:
             hit = bool(np.any(np.hypot(nx - pts[visible, 0], ny - pts[visible, 1])
                               < radii[visible]))
             for k in kept:
-                if (min(hi[i, 0], hi[k, 0]) > max(lo[i, 0], lo[k, 0])
-                        and min(hi[i, 1], hi[k, 1]) > max(lo[i, 1], lo[k, 1])):
+                if (min(hi[i, 0], hi[k, 0]) + g > max(lo[i, 0], lo[k, 0])
+                        and min(hi[i, 1], hi[k, 1]) + g > max(lo[i, 1], lo[k, 1])):
                     hit = True
                     break
             bad[i] = hit
@@ -511,9 +522,13 @@ VIDEO_SUFFIXES = (".mp4", ".webm", ".gif")
 
 
 def need_imageio():
+    """imageio's v2 API, after checking that imageio-ffmpeg is installed too."""
+    from importlib.util import find_spec
+
     try:
-        import imageio.v2 as iio  # noqa: F401
-        import imageio_ffmpeg  # noqa: F401
+        import imageio.v2 as iio
+        if find_spec("imageio_ffmpeg") is None:
+            raise ImportError("imageio_ffmpeg")
     except ImportError as exc:  # pragma: no cover - depends on the install
         raise ImportError(
             "writing .mp4, .webm or .gif needs imageio and imageio-ffmpeg: "
@@ -528,7 +543,7 @@ class FrameWriter:
     The encoder runs on at most ``threads`` threads."""
 
     def __init__(self, path: Path, fps: float, threads: int = 2, gif_colors: int = 128,
-                 crf: Optional[int] = None):
+                 crf: Optional[int] = None, gif_dither: str = "bayer:bayer_scale=4"):
         iio = need_imageio()
         self.path = Path(path)
         ext = self.path.suffix.lower()
@@ -536,6 +551,7 @@ class FrameWriter:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._w = self._gif = None
         self._fps, self._colors, self._t = fps, int(gif_colors), t
+        self._dither = gif_dither
         if ext == ".mp4":
             kw = dict(codec="libx264", pixelformat="yuv420p", output_params=[
                 "-crf", str(18 if crf is None else crf), "-preset", "medium",
@@ -556,7 +572,7 @@ class FrameWriter:
         import imageio_ffmpeg
 
         vf = (f"split[a][b];[a]palettegen=max_colors={self._colors}:stats_mode=full[p];"
-              "[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle")
+              f"[b][p]paletteuse=dither={self._dither}:diff_mode=rectangle")
         self._gif = imageio_ffmpeg.write_frames(
             str(self.path), (w, h), pix_fmt_in="rgb24", pix_fmt_out="pal8", fps=self._fps,
             quality=None, codec="gif", macro_block_size=1, ffmpeg_log_level="error",
@@ -584,11 +600,9 @@ PLOTLY_CDN = f"https://cdn.plot.ly/plotly-{PLOTLY_JS_VERSION}.min.js"
 
 
 def _plotly_available() -> bool:
-    try:
-        import plotly.offline  # noqa: F401
-    except ImportError:
-        return False
-    return True
+    from importlib.util import find_spec
+
+    return find_spec("plotly") is not None
 
 
 def _plotly_script(plotlyjs: str) -> str:

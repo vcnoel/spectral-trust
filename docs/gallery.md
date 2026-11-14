@@ -28,6 +28,35 @@ Every call takes `theme="light"` or `"dark"`, `size`, `fps`, `duration`, `dpi`,
 default). Output is deterministic for a fixed `seed`. Rendering runs on the CPU,
 and ffmpeg uses two threads (`threads=`).
 
+## flow
+
+```python
+pair = model.run_with_spectra([clean, injected])
+pair.animate("flow", "flow.mp4", text=1, other=pair.text(0), theme="dark")
+```
+
+Each token is a tube through depth. Along the tube is the layer, from 0 to the
+last. Across it are the token's spectral coordinates at that layer: the Fiedler
+vector upright, with its sign matched from layer to layer, and eigenvector 3 in
+depth. A Catmull-Rom spline joins the layers. The colour is the token's side
+of the Fiedler split at that layer, and the thickness is the attention the
+token receives, so a sink becomes a trunk. The sentence braids into two
+bundles where the split forms and crosses over where context mixes. With
+`other=` (the prompt without the injection), the tokens only this prompt has
+are outlined in vermillion, and they travel as their own strand. A light,
+display-only pull toward each side's mean (`bundle=0.45`, 0 for the raw
+coordinates) makes the bundles easy to see. `axes="procrustes"` uses
+Procrustes-aligned eigenvectors 2 and 3 instead.
+
+The camera starts at layer 0, flies along the depth axis through the layers,
+then pulls back and turns to show the whole braid. Labels mark only the ends
+of a few key tokens. The scene is three.js (r160, shipped with the package):
+the `.html` page plays the flight once, then can be orbited and hovered.
+Videos are captured frame by frame from the same page in headless Chrome,
+Edge or Chromium, so they look the same as the page. Without a browser,
+`engine="matplotlib"` draws a simpler version of the same scene and camera.
+`SPECTRAL_TRUST_BROWSER` points at a browser that is not found on its own.
+
 ## embedding3d
 
 ```python
@@ -39,7 +68,9 @@ layer's head-averaged attention graph. Its colour is the side of the Fiedler
 split, blue or orange. The cloud morphs from layer to layer under a slow camera
 orbit. Successive layers are aligned by orthogonal Procrustes after their signs
 are fixed, so the motion shows how the geometry changes rather than the
-arbitrary signs of the eigenvectors. The `.html` version can be rotated and
+arbitrary signs of the eigenvectors. In a dense cluster the label of the
+farther token gives way rather than touch another. `floor=True` adds drop lines
+and shadows on a floor under the cloud. The `.html` version can be rotated and
 hovered, and its slider moves through the layers.
 
 ## waterfall
