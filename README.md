@@ -203,8 +203,8 @@ probes, no training.
 
 - Bao, Qi, Liu, Arora, Sarfati, Boullé and Earls (2026).
   [A Graph Signal Processing Perspective on Numerical Sequence Representations in LLM In-Context Learning](https://arxiv.org/abs/2608.03015).
-  arXiv:2608.03015. Cornell University, Goodfire AI and Imperial College
-  London. Adapts the library's Fiedler value, HFER and spectral entropy
+  EACL 2027. arXiv:2608.03015. Cornell University, Goodfire AI and Imperial
+  College London. Adapts the library's Fiedler value, HFER and spectral entropy
   diagnostics to numerical in-context learning.
 - Kim, Lutzeyer and Guo (2026).
   [Attention-Graph Curvature for the Verification of Mathematical Reasoning](https://arxiv.org/abs/2610.16709).
