@@ -86,7 +86,8 @@ the new opt-in metrics, every result is bit-identical to 0.5.0.
 - LM-Polygraph bridge (`spectral_trust.integrations.lm_polygraph`,
   optional extra `polygraph`): `SpectralTrustEstimator` scores any attention
   metric as a sequence-level LM-Polygraph estimator. The core package never
-  imports lm-polygraph.
+  imports lm-polygraph. Tested end to end with lm-polygraph 0.7.0 (its
+  manager, stat calculators and metrics) on GPT-2 and CoQA items.
 - Fixed: with value-weighted edges, the graph view and the animations
   rebuilt the plain attention graph and mixed its eigenpairs with the value
   graph's Fiedler vector. A symmetric value-weighted layer graph is now

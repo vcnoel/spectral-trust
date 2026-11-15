@@ -155,3 +155,46 @@ def test_empty_span_is_nan(bridge, stats):
     est = bridge.SpectralTrustEstimator("operator.participation_ratio", span="generated")
     assert np.isnan(est.score(stats["raw"][0], n_generated=0))
     assert np.isfinite(est.score(stats["raw"][0], n_generated=2))
+
+
+def test_end_to_end_with_lm_polygraph():
+    """LM-Polygraph's own manager, stat calculators and metrics on a tiny
+    random GPT-2 (runs only where lm-polygraph and the GPT-2 tokenizer are
+    available)."""
+    manager = pytest.importorskip("lm_polygraph.utils.manager")
+    from lm_polygraph.defaults.register_default_stat_calculators import \
+        register_default_stat_calculators
+    from lm_polygraph.estimators import MaximumSequenceProbability
+    from lm_polygraph.utils.builder_enviroment_stat_calculator import \
+        BuilderEnvironmentStatCalculator
+    from lm_polygraph.utils.dataset import Dataset
+    from lm_polygraph.utils.generation_parameters import GenerationParameters
+    from lm_polygraph.utils.model import WhiteboxModel
+    from transformers import AutoTokenizer, GPT2Config, GPT2LMHeadModel
+    from spectral_trust.integrations.lm_polygraph import SpectralTrustEstimator
+    try:
+        tok = AutoTokenizer.from_pretrained("gpt2", local_files_only=True)
+    except OSError:
+        pytest.skip("the GPT-2 tokenizer is not in the Hugging Face cache")
+    tok.pad_token = tok.eos_token
+    torch.manual_seed(0)
+    hf = GPT2LMHeadModel(GPT2Config(n_layer=2, n_head=2, n_embd=32,
+                                    vocab_size=tok.vocab_size)).eval()
+    hf.set_attn_implementation("eager")
+    model = WhiteboxModel(hf, tok, "tiny-gpt2",
+                          generation_parameters=GenerationParameters(max_new_tokens=5))
+    ests = [SpectralTrustEstimator("operator.participation_ratio", sign=-1),
+            SpectralTrustEstimator("graph.fiedler_value", span="generated"),
+            MaximumSequenceProbability()]
+    x = ["Question: what colour is the sky? Answer:", "The capital of France is",
+         "Two plus two equals"]
+    man = manager.UEManager(
+        Dataset(x, ["blue", "Paris", "four"], batch_size=1), model, ests,
+        builder_env_stat_calc=BuilderEnvironmentStatCalculator(model),
+        available_stat_calculators=register_default_stat_calculators("Whitebox"),
+        generation_metrics=[], ue_metrics=[], processors=[], ignore_exceptions=False,
+        verbose=False, max_new_tokens=5)
+    man()
+    for est in ests:
+        scores = np.asarray(man.estimations[("sequence", str(est))], dtype=float)
+        assert scores.shape == (3,) and np.isfinite(scores).all(), str(est)
