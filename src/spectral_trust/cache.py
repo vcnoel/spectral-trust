@@ -47,6 +47,7 @@ from .per_head import (
     PER_HEAD_HYBRID_METRIC_NAMES, PER_HEAD_METRIC_NAMES,
 )
 from .spectral import METRIC_FAMILIES
+from .directed import DIRECTED_METRIC_FAMILIES
 
 #: Scalar metrics of the head-averaged graph (namespace ``graph``), in order.
 GRAPH_METRIC_NAMES: List[str] = [
@@ -54,6 +55,10 @@ GRAPH_METRIC_NAMES: List[str] = [
     "eig_energy", "eig_spectral_entropy", "eig_hfer",
     "energy", "smoothness_index", "spectral_entropy", "hfer",
 ]
+
+#: Scalar metrics of the graph namespace that exist only for directed graphs
+#: (``GSPConfig(graph_direction="directed")``).
+DIRECTED_GRAPH_METRIC_NAMES: List[str] = ["directed_tv"]
 
 #: Scalar metric names of each namespace.
 NAMESPACE_METRICS: Dict[str, List[str]] = {
@@ -66,7 +71,7 @@ NAMESPACE_METRICS: Dict[str, List[str]] = {
 ARRAY_NAMES: Dict[str, List[str]] = {
     "attn": ["eigenvalues", "pattern"],
     "resid": [],
-    "graph": ["eigenvalues", "fiedler_vector", "spectral_masses"],
+    "graph": ["eigenvalues", "fiedler_vector", "spectral_masses", "phase"],
 }
 
 PER_HEAD_NAMESPACES = ("attn", "resid")
@@ -82,12 +87,14 @@ def metric_family(qualified: str) -> str:
         return "attention"
     if namespace == "resid":
         return "hybrid"
-    if name == "fiedler_vector":
+    if name in ("fiedler_vector", "phase"):
         return "attention"
+    if name in DIRECTED_METRIC_FAMILIES:
+        return DIRECTED_METRIC_FAMILIES[name]
     return METRIC_FAMILIES.get(name, "hybrid" if name == "spectral_masses" else "attention")
 
 
-def resolve_metrics(metrics, hybrid: bool = True) -> List[str]:
+def resolve_metrics(metrics, hybrid: bool = True, directed: bool = False) -> List[str]:
     """Normalise a metric selection to namespaced names (``"attn.hfer"``).
 
     ``metrics`` is None (every metric), or a list whose entries are a
@@ -95,12 +102,24 @@ def resolve_metrics(metrics, hybrid: bool = True) -> List[str]:
     (``"graph.hfer"``), or a bare name, which selects it in every namespace
     that has it (``"hfer"`` gives ``attn.hfer``, ``resid.hfer`` and
     ``graph.hfer``). With ``hybrid=False`` the hybrid metrics are left out of
-    ``None`` and of namespaces, and naming one explicitly raises.
+    ``None`` and of namespaces, and naming one explicitly raises. With
+    ``directed=True`` the graph namespace also has the directed metrics
+    (:data:`DIRECTED_GRAPH_METRIC_NAMES`).
     """
     def allowed(q):
         return hybrid or metric_family(q) == "attention"
 
-    every = [f"{ns}.{m}" for ns, names in NAMESPACE_METRICS.items() for m in names]
+    names_of = dict(NAMESPACE_METRICS)
+    if directed:
+        names_of["graph"] = list(GRAPH_METRIC_NAMES) + list(DIRECTED_GRAPH_METRIC_NAMES)
+    every = [f"{ns}.{m}" for ns, names in names_of.items() for m in names]
+    if metrics is not None and not directed:
+        entries = [metrics] if isinstance(metrics, str) else list(metrics)
+        for entry in entries:
+            name = str(entry).strip().split(".", 1)[-1]
+            if name in DIRECTED_GRAPH_METRIC_NAMES:
+                raise ValueError(f"{entry!r} is measured on directed graphs only; pass "
+                                 "GSPConfig(graph_direction='directed')")
     if metrics is None:
         return [q for q in every if allowed(q)]
     if isinstance(metrics, str):
@@ -110,12 +129,12 @@ def resolve_metrics(metrics, hybrid: bool = True) -> List[str]:
         entry = str(entry).strip()
         if entry.endswith(".*"):
             entry = entry[:-2]
-        if entry in NAMESPACE_METRICS:
-            chosen = [f"{entry}.{m}" for m in NAMESPACE_METRICS[entry]]
+        if entry in names_of:
+            chosen = [f"{entry}.{m}" for m in names_of[entry]]
             chosen = [q for q in chosen if allowed(q)]
         elif "." in entry:
             ns, _, name = entry.partition(".")
-            if ns not in NAMESPACE_METRICS or name not in NAMESPACE_METRICS[ns]:
+            if ns not in names_of or name not in names_of[ns]:
                 raise ValueError(_unknown_metric(entry, every))
             chosen = [entry]
         else:

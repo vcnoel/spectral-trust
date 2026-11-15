@@ -7,7 +7,7 @@ from .spectral import (
     SpectralDiagnostics, SpectralAnalyzer, calculate_spectral_velocity,
     METRIC_FAMILIES,
 )
-from .graph import GraphConstructor
+from .graph import GraphConstructor, EDGE_WEIGHTS, GRAPH_DIRECTIONS
 from .instrumentation import (
     LLMInstrumenter, NonFiniteAttentionError, assert_finite_attention,
 )
@@ -35,7 +35,9 @@ from .value_weighted import (
     value_weighted_attention, value_weighted_edges, attention_contributions,
     capture_attention_values, AttentionValues, ValueCapture,
 )
-from .cache import SpectralCache, LayerSpectra, HeadSpectra, GRAPH_METRIC_NAMES
+from .cache import (
+    SpectralCache, LayerSpectra, HeadSpectra, GRAPH_METRIC_NAMES, DIRECTED_GRAPH_METRIC_NAMES,
+)
 from .model import SpectralModel, compute_spectra
 from .interop import from_transformer_lens, from_nnsight, from_hf_outputs
 from . import viz
@@ -56,6 +58,8 @@ __all__ = [
     "calculate_spectral_velocity",
     "METRIC_FAMILIES",
     "GraphConstructor",
+    "EDGE_WEIGHTS",
+    "GRAPH_DIRECTIONS",
     "LLMInstrumenter",
     "NonFiniteAttentionError",
     "assert_finite_attention",
@@ -104,6 +108,7 @@ __all__ = [
     "LayerSpectra",
     "HeadSpectra",
     "GRAPH_METRIC_NAMES",
+    "DIRECTED_GRAPH_METRIC_NAMES",
     "compute_spectra",
     "from_transformer_lens",
     "from_nnsight",

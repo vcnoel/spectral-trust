@@ -88,6 +88,26 @@ class GSPConfig:
     # only some layers, as hybrid linear-attention models do.
     attention_layer_map: Optional[list] = None
 
+    # New in v0.5.1: options of the head-averaged layer graph (the "graph"
+    # namespace of SpectralModel.run_with_spectra and compute_spectra, and
+    # GraphConstructor.layer_graph). The defaults build the graph that every
+    # earlier release built, with identical results.
+    # Edge weights: "attention" (the attention weights), "value" (the norm of
+    # what token j adds to token i's attention output,
+    # ||sum_h a^h_ij W_O^h v^h_j||, Kobayashi et al. 2020) or
+    # "value_per_head" (a^h_ij ||W_O^h v^h_j|| per head, then aggregated over
+    # heads like attention). See spectral_trust.value_weighted.
+    edge_weights: str = "attention"
+    # "symmetric" symmetrises the edges before the Laplacian (above);
+    # "directed" keeps them as the causal row-normalised operator
+    # P = D_out^-1 A, measured through its magnetic Laplacian and the directed
+    # total variation (spectral_trust.directed).
+    graph_direction: str = "symmetric"
+    # TODO(sink grounding): reserved for grounding the layer graph at the
+    # attention sink, whose definition is pending. Not implemented: any value
+    # other than None raises NotImplementedError (graph.check_graph_options).
+    sink_grounding: Optional[str] = None
+
     # New in v0.5.1: charge q of the magnetic Laplacian of a directed graph
     # (spectral_trust.directed). With edge weights in [0, 1] (rows of a
     # row-normalised operator), the phase 2*pi*q*(A_ij - A_ji) stays in
