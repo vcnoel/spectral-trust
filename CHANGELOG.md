@@ -92,6 +92,10 @@ the new opt-in metrics, every result is bit-identical to 0.5.0.
   graph's Fiedler vector. A symmetric value-weighted layer graph is now
   stored as `graph.adjacency` when the patterns are kept, and the views use
   it; a directed layer graph raises a clear error there.
+- Fixed: headless Chrome, which the animations use for video, refuses to
+  start its sandbox as root (Colab, most containers). The launcher now
+  passes `--no-sandbox` when running as root, or as the environment
+  variable `SPECTRAL_TRUST_BROWSER_NO_SANDBOX` (`1` or `0`) says.
 - `GraphConstructor.construct_laplacian` documents that negative weights are
   set to zero (signed graphs are not supported yet).
 - New pages: Operator spectra in the attention geometry; LM-Polygraph
