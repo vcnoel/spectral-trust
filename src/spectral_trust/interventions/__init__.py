@@ -9,9 +9,9 @@ TransformerLens basics. Added in 0.5.0.
   exit: graph-frequency steering of the residual stream along the token axis
   (:meth:`ResidSite.graph_filter`, symmetric or causal), activation
   steering (:meth:`ResidSite.add`), head ablation (zero, mean, resample),
-  attention-edge removal that holds the sink mass fixed
-  (:meth:`AttentionSite.remove_edges`), and singular-value rescaling of a
-  weight matrix (:meth:`WeightSite.svd_scale`).
+  attention-edge removal with an explicit choice of where the removed mass
+  goes (:meth:`AttentionSite.remove_edges`), and singular-value rescaling of
+  a weight matrix (:meth:`WeightSite.svd_scale`).
 - :func:`patch` and :class:`Patcher`: activation patching, plain or
   frequency-resolved (one band of a token-axis graph eigenbasis).
 - :func:`weight_snr`: ``sigma_1 / median(sigma)`` of a weight matrix, and
@@ -23,7 +23,7 @@ The top-level package exports ``st.intervene`` (the context manager),
 ``st.graph_filter``, ``st.weight_snr`` and ``st.weight_svd_full``.
 """
 from .context import (
-    AttentionSite, Edit, Intervention, ResidSite, WeightSite, intervene,
+    KEEP_SINK_WARN_FACTOR, AttentionSite, Edit, Intervention, ResidSite, WeightSite, intervene,
     remove_edges_from_pattern,
 )
 from .filters import (
@@ -41,7 +41,7 @@ from .weights import (
 
 __all__ = [
     "intervene", "Intervention", "Edit", "ResidSite", "AttentionSite", "WeightSite",
-    "remove_edges_from_pattern",
+    "remove_edges_from_pattern", "KEEP_SINK_WARN_FACTOR",
     "graph_filter", "FilterSpec", "filter_coefficients", "filter_response", "ideal_response",
     "attention_adjacency", "path_adjacency", "laplacian", "laplacian64", "FILTER_KINDS",
     "GRAPH_NAMES", "PRECISIONS", "compute_placement",

@@ -466,6 +466,71 @@ def test_remove_edges_sink_rule_on_a_matrix():
     assert torch.allclose(plain[0, 0, 3], torch.tensor([0.4, 0.0, 0.2, 0.1]) / 0.7)
 
 
+def _no_warnings(fn):
+    import warnings
+    with warnings.catch_warnings(record=True) as rec:
+        warnings.simplefilter("always")
+        out = fn()
+    assert not [r for r in rec if "keep_sink" in str(r.message)]
+    return out
+
+
+def test_remove_edges_warns_when_keep_sink_amplifies_the_kept_edges():
+    # rows: [sink, removed, kept, kept]; the kept non-sink mass is 0.05 of 0.80
+    w = torch.tensor([0.2, 0.75, 0.04, 0.01]).repeat(2, 3, 4, 1)          # [2, 3, 4, 4]
+    rm = torch.zeros(1, 1, 1, 4, dtype=torch.bool)
+    rm[..., 1] = True
+    sink = torch.zeros(2, dtype=torch.long)
+    import warnings
+    with warnings.catch_warnings(record=True) as rec:
+        warnings.simplefilter("always")
+        out = remove_edges_from_pattern(w, rm, sink)
+    msgs = [r for r in rec if issubclass(r.category, UserWarning) and "keep_sink" in str(r.message)]
+    assert len(msgs) == 1                                   # once per call, not once per row
+    assert "24 row(s)" in str(msgs[0].message) and "16" in str(msgs[0].message)
+    np.testing.assert_allclose(out[0, 0, 0].numpy(), [0.2, 0.0, 0.64, 0.16], atol=1e-6)
+    # below the threshold, with the warning switched off, and for the other choices: silent
+    small = torch.tensor([0.2, 0.1, 0.4, 0.3]).view(1, 1, 1, 4)
+    _no_warnings(lambda: remove_edges_from_pattern(small, rm, sink[:1]))
+    _no_warnings(lambda: remove_edges_from_pattern(w, rm, sink, warn_factor=None))
+    _no_warnings(lambda: remove_edges_from_pattern(w, rm, sink, keep_sink=False))
+    _no_warnings(lambda: remove_edges_from_pattern(w, rm, sink, renormalize=False))
+
+
+def test_remove_edges_in_model_warns_once_per_call(gpt2):
+    import warnings
+    from spectral_trust.interventions._arch import Arch
+    arch = Arch(gpt2)
+    ids = _ids(4, n=16)
+    S = ids.shape[1]
+    with st.intervene(gpt2):
+        w0 = _pattern(gpt2, ids, 1, arch)[0, 0]
+    key_mask = torch.zeros(S, S, dtype=torch.bool)
+    key_mask[S - 1, 1:S - 1] = True                    # the last query keeps only itself
+    factor = float((1 - w0[S - 1, 0]) / w0[S - 1, S - 1])
+    assert factor > 10                                 # the case the warning is for
+    with warnings.catch_warnings(record=True) as rec:
+        warnings.simplefilter("always")
+        with st.intervene(gpt2) as iv:
+            iv.attention(1, 0).remove_edges(key_mask)
+            _logits(gpt2, ids)
+            _logits(gpt2, ids)                         # a second pass under the same call
+        with st.intervene(gpt2) as iv:
+            iv.attention(1, 0).remove_edges(key_mask, keep_sink=False)
+            _logits(gpt2, ids)
+    msgs = [str(r.message) for r in rec if "keep_sink" in str(r.message)]
+    assert len(msgs) == 1 and "layer 1 (1.0)" in msgs[0]
+    with st.intervene(gpt2) as iv:                     # a new call warns again
+        iv.attention(1, 0).remove_edges(key_mask)
+        with pytest.warns(UserWarning, match="keep_sink=True"):
+            _logits(gpt2, ids)
+    light = torch.zeros(S, S, dtype=torch.bool)
+    light[S - 1, 1] = True                             # one key of fifteen: a small factor
+    with st.intervene(gpt2) as iv:
+        iv.attention(1, 0).remove_edges(light)
+        _no_warnings(lambda: _logits(gpt2, ids))
+
+
 # ── weights ──────────────────────────────────────────────────────────────────
 
 def _v2_steer(W_param: torch.Tensor, alpha: float) -> torch.Tensor:

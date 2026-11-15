@@ -88,6 +88,12 @@ residual content edges, plain renormalisation amplifies the sink, and
 zeroing shrinks the head's output. They are three interventions, and they
 answer three questions.
 
+In particular, `keep_sink=True` does not keep this ablation a clean edge
+ablation. With 0.77 of each row removed, the 0.03 left on the other content
+keys is scaled up to 0.80, and the −0.79 includes the effect of that
+amplification. `remove_edges` warns, once per call, when the factor on the
+kept edges of any edited row exceeds 10.
+
 **When the removed mass is small, the choice barely matters.** In the 20
 random triples the same edges carry 0.15 of the rows, and the three choices
 agree: −0.06 [−0.07, −0.05], −0.06 [−0.07, −0.06] and −0.07 [−0.08, −0.06].
@@ -110,6 +116,8 @@ An edge removal can increase the metric it is meant to probe.
 ## What to do with this
 
 - Say which choice an edge ablation uses; it is part of the method.
+  `keep_sink=True` is the default because it leaves the sink's share
+  unchanged, not because it is neutral.
 - Report the attention mass the removed edges carried. When it is a large
   share of the row, run all three choices; if they disagree, the measured
   effect is about where the mass went, not about the edges alone.

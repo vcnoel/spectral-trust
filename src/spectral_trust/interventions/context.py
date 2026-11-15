@@ -19,6 +19,7 @@ Negative positions count from the end of the current sequence, which moves
 during generation; they raise at a cached generation step.
 """
 import logging
+import warnings
 from typing import Callable, List, Optional, Sequence, Union
 
 import numpy as np
@@ -32,6 +33,10 @@ from .filters import FilterSpec, GraphSpec, apply_filter
 from .weights import linear_weight, matrix_snr, svd_scale_matrix
 
 logger = logging.getLogger(__name__)
+
+#: :meth:`AttentionSite.remove_edges` with ``keep_sink=True`` warns when it
+#: multiplies the remaining non-sink attention of a row by more than this.
+KEEP_SINK_WARN_FACTOR = 10.0
 
 Heads = Union[None, int, Sequence[int]]
 Positions = Union[None, int, slice, Sequence[int], torch.Tensor]
@@ -692,19 +697,24 @@ class AttentionSite:
         non-sink keys while the sink entry (the first token, ``sink=0``)
         keeps its value, so the row's sink mass is held fixed and the
         removed mass goes back to the content keys only. With
-        ``keep_sink=False`` the row is renormalised over every remaining key.
+        ``keep_sink=False`` the row is renormalised over every remaining key,
+        and with ``renormalize=False`` the entries are only zeroed.
 
-        Why the default: plain renormalisation lets the sink absorb or
-        release mass. Attention rows in trained models put most of their
-        mass on the first token, so removing a few content edges and
-        renormalising changes the sink entry little, but removing sink edges
-        (or renormalising after them) hands that mass to the content keys:
-        on GPT-2 small IOI, removing first-token edges at the answer
-        position with plain renormalisation cost about six times more logit
-        difference per unit of removed mass than removing random content
-        edges, because each edited row's content attention was multiplied
-        (by eight on average). Holding the sink mass fixed keeps an edge
-        ablation an edge ablation.
+        The three choices send the removed mass to different places, and none
+        of them is a pure edge ablation when the removed edges carry much of
+        the row. Plain renormalisation hands most of it to the sink, which in
+        trained models already holds a large share of every row. Holding the
+        sink fixed hands it to the content keys that are left: each is
+        multiplied by the row's non-sink mass before the edit divided by the
+        non-sink mass kept. When the removed edges held most of that mass,
+        the factor is large and the edit amplifies the few edges left. In the
+        GPT-2 small IOI use case (removing the name movers' END edges to the
+        names, 0.77 of those rows), the median factor on the kept edges was
+        13 (head 10.0), 55 (9.9) and 181 (9.6), and plain renormalisation
+        raised the first token's share of the rows from 0.20 to 0.87. A
+        ``UserWarning`` is issued, once per ``remove_edges`` call, when the
+        factor of any edited row exceeds ``KEEP_SINK_WARN_FACTOR`` (10). In
+        that regime, report the removed mass and compare the three choices.
 
         Args:
             key_mask: which edges to remove (True = remove): ``[k]`` keys
@@ -728,6 +738,7 @@ class AttentionSite:
         """
         iv = self.iv
         km = key_mask if callable(key_mask) else torch.as_tensor(key_mask).bool()
+        warned = [False]                       # one warning per remove_edges call
 
         def fn(w, qpos):
             iv._check_negative(queries, "remove_edges")
@@ -754,7 +765,11 @@ class AttentionSite:
             first = valid.float().argmax(dim=1) if valid is not None else \
                 torch.zeros(B, dtype=torch.long, device=w.device)
             sink_pos = (first + int(sink)).clamp(max=k - 1)
-            return remove_edges_from_pattern(w, rm, sink_pos, keep_sink, renormalize)
+            out, factor = _remove_edges(w, rm, sink_pos, keep_sink, renormalize)
+            if not warned[0]:
+                warned[0] = _warn_keep_sink_factor(factor, KEEP_SINK_WARN_FACTOR,
+                                                   self._label())
+            return out
 
         edit = self.edit_pattern(fn)
         edit.description = (f"remove_edges {self._label()} (keep_sink={keep_sink}, "
@@ -763,13 +778,29 @@ class AttentionSite:
 
 
 def remove_edges_from_pattern(w: torch.Tensor, remove: torch.Tensor, sink: torch.Tensor,
-                              keep_sink: bool = True, renormalize: bool = True) -> torch.Tensor:
+                              keep_sink: bool = True, renormalize: bool = True,
+                              warn_factor: Optional[float] = KEEP_SINK_WARN_FACTOR
+                              ) -> torch.Tensor:
     """Remove edges from attention probabilities ``w [B, H, q, k]``.
 
     ``remove`` is a boolean mask broadcastable to ``w``; ``sink [B]`` the
     sink key of each item. See :meth:`AttentionSite.remove_edges`. Rows in
-    which no nonzero entry is removed are returned bit for bit.
+    which no nonzero entry is removed are returned bit for bit. With
+    ``keep_sink=True``, one ``UserWarning`` is issued when the kept non-sink
+    entries of any edited row are multiplied by more than ``warn_factor``
+    (``None``: never).
     """
+    out, factor = _remove_edges(w, remove, sink, keep_sink, renormalize)
+    if warn_factor is not None:
+        _warn_keep_sink_factor(factor, warn_factor)
+    return out
+
+
+def _remove_edges(w: torch.Tensor, remove: torch.Tensor, sink: torch.Tensor,
+                  keep_sink: bool, renormalize: bool):
+    """The edit and, for ``keep_sink=True``, the factor applied to the kept
+    non-sink entries of each row (``[B, H, q, 1]``, 0 on rows not edited;
+    ``None`` otherwise)."""
     B, H, q, k = w.shape
     remove = remove.expand(B, H, q, k)
     sink_hot = torch.zeros(B, 1, 1, k, dtype=torch.bool, device=w.device)
@@ -779,7 +810,7 @@ def remove_edges_from_pattern(w: torch.Tensor, remove: torch.Tensor, sink: torch
                          "pass keep_sink=False to remove sink edges")
     kept = w.masked_fill(remove, 0.0)
     if not renormalize:
-        return kept
+        return kept, None
     changed = (remove & (w != 0)).any(dim=-1, keepdim=True)
     row = w.sum(dim=-1, keepdim=True)
     tiny = torch.finfo(w.dtype).tiny
@@ -789,10 +820,30 @@ def remove_edges_from_pattern(w: torch.Tensor, remove: torch.Tensor, sink: torch
         tot = others.sum(dim=-1, keepdim=True)
         scale = torch.where(tot > 0, (row - s) / tot.clamp_min(tiny), torch.zeros_like(tot))
         new = torch.where(sink_hot, w, others * scale)
-    else:
-        tot = kept.sum(dim=-1, keepdim=True)
-        new = torch.where(tot > 0, kept * (row / tot.clamp_min(tiny)), kept)
-    return torch.where(changed, new, w)
+        return torch.where(changed, new, w), torch.where(changed, scale, torch.zeros_like(scale))
+    tot = kept.sum(dim=-1, keepdim=True)
+    new = torch.where(tot > 0, kept * (row / tot.clamp_min(tiny)), kept)
+    return torch.where(changed, new, w), None
+
+
+def _warn_keep_sink_factor(factor: Optional[torch.Tensor], limit: float,
+                           where: str = "") -> bool:
+    """Warn once if any row's keep-sink factor exceeds ``limit``; returns
+    whether it warned."""
+    if factor is None or factor.numel() == 0:
+        return False
+    big = factor.detach().float() > limit
+    if not bool(big.any()):
+        return False
+    top = float(factor.detach().float().max())
+    at = f" at {where}" if where else ""
+    warnings.warn(
+        f"remove_edges(keep_sink=True){at} multiplied the remaining non-sink attention of "
+        f"{int(big.sum())} row(s) by more than {limit:g} (largest factor {top:.3g}): the "
+        f"removed edges held most of those rows' non-sink mass, so the edit amplifies the "
+        f"edges left as well as removing the others. Report the removed mass and compare "
+        f"keep_sink=False and renormalize=False.", UserWarning, stacklevel=3)
+    return True
 
 
 class WeightSite:

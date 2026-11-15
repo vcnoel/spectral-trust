@@ -181,14 +181,22 @@ with st.intervene(model) as iv:
 ```
 
 With `keep_sink=True` (the default) the row is renormalised over its
-remaining non-sink keys while the first token's entry keeps its value. Most
-attention rows put much of their mass on the first token. Plain
-renormalisation (`keep_sink=False`) lets that sink mass move: on GPT-2 small
-IOI, removing first-token edges at the answer position with plain
-renormalisation cost about six times more logit difference per unit of
-removed mass than removing random content edges, because the released mass
-multiplied each row's content attention. Holding the sink fixed keeps an
-edge ablation an edge ablation.
+remaining non-sink keys while the first token's entry keeps its value.
+`keep_sink=False` renormalises over every remaining key, the first token
+included, and `renormalize=False` only zeroes the entries.
+
+None of the three is a pure edge ablation when the removed edges carry much
+of the row. Plain renormalisation gives the removed mass mostly to the first
+token, which already holds a large share of most rows. Holding the sink fixed
+gives it to the content keys that are left, each multiplied by the row's
+non-sink mass before the edit over the non-sink mass kept. On GPT-2 small
+IOI, removing the name movers' edges from END to the names (0.77 of those
+rows) multiplied the remaining content edges by a median 13 to 181 depending
+on the head, while plain renormalisation raised the first token's share from
+0.20 to 0.87 ([edge ablation and the sink](../use-cases/sink-ablation.md)).
+`remove_edges` warns, once per call, when the factor of any edited row
+exceeds 10. In that regime, report the removed mass and compare the three
+choices.
 
 `edit_pattern(fn)` gives the general form: `fn(weights, query_positions)`
 returns new attention probabilities, and the head's output is rebuilt as
