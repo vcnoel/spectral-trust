@@ -158,3 +158,28 @@ values is within 0.05 of the paper's.
 ```bash
 python examples/operator_spectra_sink.py --items 200 --length 128
 ```
+
+## Cost
+
+Per head, the operator is one `n × n` product and one symmetric
+eigendecomposition in float64; the participation ratio alone would need only
+`tr S` and `‖S‖²_F`, but the contraction needs `λ₂`, so the full spectrum is
+computed. Time of `compute_spectra` on the attention of all 12 layers of
+GPT-2 small (CPU, 4 threads, median of 3 runs), next to the forward pass
+and to the existing metrics:
+
+| sequence length | forward pass | `operator`, per head | `operator`, `"mean"` | `graph.fiedler_value` | default metrics |
+|---|---|---|---|---|---|
+| 128 | 0.12 s | 0.09 s | 0.02 s | 0.06 s | 0.26 s |
+| 512 | 0.65 s | 1.75 s | 0.17 s | 0.56 s | 3.57 s |
+
+The value-weighted operator (`operator_edges="value_per_head"`) costs the
+same once the edges are computed (1.77 s at 512 tokens), plus the value
+capture of the forward pass.
+
+## References
+
+- F. Viganò, S. Melzi and M. Ovsjanikov. Spectral geometry of attention:
+  from information routing to uncertainty. NeurIPS 2026, arXiv:2610.06012.
+- E. Fadeeva et al. LM-Polygraph: uncertainty estimation for language
+  models. EMNLP 2023 (System Demonstrations).

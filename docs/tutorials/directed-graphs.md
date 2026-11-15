@@ -307,7 +307,10 @@ curvature of the symmetrised graph, each edge counted once. A
 value-weighted symmetric graph holds raw norms, which are not
 probabilities: under the negative-log weights the curvature is computed on
 `(P + Pᵀ)/2` instead, `P` the row-normalised value-weighted attention.
-`GSPConfig.forman_weights` sets the weights. On the sentence above, with
+`GSPConfig.forman_weights` sets the weights. Over the 12 layers of GPT-2 small (CPU, 4
+threads) the metric takes 0.04 s at 128 tokens and 0.44 s at 512 on the
+symmetric graph (0.03 s and 0.39 s on the directed one), against 0.12 s and
+0.65 s for the forward pass. On the sentence above, with
 `graph_direction="directed"`, the mean curvature is −6.25 at layer 0, −8.30
 at layer 5 and −7.46 at layer 11.
 
