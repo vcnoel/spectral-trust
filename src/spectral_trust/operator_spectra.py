@@ -364,5 +364,29 @@ def operator_metrics(A, measure: Measure = "pullback", *, normalize_rows: bool =
 __all__ = [
     "MEASURES", "OPERATOR_METRIC_NAMES", "OperatorSpectrum", "attention_operator",
     "operator_measures", "operator_spectrum", "participation_ratio", "spectrum_metrics",
-    "operator_metrics",
+    "operator_metrics", "OPERATOR_HEADS", "check_operator_options",
 ]
+
+
+#: Accepted ``GSPConfig.operator_heads``.
+OPERATOR_HEADS = ("per_head", "mean")
+
+
+def check_operator_options(config) -> None:
+    """Raise on an unknown ``operator_measure``, ``operator_heads`` or
+    ``operator_edges``, and on ``operator_edges="value"`` (one matrix per
+    layer) with ``operator_heads="per_head"``."""
+    from .graph import EDGE_WEIGHTS
+    measure = getattr(config, "operator_measure", "pullback")
+    if measure not in MEASURES:
+        raise ValueError(f"operator_measure must be one of {MEASURES}, got {measure!r}")
+    heads = getattr(config, "operator_heads", "per_head")
+    if heads not in OPERATOR_HEADS:
+        raise ValueError(f"operator_heads must be one of {OPERATOR_HEADS}, got {heads!r}")
+    edges = getattr(config, "operator_edges", "attention")
+    if edges not in EDGE_WEIGHTS:
+        raise ValueError(f"operator_edges must be one of {EDGE_WEIGHTS}, got {edges!r}")
+    if edges == "value" and heads == "per_head":
+        raise ValueError(
+            "operator_edges='value' sums the heads inside the norm, so it has one matrix per "
+            "layer: use operator_heads='mean', or operator_edges='value_per_head'")

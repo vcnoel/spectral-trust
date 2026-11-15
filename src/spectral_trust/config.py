@@ -110,3 +110,20 @@ class GSPConfig:
     # [-pi/2, pi/2] for q <= 1/4, and at q = 1/4 a one-way edge of weight 1
     # gets the phase pi/2 (see spectral_trust.directed.magnetic_laplacian).
     magnetic_q: float = 0.25
+
+    # New in v0.5.1: the "operator" namespace of SpectralModel.run_with_spectra
+    # and compute_spectra (spectral_trust.operator_spectra), computed only when
+    # it is named in metrics= (metrics=None leaves it out, so every earlier
+    # call is unchanged). Each layer's attention A is read as an operator
+    # L2(mu) -> L2(pi); its rows are renormalised first (the span's own edges
+    # under token_span).
+    # Measures: "pullback" (pi uniform, mu = A^T pi) or "counting" (A^T A).
+    operator_measure: str = "pullback"
+    # "per_head": one value per head ([n_heads], heads= applies); "mean": one
+    # value per layer, from the head-aggregated A (head_aggregation applies).
+    operator_heads: str = "per_head"
+    # A: "attention", or the value-weighted edges of spectral_trust.value_weighted
+    # with each row divided by its sum: "value_per_head" (a^h_ij ||W_O^h v^h_j||,
+    # per head) or "value" (||sum_h a^h_ij W_O^h v^h_j||, one matrix per
+    # layer, so operator_heads="mean" only).
+    operator_edges: str = "attention"

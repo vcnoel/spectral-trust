@@ -33,6 +33,7 @@ from .config import GSPConfig
 from .framework import attention_layer_indices
 from .graph import GraphConstructor, default_graph
 from .instrumentation import assert_finite_attention
+from .operator_spectra import check_operator_options, operator_metrics
 from .per_head import (
     HeadSelection, _resolve_heads, per_head_hybrid_metrics, per_head_metrics,
 )
@@ -118,6 +119,7 @@ def compute_spectra(
     keep_patterns: Optional[bool] = None,
     meta: Optional[Dict[str, Any]] = None,
     edges: Optional[Mapping[int, torch.Tensor]] = None,
+    operator_edges: Optional[Mapping[int, torch.Tensor]] = None,
 ) -> SpectralCache:
     """
     Spectral measurements from attention tensors (and optionally the signals
@@ -147,6 +149,16 @@ def compute_spectra(
             heads, seq, seq]`` (per head), from
             :func:`~spectral_trust.value_weighted.value_weighted_edges`.
             :meth:`SpectralModel.run_with_spectra` computes them.
+        operator_edges: the same for the ``operator`` namespace when
+            ``config.operator_edges`` is not ``"attention"``; default
+            ``edges`` when both options agree.
+
+    The ``operator`` namespace (computed only when ``metrics`` names it)
+    reads each layer's attention as an operator ``L²(μ) → L²(π)``
+    (:mod:`spectral_trust.operator_spectra`), after ``config.operator_measure``,
+    ``operator_heads`` and ``operator_edges``. The rows of ``A`` are divided
+    by their sums first: the span's own edges under ``token_span``, the
+    value-weighted attention for value edges, and float rounding otherwise.
 
     The ``graph`` namespace follows ``config.edge_weights`` and
     ``config.graph_direction``. With ``graph_direction="directed"`` its
@@ -167,6 +179,8 @@ def compute_spectra(
             f"edge_weights={edge_mode!r} needs the model's value states; use "
             "SpectralModel.run_with_spectra, or pass edges= from "
             "spectral_trust.value_weighted_edges")
+    check_operator_options(cfg)
+    op_mode = getattr(cfg, "operator_edges", "attention")
     if not cfg.save_intermediate:
         cfg = replace(cfg, save_intermediate=True)   # the graph view needs eigenvectors
     attentions = {int(k): _batched(v, 4) for k, v in attentions.items() if v is not None}
@@ -207,6 +221,15 @@ def compute_spectra(
     attn_names = [q.split(".", 1)[1] for q in selected if q.startswith("attn.")]
     resid_names = [q.split(".", 1)[1] for q in selected if q.startswith("resid.")]
     graph_names = [q.split(".", 1)[1] for q in selected if q.startswith("graph.")]
+    operator_names = [q.split(".", 1)[1] for q in selected if q.startswith("operator.")]
+    if operator_names and op_mode != "attention" and operator_edges is None:
+        if op_mode == edge_mode and edges is not None:
+            operator_edges = edges
+        else:
+            raise ValueError(
+                f"operator_edges={op_mode!r} needs the model's value states; use "
+                "SpectralModel.run_with_spectra, or pass operator_edges= from "
+                "spectral_trust.value_weighted_edges")
 
     first = attentions[available[0]]
     batch, n_heads = int(first.shape[0]), int(first.shape[1])
@@ -284,6 +307,11 @@ def compute_spectra(
                 if hybrid:
                     rec[f"blocks.{lay}.graph.spectral_masses"] = np.asarray(
                         diag.spectral_masses, dtype=np.float32)
+            if operator_names:
+                src = a if op_mode == "attention" else \
+                    operator_edges[lay][b, ..., :n, :n].detach().to(device="cpu")
+                _operator_layer(rec, lay, src, (s, e), cfg, head_lists[lay], n_heads,
+                                operator_names)
         records.append(rec)
 
     all_heads = all(v is None for v in head_lists.values())
@@ -332,6 +360,34 @@ def _option_graph(rec, lay, src, x, span, full, cfg, gc, analyzer, names, hybrid
     if hybrid:
         rec[f"blocks.{lay}.graph.spectral_masses"] = np.asarray(diag.spectral_masses,
                                                                 dtype=np.float32)
+
+
+def _operator_layer(rec, lay, src, span, cfg, heads, n_heads, names):
+    """The ``operator`` namespace of one layer. ``src`` is ``[H, S, S]``
+    (attention, or per-head value-weighted edges) or ``[S, S]``
+    (value-weighted edges summed over heads)."""
+    s, e = span
+    A = src[..., s:e, s:e].to(torch.float64)
+    measure = getattr(cfg, "operator_measure", "pullback")
+    if getattr(cfg, "operator_heads", "per_head") == "mean":
+        if A.dim() == 3:
+            A = GraphConstructor(cfg).aggregate_heads(A.unsqueeze(0))[0]
+        m = operator_metrics(A, measure, normalize_rows=True, return_eigenvalues=True)
+        for name in names:
+            rec[f"blocks.{lay}.operator.{name}"] = float(m[name])
+        rec[f"blocks.{lay}.operator.eigenvalues"] = m["eigenvalues"].numpy().astype(np.float32)
+        return
+    rows = heads if heads is not None else list(range(n_heads))
+    if heads is not None:
+        A = A.index_select(0, torch.as_tensor(heads, dtype=torch.long))
+    m = operator_metrics(A, measure, normalize_rows=True, return_eigenvalues=True)
+    for name in names:
+        v = np.full(n_heads, np.nan, dtype=np.float32)
+        v[rows] = m[name].numpy()
+        rec[f"blocks.{lay}.operator.{name}"] = v
+    eig = np.full((n_heads, e - s), np.nan, dtype=np.float32)
+    eig[rows] = m["eigenvalues"].numpy()
+    rec[f"blocks.{lay}.operator.eigenvalues"] = eig
 
 
 def _per_head_attention(rec, layer_attn, chosen, head_lists, n_heads, span, cfg, names):
@@ -578,8 +634,9 @@ class SpectralModel:
                 lists). Strings are tokenised with the model's tokenizer as
                 it is configured (special tokens included), with no
                 truncation.
-            metrics: which metrics to keep. None keeps all. Entries may be a
-                namespace (``"attn"``, ``"resid"``, ``"graph"``), a
+            metrics: which metrics to keep. None keeps all but the opt-in
+                ``operator`` namespace. Entries may be a namespace
+                (``"attn"``, ``"resid"``, ``"graph"``, ``"operator"``), a
                 namespaced name (``"graph.hfer"``) or a bare name, which
                 selects it in every namespace (``"fiedler_value"`` gives
                 ``attn.fiedler_value`` and ``graph.fiedler_value``). A
@@ -614,7 +671,9 @@ class SpectralModel:
 
         The ``graph`` namespace follows the graph options of
         :attr:`config` (``edge_weights``, ``graph_direction``; see
-        :func:`compute_spectra`). For value-weighted edges the forward pass
+        :func:`compute_spectra`), and the ``operator`` namespace its
+        operator options (``operator_measure``, ``operator_heads``,
+        ``operator_edges``). For value-weighted edges the forward pass
         also records each layer's value states and output projection
         (:class:`~spectral_trust.value_weighted.ValueCapture`), which leaves
         the model's outputs unchanged.
@@ -622,6 +681,13 @@ class SpectralModel:
         single, items = _normalise_inputs(text_or_list)
         edge_mode = getattr(self.config, "edge_weights", "attention")
         default_graph(self.config)          # checks the graph options
+        check_operator_options(self.config)
+        op_mode = getattr(self.config, "operator_edges", "attention")
+        if op_mode != "attention" and not any(
+                q.startswith("operator.") for q in resolve_metrics(
+                    metrics, hybrid=hybrid,
+                    directed=getattr(self.config, "graph_direction", "symmetric") == "directed")):
+            op_mode = "attention"           # no operator metric: no value capture for it
         if self.tokenizer is None and any(isinstance(it, str) for it in items):
             raise ValueError("text input needs a tokenizer")
         batch_size = max(int(batch_size), 1)
@@ -629,8 +695,8 @@ class SpectralModel:
         for start in range(0, len(items), batch_size):
             chunk = items[start:start + batch_size]
             input_ids, mask, lengths, ids = self._encode(chunk)
-            edges = None
-            if edge_mode == "attention":
+            edges = op_edges = None
+            if edge_mode == "attention" and op_mode == "attention":
                 out = self.model(input_ids=input_ids.to(self.device),
                                  attention_mask=mask.to(self.device),
                                  output_attentions=True, output_hidden_states=True,
@@ -647,7 +713,11 @@ class SpectralModel:
                                      attention_mask=mask.to(self.device),
                                      output_attentions=True, output_hidden_states=True,
                                      use_cache=False, return_dict=True)
-                edges = _LazyEdges(cap.results(lengths), per_head=edge_mode == "value_per_head")
+                captured = cap.results(lengths)
+                if edge_mode != "attention":
+                    edges = _LazyEdges(captured, per_head=edge_mode == "value_per_head")
+                if op_mode != "attention":
+                    op_edges = _LazyEdges(captured, per_head=op_mode == "value_per_head")
             attn = list(out.attentions or [])
             hidden = list(out.hidden_states or [])
             if not attn or all(a is None for a in attn):
@@ -667,8 +737,9 @@ class SpectralModel:
                 attentions, signals, tokens=tokens, lengths=lengths,
                 n_layers=self.n_layers or len(hidden) - 1, config=self.config,
                 metrics=metrics, layers=layers, heads=heads, token_span=token_span,
-                hybrid=hybrid, keep_patterns=keep_patterns, meta=meta, edges=edges))
-            del out, attn, hidden, edges
+                hybrid=hybrid, keep_patterns=keep_patterns, meta=meta, edges=edges,
+                operator_edges=op_edges))
+            del out, attn, hidden, edges, op_edges
         return merge_caches(parts, batched=not single)
 
 

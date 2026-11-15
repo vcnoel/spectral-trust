@@ -128,6 +128,46 @@ def test_explicit_defaults_equal_the_plain_config(gpt2):
         assert np.array_equal(np.asarray(plain[key]), np.asarray(explicit[key])), key
 
 
+# The metric names of a default run in 0.5.0, verbatim.
+METRICS_0_5_0 = (
+    ["attn." + m for m in ["fiedler_value", "connectivity_ratio", "spectral_entropy_norm",
+                           "hfer", "spectral_radius"]]
+    + ["resid." + m for m in ["energy", "smoothness_index", "spectral_entropy", "hfer"]]
+    + ["graph." + m for m in ["fiedler_value", "spectral_radius", "connectivity",
+                              "eig_energy", "eig_spectral_entropy", "eig_hfer", "energy",
+                              "smoothness_index", "spectral_entropy", "hfer"]])
+
+
+@pytest.mark.parametrize("operator_opts", [
+    {},
+    dict(operator_measure="counting", operator_heads="mean", operator_edges="value"),
+    dict(operator_edges="value_per_head")])
+def test_operator_options_leave_default_runs_bit_identical(gpt2, operator_opts):
+    # The operator namespace is opt-in: a run that does not name it computes
+    # the metrics of 0.5.0, and its options change nothing.
+    ids = _ids(2)
+    plain = st.SpectralModel(gpt2, None, config=CFG).run_with_spectra(ids)
+    assert plain.metric_names == METRICS_0_5_0
+    assert not any(".operator." in k for k in plain.keys())
+    other = st.SpectralModel(gpt2, None, config=replace(CFG, **operator_opts)
+                             ).run_with_spectra(ids)
+    assert other.keys() == plain.keys() and other.metric_names == plain.metric_names
+    for key in plain.keys():
+        assert np.array_equal(np.asarray(plain[key]), np.asarray(other[key])), key
+
+
+def test_operator_metrics_leave_the_other_namespaces_bit_identical(gpt2):
+    ids = _ids(3)
+    plain = st.SpectralModel(gpt2, None, config=CFG).run_with_spectra(ids, token_span=(1, 9))
+    both = st.SpectralModel(gpt2, None, config=CFG).run_with_spectra(
+        ids, metrics=METRICS_0_5_0 + ["operator"], token_span=(1, 9))
+    assert set(both.keys()) - set(plain.keys()) == {
+        f"blocks.{lay}.operator.{m}" for lay in range(3)
+        for m in st.OPERATOR_METRIC_NAMES + ["eigenvalues"]}
+    for key in plain.keys():
+        assert np.array_equal(np.asarray(plain[key]), np.asarray(both[key])), key
+
+
 def test_default_layer_graph_is_the_existing_construction():
     a = torch.rand(2, 3, 7, 7, generator=torch.Generator().manual_seed(2)).tril()
     weighted = replace(CFG, symmetrization="row_norm", head_aggregation="attention_weighted")
