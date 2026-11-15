@@ -252,6 +252,70 @@ print(fc.imbalance.round(2))
 
 Block 1 reads from block 0 and block 2 from both, about 95% one way.
 
+## Forman curvature
+
+The Forman curvature of an edge is a closed-form function of the weights of
+the edges that meet its two ends. On an attention graph, an entry
+`a_ij > 0` (`i ≠ j`) is an edge from the query i to the key j; self-loops
+are left out and rows are not renormalised. Following Kim, Lutzeyer and Guo
+(2026), its weight is `w = max(−log a, 10⁻⁹)`, so weak attention makes a
+long edge, and the directed curvature with unit vertex weights is
+
+```text
+F(i, j) = 2 − √w_ij ( Σ_{edges into i} 1/√w + Σ_{edges out of j} 1/√w )
+```
+
+An edge is flat when the edges entering its source and leaving its target
+are as strong as itself and few, and negative when they are stronger or
+many. On a symmetric graph the undirected curvature counts every edge at
+either end, `2 − √w_e (Σ_{e'∋i, e'≠e} 1/√w + Σ_{e'∋j, e'≠e} 1/√w)`, which
+with unit weights is the combinatorial `4 − deg(i) − deg(j)`. Some closed
+forms with unit weights: 0 on a directed cycle, 2 on every edge of a star
+(every token reads the first), `3 − k` on the undirected star `K_{1,k}`,
+`6 − 2n` on the complete graph `K_n`, and `2 − (n − 1 − i) − j` on the
+edge `(i, j)` of a complete causal graph. The edge from the last token of a
+prefix to the first token always has curvature 2, the maximum.
+
+```python
+vals = st.capture_attention_values(model, text)
+A = vals[5].weights[0].mean(0)                    # layer 5, heads averaged
+T = 8                                             # the prefix that ends at token 7
+F = st.forman_curvature(A[:T, :T])                # [T, T], NaN where there is no edge
+st.forman_quantiles(F, tokens=(5, 8))             # pooled outgoing edges of tokens 5 to 7
+# -6.55 -6.09 -5.26 -4.40 2.00   (quantiles 0, 0.25, 0.5, 0.75, 1)
+st.forman_node_curvature(F)                       # mean outgoing curvature per token
+```
+
+`forman_quantiles` is the summary of the paper: the curvatures of the
+outgoing edges of a set of tokens, pooled, at the quantiles 0, 0.25, 0.5,
+0.75 and 1 (linear interpolation; zeros for a set without edges). On the
+graph of the prefix that ends with a step, the step's tokens give that
+step's vector at one layer. `weights="attention"` (`w = a`) and
+`weights="unit"` are also available, or any callable.
+
+Softmax attention is dense, so a token's degree grows with its position
+and the combinatorial part of the curvature with the length of the
+sequence: compare curvatures between inputs of the same length, or over a
+fixed span.
+
+In the pipeline, `metrics="forman_curvature_mean"` (computed only when
+named) gives `graph.forman_curvature_mean`, the mean over the edges of the
+layer graph, and the array `graph.forman_quantiles` over all its edges, on
+the graph that the options build: the directed curvature of the
+row-normalised operator `P` of a directed graph, or the undirected
+curvature of the symmetrised graph, each edge counted once. A
+value-weighted symmetric graph holds raw norms, which are not
+probabilities: under the negative-log weights the curvature is computed on
+`(P + Pᵀ)/2` instead, `P` the row-normalised value-weighted attention.
+`GSPConfig.forman_weights` sets the weights. On the sentence above, with
+`graph_direction="directed"`, the mean curvature is −6.25 at layer 0, −8.30
+at layer 5 and −7.46 at layer 11.
+
+The curvature, its weights and the quantile summary are implemented from
+the equations of Kim, Lutzeyer and Guo (2026); not checked against official
+code (their code is released under AGPL-3.0, so it was neither read nor
+run). Their per-step verifiers are not part of the library.
+
 ## Options and cost
 
 | `GSPConfig` field | values | default |
@@ -259,6 +323,7 @@ Block 1 reads from block 0 and block 2 from both, about 95% one way.
 | `edge_weights` | `"attention"`, `"value"`, `"value_per_head"` | `"attention"` |
 | `graph_direction` | `"symmetric"`, `"directed"` | `"symmetric"` |
 | `magnetic_q` | charge of the magnetic Laplacian, `≥ 0` | `0.25` |
+| `forman_weights` | `"neg_log"`, `"attention"`, `"unit"` (`graph.forman_curvature_mean`) | `"neg_log"` |
 
 The options apply to the head-averaged graph: the `graph` namespace of
 `SpectralModel.run_with_spectra` and `compute_spectra` (which takes
@@ -270,6 +335,9 @@ their defaults give results identical, bit for bit, to earlier releases.
 `GSPDiagnosticsFramework`, the graph filters and frequency-resolved
 patching run on the symmetrised attention graph and refuse the other
 options.
+The graph view (`viz.graph`) and the animations show a value-weighted
+layer graph when the patterns are kept (it is stored as `graph.adjacency`);
+a directed layer graph raises there, while a single head's graph is shown.
 
 Without a gate the summed edges come from the Gram matrices of the per-head
 projected values, `w_ij² = Σ_{h,h'} a^h_ij a^h'_ij ⟨u^h_j, u^h'_j⟩`, in
@@ -293,5 +361,13 @@ keys it attends to, in `O(S² H d_head d_model)` time.
   network for directed graphs. NeurIPS 2021.
 - M. Cucuringu, H. Li, H. Sun and L. Zanetti. Hermitian matrices for
   clustering directed graphs: insights and applications. AISTATS 2020.
+- R. Forman. Bochner's method for cell complexes and combinatorial Ricci
+  curvature. Discrete & Computational Geometry, 29, 2003.
+- R. P. Sreejith, K. Mohanraj, J. Jost, E. Saucan and A. Samal. Forman
+  curvature for complex networks. Journal of Statistical Mechanics, 2016.
+- R. P. Sreejith, J. Jost, E. Saucan and A. Samal. Forman curvature for
+  directed networks. arXiv:1605.04662, 2017.
+- K. Kim, J. Lutzeyer and Y. Guo. Attention-graph curvature for the
+  verification of mathematical reasoning. arXiv:2610.16709, 2026.
 - D. Dahlem, D. Maniloff and M. Misiura. Self-attention as transport:
   limits of symmetric spectral diagnostics. arXiv:2605.04893, 2026.
