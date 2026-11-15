@@ -1,5 +1,116 @@
 # Changelog
 
+## Known issue in releases before 0.2.2
+
+Releases 0.1.0 to 0.2.1 computed the layer-level spectrum
+(`SpectralAnalyzer.compute_eigendecomposition`, used by
+`GSPDiagnosticsFramework`) with `scipy.linalg.eigh` (`eigsh` on the sparse
+path) for every normalization. Under `normalization="rw"`, the default until
+0.3.0, the Laplacian `I − D⁻¹W` is not symmetric: `eigh` reads only one
+triangle of it, so it returned the spectrum of a different, symmetric
+matrix, and negative eigenvalues were then clipped to 0. The Fiedler value
+and the other metrics computed from that eigendecomposition were wrong,
+mostly too low: recomputing the 0.1.2 construction on Phi-3-mini-4k-instruct
+gave Fiedler values up to 0.36 below the correct ones (and up to 0.07
+above). `normalization="sym"` and `"none"` were not affected. 0.2.2
+diagonalises non-symmetric Laplacians with a general solver, and 0.3.0 made
+`"sym"` the default. Results computed with 0.1.x, 0.2.0 or 0.2.1 under
+`normalization="rw"` should be recomputed with a current release. The
+per-head functions, added in 0.3.0, had a related issue with `"rw"` that
+0.4.0 fixed (see v0.4.0).
+
+## v0.5.0 (2026-11-15)
+
+Interventions: the TransformerLens basics (patching, ablation, steering)
+on Hugging Face models, and interventions in the graph-spectral domain. No
+result changes for existing calls.
+
+- New subpackage `spectral_trust.interventions` and context manager
+  `st.intervene(model)`: hook-based edits, all undone on exit (hooks
+  removed, weights restored bit for bit, the attention implementation and
+  any wrapped `transformers` function put back). It takes a `SpectralModel`
+  or a plain `transformers` causal LM (GPT-2, Llama, Qwen, Mistral, Gemma,
+  GPT-NeoX and OPT layouts). Interventions on one model may be nested and
+  closed in any order. Positions are absolute, so position-dependent edits
+  agree between cached generation and recomputation.
+- Public names of `spectral_trust.interventions`:
+  - edits: `intervene` (also `st.intervene`), `Intervention` (`resid`,
+    `attention`, `weights`, `hook`, `close`), `ResidSite` (`add`,
+    `graph_filter`), `AttentionSite` (`ablate`, `head_outputs`,
+    `edit_pattern`, `remove_edges`), `WeightSite` (`svd_scale`, `snr`,
+    `weight`), `Edit` (`remove`) and `remove_edges_from_pattern`;
+  - graph filters: `graph_filter` (also `st.graph_filter`), `FilterSpec`,
+    `filter_coefficients`, `filter_response`, `ideal_response`,
+    `attention_adjacency`, `path_adjacency`, `laplacian`, `laplacian64`,
+    `compute_placement`, `FILTER_KINDS`, `GRAPH_NAMES`, `PRECISIONS`;
+  - patching: `patch`, `Patcher`, `PatchSpec`, `equal_count_bands` (all
+    four also top-level), `select_modes`, `haar_basis`, `BASES`, `SITES`;
+  - weights: `weight_snr`, `weight_svd_full` (both also top-level),
+    `matrix_snr`, `lowrank_snr`, `svd_scale_matrix`;
+  - warning thresholds: `KEEP_SINK_WARN_FACTOR` (10) and
+    `GRAPH_FILTER_WARN_RELATIVE_EDIT` (0.5).
+- Graph-frequency steering: `iv.resid(layer).graph_filter(kind, cutoff= |
+  band=, strength=, graph=, causal=)` filters the residual stream along the
+  token axis on that layer's head-averaged attention graph (built as the
+  measurements build it), the chain graph, or a given graph:
+  `X' = X + s (g(L) X − X)`. Low-pass, high-pass, band-pass and band-stop
+  responses use the Jackson-damped Chebyshev machinery of `band_energies`
+  (no eigendecomposition), computed in float64 by default (on the CPU when
+  the model is on Apple MPS) or in float32 with `precision="float32"`,
+  faster on GPUs; `method="dense"` applies the ideal band indicator. `causal=True` filters each position on the graph
+  of its prefix, a lower-triangular operator, so generation with a KV cache
+  matches recomputation, beam search included; a cached step under the
+  symmetric filter raises.
+- Head ablation (`ablate("zero" | "mean" | "resample")` on the per-head
+  outputs; mean and resample take a reference, and resample draws its items
+  once per input, shared by its beams), activation steering
+  (`resid(l).add`), custom hooks (`iv.hook(site, layer, fn)`) and
+  attention-pattern edits (`edit_pattern`; these need transformers 4.48 or
+  later and say so at run time, while the package keeps requiring 4.30).
+- `remove_edges(key_mask, keep_sink=True)` removes attention edges and
+  renormalises each edited row over its remaining non-sink keys with the
+  first token's entry held fixed; `keep_sink=False` renormalises over every
+  remaining key, the first token included, and `renormalize=False` only
+  zeroes. None of the three is a pure edge ablation when the removed edges
+  carry most of a row: holding the sink fixed then multiplies the edges
+  left by a large factor (13 to 181 for the GPT-2 name movers in the IOI
+  use case).
+- Weight-spectrum steering: `iv.weights(layer, module).svd_scale(alpha, k=)`
+  applies the spectral-steering rescaling
+  `σ' = σ (1 + α (σ − mean) / std)` and warns when a factor turns
+  non-positive. The rebuilt matrix equals spectral-steering's reference code
+  bit for bit; the two give the same model for bias-free `nn.Linear`
+  projections (the Llama-family `mlp.down_proj`), since the reference swaps
+  in a bias-free layer while `svd_scale` edits the weight in place, keeps
+  the bias and also handles GPT-2's `Conv1D`. Edits of one matrix stack and
+  can be removed in any order.
+- `st.weight_snr(model, layer, module)` is `σ₁ / median(σ)` over the full
+  spectrum (`layer=None`: every layer). `st.weight_snr(W, k)` on a tensor and
+  the new `st.weight_svd_full(W)` are the two functions of the unreleased
+  0.2.3 branch that spectral-steering's scripts import, so they run on this
+  release.
+- Activation patching: `st.patch(model, clean, corrupt, site=, layer=,
+  head=, positions=)` and `st.Patcher`, which runs the clean and corrupt
+  inputs once, captures activations as patches need them, batches many
+  patches, and raises if the model changed since the capture.
+  Frequency-resolved patching (`band=`, `basis="clean_attention" |
+  "corrupt_attention" | "path" | "random"`) takes one band of a token-axis
+  eigenbasis from the clean run; the full band equals plain patching.
+  `st.equal_count_bands` splits the modes into equal-count bands.
+- Warnings: `remove_edges` with `keep_sink=True` warns, once per call,
+  when it multiplies the kept non-sink attention of any edited row by more
+  than 10; `graph_filter` on the residual stream warns, once per call, when
+  its edit exceeds half the residual norm of the edited positions
+  (`‖X' − X‖ / ‖X‖ > 0.5`). `svd_scale` warns when a singular value's factor
+  turns non-positive.
+- New tutorial: Interventions.
+- Use cases (`docs/use-cases/`, with scripts and outputs in
+  `examples/use_cases/`): edge ablation and the attention sink on GPT-2 IOI,
+  graph-frequency steering against matched controls, frequency-resolved
+  patching on IOI, which words split Phi-3-mini's attention graph, the side
+  effects of `graph_filter` on GPT-2 and Phi-3-mini, and the design of a
+  band-stop injection defence, which has not been run.
+
 ## v0.4.2
 
 Animated views. One call writes a video, a GIF or an interactive page of a

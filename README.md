@@ -90,6 +90,30 @@ The other kinds are `waterfall`, `compare`, `graph_movie`, `head_atlas` and
 Videos and GIFs need the `viz` extra (`pip install "spectral-trust[viz]"`). The
 [gallery](https://vcnoel.github.io/spectral-trust/gallery/) describes each one.
 
+## Interventions
+
+New in 0.5.0: `st.intervene(model)` edits a Hugging Face model with hooks
+(graph-frequency filters of the residual stream, attention-edge removal, head
+ablation, steering, singular-value rescaling) and undoes every edit on exit;
+`st.patch` adds activation patching, plain or one graph-frequency band at a
+time.
+
+```python
+import spectral_trust as st
+
+model = st.SpectralModel.from_pretrained("gpt2")
+ids = model.tokenizer("When Mary and John went to the store, John gave a drink to",
+                      return_tensors="pt").input_ids
+
+with st.intervene(model) as iv:
+    iv.resid(6).graph_filter("lowpass", cutoff=1.0, strength=0.5,
+                             causal=True, token_span=(1, None))
+    logits = model(ids).logits
+```
+
+The [use cases](https://vcnoel.github.io/spectral-trust/use-cases/) run them on
+real models against matched controls.
+
 ## Use it with TransformerLens or nnsight
 
 Measure a run you already have, with no second forward pass. From a
@@ -220,7 +244,7 @@ and the graph signal processing framework paper:
 @software{noel_spectral_trust,
   author  = {No{\"e}l, Valentin},
   title   = {spectral-trust: graph-spectral diagnostics for transformer attention},
-  version = {0.4.2},
+  version = {0.5.0},
   year    = {2026},
   url     = {https://github.com/vcnoel/spectral-trust},
   license = {Apache-2.0}
@@ -564,6 +588,7 @@ Unselected heads are dropped before any conversion or decomposition, and
   - `cache.py` — `SpectralCache`, its layer and head views, DataFrame export, save and load
   - `interop.py` — `from_transformer_lens`, `from_nnsight`, `from_hf_outputs`
   - `viz.py` — self-contained SVG views: `graph`, `heatmap`, `spectrum`
+  - `interventions/` — `intervene`, `patch` and the graph-frequency filters
   - `graph.py` — attention-graph construction (symmetrization, aggregation, Laplacians)
   - `spectral.py` — eigendecomposition and diagnostics (`SpectralAnalyzer`, `SpectralDiagnostics`, `METRIC_FAMILIES`)
   - `per_head.py` — per-head spectral diagnostics (attention and hybrid), head subsets, and probe feature helpers
@@ -572,7 +597,7 @@ Unselected heads are dropped before any conversion or decomposition, and
   - `framework.py` — end-to-end orchestration (`GSPDiagnosticsFramework`)
   - `instrumentation.py` — model loading and tensor capture
 - `docs/` — the documentation site (`mkdocs.yml` at the root) and `make_assets.py`, which regenerates the figures in `docs/assets/` from the library's output
-- `examples/` — `quickstart.ipynb` and minimal scripts (hallucination differential analysis, head-masking ablation)
+- `examples/` — `quickstart.ipynb`, minimal scripts (hallucination differential analysis, head-masking ablation) and `use_cases/`, the scripts and outputs of the use-case pages
 - `benchmarks/` — latency and precision scaling scripts; `fast_vs_dense.py`, `end_to_end.py` and their `results.json` / `results.md`
 - `notebooks/` — demo notebook
 - `tests/` — unit tests, run by `.github/workflows/tests.yml`

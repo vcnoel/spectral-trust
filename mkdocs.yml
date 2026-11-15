@@ -94,6 +94,15 @@ nav:
       - Quickstart: tutorials/quickstart.md
       - Per-head analysis: tutorials/per-head.md
       - TransformerLens and nnsight: tutorials/interop.md
+      - Interventions: tutorials/interventions.md
   - Animated gallery: gallery.md
+  - Use cases:
+      - Overview: use-cases/index.md
+      - Edge ablation and the sink: use-cases/sink-ablation.md
+      - Graph-frequency steering: use-cases/graph-filter-steering.md
+      - Frequency-resolved patching: use-cases/frequency-patching.md
+      - Phi-3 prepositions: use-cases/phi3-prepositions.md
+      - Graph-filter side effects: use-cases/graph-filter-side-effects.md
+      - Injection defence (design, not run): use-cases/injection-defence.md
   - API reference: api.md
   - Changelog: changelog.md

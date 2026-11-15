@@ -9,7 +9,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="spectral_trust",
-    version="0.4.2",
+    version="0.5.0",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
     package_data={
@@ -26,6 +26,10 @@ setup(
         "seaborn",
         "scipy",
         "torch>=2.0.0",
+        # Attention-pattern edits (spectral_trust.interventions: remove_edges,
+        # edit_pattern) need transformers >= 4.48, the first version with a
+        # module-level eager_attention_forward; they check it at run time and
+        # raise a clear error, so older versions keep working for the rest.
         "transformers>=4.30.0",
         "tqdm",
         "accelerate"
