@@ -1,10 +1,10 @@
 # Quickstart
 
-This tutorial follows
-[`examples/quickstart.ipynb`](https://github.com/vcnoel/spectral-trust/blob/main/examples/quickstart.ipynb)
-([open in Colab](https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/examples/quickstart.ipynb)).
-Everything runs on a CPU; the first run downloads `Qwen/Qwen3-0.6B` (about
-1.5 GB).
+Everything here runs on a CPU; the first run downloads `Qwen/Qwen3-0.6B`
+(about 1.5 GB). The notebook
+[`notebooks/01_quickstart.ipynb`](https://github.com/vcnoel/spectral-trust/blob/main/notebooks/01_quickstart.ipynb)
+([open in Colab](https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/notebooks/01_quickstart.ipynb))
+runs the same steps on GPT-2 small.
 
 ## One text
 
