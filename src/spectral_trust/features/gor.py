@@ -159,10 +159,10 @@ def geometry_of_reason(attentions: Sequence, hidden_states: Sequence, *,
         hidden_states: the ``layers + 1`` states ``[1, S, d]`` (or
             ``[S, d]``) that ``output_hidden_states=True`` returns, embeddings
             first; layer ``l`` is measured on ``hidden_states[l + 1]``.
-        normalization, hfer_cutoff_ratio, eigen_solver, num_eigenvalues,
-        lanczos_max_iter, symmetrization, head_aggregation,
-        remove_self_loops: the 0.1.2 ``GSPConfig`` fields, at the values of
-            the paper's run.
+        normalization: the 0.1.2 ``GSPConfig`` field, at its value in the
+            paper's run, as are ``hfer_cutoff_ratio``, ``eigen_solver``,
+            ``num_eigenvalues``, ``lanczos_max_iter``, ``symmetrization``,
+            ``head_aggregation`` and ``remove_self_loops``.
         attention_mask: the tokenizer's ``[1, S]`` mask; it only matters for
             ``head_aggregation="attention_weighted"``.
         arpack_seed: None reproduces 0.1.2, whose ARPACK calls (sparse

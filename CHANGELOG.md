@@ -19,6 +19,27 @@ diagonalises non-symmetric Laplacians with a general solver, and 0.3.0 made
 per-head functions, added in 0.3.0, had a related issue with `"rw"` that
 0.4.0 fixed (see v0.4.0).
 
+## Unreleased: critique pack
+
+Measures that answer the critiques of spectral attention diagnostics. No
+result changes: every 0.5.0 call is bit-identical
+(`tests/test_regression_050.py`).
+
+- `GSPConfig.subgraph_renormalize`: the nodes kept by `subgraph_indices` or
+  `token_span` are renormalised per row before the graph is built (BOS drop
+  as in Bao et al.); `graph.drop_and_renormalize`.
+- `spectral_trust.features`: `sink_mass`, `value_norms`,
+  `value_weighted_sink`, `effective_rank`, `attention_covariates`; the
+  asymmetry `G` and conductance `φ̂` of Dahlem et al. (`asymmetry`,
+  `capacity_phi`, `transport_sigma2`, `transport_operator`; from their
+  equations, no released code); `geometry_of_reason`, the paper's features
+  as its code computed them, bit-identical to 0.1.2.
+- `spectral_trust.pseudospectra`: `sigma_min`, `pseudospectrum`,
+  `pseudospectral_radius`, `pseudospectral_abscissa`, `kreiss_constant`,
+  `departure_from_normality`, `numerical_range`, `depth_propagator`,
+  `nonnormality`.
+- Docs: "What a symmetrised spectrum cannot see" and "Baselines".
+
 ## v0.5.0 (2026-11-15)
 
 Interventions: the TransformerLens basics (patching, ablation, steering)

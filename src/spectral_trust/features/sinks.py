@@ -169,19 +169,15 @@ def attention_covariates(attention, values=None, out_weight=None, sink: int = 0
         sink: index of the sink token.
 
     Returns:
-        name -> ``[..., heads]`` (``n_tokens`` is an int):
-
-        - ``sink_mass``: :func:`sink_mass`;
-        - ``value_weighted_sink``: :func:`value_weighted_sink`;
-        - ``diagonal_mass``: mean of ``A[i, i]`` over queries;
-        - ``previous_token_mass``: mean of ``A[i, i - 1]`` over queries
-          ``i >= 1``;
-        - ``row_entropy``: mean over queries of ``-Σ_j A[i, j] log A[i, j]``
-          (nats);
-        - ``attention_effective_rank``: :func:`effective_rank` of each map;
-        - ``asymmetry``: the coefficient ``G`` of Dahlem et al.
-          (:func:`spectral_trust.features.asymmetry`);
-        - ``n_tokens``: ``S``.
+        name -> ``[..., heads]`` (``n_tokens`` is an int). ``sink_mass`` is
+        :func:`sink_mass`, ``value_weighted_sink`` :func:`value_weighted_sink`,
+        ``diagonal_mass`` the mean of ``A[i, i]`` over queries,
+        ``previous_token_mass`` the mean of ``A[i, i - 1]`` over queries
+        ``i >= 1``, ``row_entropy`` the mean over queries of
+        ``-Σ_j A[i, j] log A[i, j]`` (nats), ``attention_effective_rank``
+        the :func:`effective_rank` of each map, ``asymmetry`` the coefficient
+        ``G`` of Dahlem et al. (:func:`spectral_trust.features.asymmetry`)
+        and ``n_tokens`` is ``S``.
     """
     A = _t(attention)
     _check_square(A)

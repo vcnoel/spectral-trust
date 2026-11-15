@@ -155,3 +155,42 @@ and `st.weight_svd_full` are also top-level names. See the
 ::: spectral_trust.band_entropy
 
 ::: spectral_trust.band_filter_response
+
+## Sink measures, orientation and reference features
+
+Added in 0.5.1, in `spectral_trust.features`; see
+[What a symmetrised spectrum cannot see](symmetrised-spectrum.md) and
+[Baselines](baselines.md).
+
+::: spectral_trust.features.sink_mass
+
+::: spectral_trust.features.value_norms
+
+::: spectral_trust.features.value_weighted_sink
+
+::: spectral_trust.features.effective_rank
+
+::: spectral_trust.features.attention_covariates
+
+::: spectral_trust.features.transport_operator
+
+::: spectral_trust.features.asymmetry
+
+::: spectral_trust.features.capacity_phi
+
+::: spectral_trust.features.transport_sigma2
+
+::: spectral_trust.features.geometry_of_reason
+
+::: spectral_trust.features.geometry_of_reason_text
+
+::: spectral_trust.graph.drop_and_renormalize
+
+## Pseudospectra
+
+Added in 0.5.1.
+
+::: spectral_trust.pseudospectra
+    options:
+      show_root_heading: false
+      heading_level: 3
