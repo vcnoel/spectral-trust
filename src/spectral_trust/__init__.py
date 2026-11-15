@@ -39,6 +39,9 @@ from .operator_spectra import (
     attention_operator, operator_spectrum, operator_measures, operator_metrics,
     participation_ratio, OperatorSpectrum, OPERATOR_METRIC_NAMES,
 )
+from .forman import (
+    forman_curvature, forman_node_curvature, forman_quantiles, FORMAN_QUANTILES,
+)
 from .cache import (
     SpectralCache, LayerSpectra, HeadSpectra, GRAPH_METRIC_NAMES, DIRECTED_GRAPH_METRIC_NAMES,
 )
@@ -114,6 +117,10 @@ __all__ = [
     "participation_ratio",
     "OperatorSpectrum",
     "OPERATOR_METRIC_NAMES",
+    "forman_curvature",
+    "forman_node_curvature",
+    "forman_quantiles",
+    "FORMAN_QUANTILES",
     "SpectralModel",
     "SpectralCache",
     "LayerSpectra",
