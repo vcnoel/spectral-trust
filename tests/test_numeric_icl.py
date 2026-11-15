@@ -240,7 +240,9 @@ def test_confound_audit_separates_confounded_from_genuine():
     assert rows["confounded"]["cv_gain_lo"] < 0.01
     assert rows["genuine"]["cv_gain_lo"] > 0
     assert rows["genuine"]["resid_auroc_lo"] > 0.6
-    assert "AUROC raw" in res.to_markdown()
+    assert "AUROC raw" in res.to_markdown() and "(covariate)" in res.to_markdown()
+    assert [r["covariate"] for r in res.covariate_rows] == ["c"]
+    assert res.covariate_rows[0]["auroc"] > 0.9
 
 
 def test_confound_audit_continuous_and_helpers():

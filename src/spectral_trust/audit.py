@@ -211,23 +211,27 @@ class AuditResult:
     ``auroc``, ``resid_auroc``, ``partial_r``, ``cv_auroc_covariates``,
     ``cv_auroc_full`` and ``cv_gain``; for a continuous target ``spearman``
     and ``partial_spearman``. Each statistic ``x`` comes with ``x_lo`` and
-    ``x_hi``.
+    ``x_hi``. ``covariate_rows`` hold each covariate's own raw effect on the
+    target (``auroc`` or ``spearman``), the baseline a readout has to beat.
     """
     kind: str
     covariates: List[str]
     rows: List[Dict[str, float]] = field(default_factory=list)
+    covariate_rows: List[Dict[str, float]] = field(default_factory=list)
 
     def to_dataframe(self):
         import pandas as pd
         return pd.DataFrame(self.rows)
 
     def to_dict(self) -> Dict:
-        return {"kind": self.kind, "covariates": self.covariates, "rows": self.rows}
+        return {"kind": self.kind, "covariates": self.covariates, "rows": self.rows,
+                "covariate_rows": self.covariate_rows}
 
     def to_markdown(self, digits: int = 2) -> str:
         if self.kind == "binary":
             cols = [("auroc", "AUROC raw"), ("resid_auroc", "AUROC after covariates"),
-                    ("partial_r", "partial r"), ("cv_gain", "CV AUROC gain")]
+                    ("partial_r", "partial r"), ("cv_auroc_covariates", "CV AUROC, covariates"),
+                    ("cv_gain", "CV AUROC gain")]
         else:
             cols = [("spearman", "Spearman raw"), ("partial_spearman", "partial Spearman")]
         head = "| readout | " + " | ".join(c[1] for c in cols) + " |"
@@ -238,6 +242,10 @@ class AuditResult:
             cells = [f"{f.format(r[k])} [{f.format(r[k + '_lo'])}, {f.format(r[k + '_hi'])}]"
                      for k, _ in cols]
             lines.append(f"| {r['readout']} | " + " | ".join(cells) + " |")
+        k = cols[0][0]
+        for r in self.covariate_rows:
+            cell = f"{f.format(r[k])} [{f.format(r[k + '_lo'])}, {f.format(r[k + '_hi'])}]"
+            lines.append(f"| *{r['covariate']} (covariate)* | {cell} |" + " |" * (len(cols) - 1))
         return "\n".join(lines)
 
 
@@ -320,4 +328,13 @@ def confound_audit(readouts: Mapping[str, Sequence[float]], target: Sequence[flo
             est, lo, hi = interval(fn, fn(np.arange(n)))
             row[key], row[key + "_lo"], row[key + "_hi"] = est, lo, hi
         result.rows.append(row)
+    for j, name in enumerate(used):
+        c = C[:, j]
+        if kind == "binary":
+            key, fn = "auroc", (lambda ix, c=c: auroc(c[ix], yb[ix]))
+        else:
+            key, fn = "spearman", (lambda ix, c=c: _corr(rankdata(c[ix]), rankdata(y[ix])))
+        est, lo, hi = interval(fn, fn(np.arange(n)))
+        result.covariate_rows.append({"covariate": name, "n": n, key: est, key + "_lo": lo,
+                                      key + "_hi": hi})
     return result
