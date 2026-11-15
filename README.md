@@ -48,6 +48,10 @@ and École Polytechnique, including a paper accepted at EACL 2027
 
 ## New in 0.5.0: interventions
 
+The interventions are new and experimental: their API may change in a minor
+release, default results of existing calls are guarded by bit-identity tests
+across releases, and audits are welcome ([wrong number](https://github.com/vcnoel/spectral-trust/issues/new?template=wrong-number.yml)).
+
 Every edit lives inside `st.intervene` and is undone on exit: hooks are
 removed, weights restored bit for bit, and the attention implementation put
 back. The three edits below are the ones the [use cases](https://github.com/vcnoel/spectral-trust#use-cases) measure
@@ -144,6 +148,9 @@ prompts. The scripts and their outputs are in
 | [Which words split Phi-3's attention graph](https://vcnoel.github.io/spectral-trust/use-cases/phi3-prepositions/) | Phi-3-mini-4k-instruct, 72 active/passive pairs and controls; four other models | λ2 at layer 3 falls from 0.93 to 0.36 on passives, but the trigger is a set of frequent prepositions, not the voice; sink mass detects it as well, the Fiedler split locates it, and no layer-2 edit undoes it. |
 | [Graph-filter side effects](https://vcnoel.github.io/spectral-trust/use-cases/graph-filter-side-effects/) | GPT-2 small and Phi-3-mini, WikiText-2 | At matched size, a low-pass edit along the attention graph costs more next-token KL than random-graph, path and scaling edits on GPT-2 and in Phi-3's middle and late layers; generation stays clean up to about 0.3 of the residual norm, and full-strength high-pass and band-pass edits break the model. |
 | [Injection defence](https://vcnoel.github.io/spectral-trust/use-cases/injection-defence/) (design) | — | A design, not a result: a band-stop filter defence and its attacker-aware evaluation. It has not been run. |
+
+Found a number that does not reproduce, or a result that a control explains?
+Open an issue with the ["wrong number" template](https://github.com/vcnoel/spectral-trust/issues/new?template=wrong-number.yml).
 
 ## Used in research
 
@@ -658,6 +665,8 @@ for the development setup, the tests and the code style, and the
 ## Changelog
 
 Release notes are in [CHANGELOG.md](https://github.com/vcnoel/spectral-trust/blob/main/CHANGELOG.md).
+Releases from 0.4.1 on, with their wheel and source distribution, are on the
+[releases page](https://github.com/vcnoel/spectral-trust/releases).
 
 ## Citation
 
