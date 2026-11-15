@@ -117,6 +117,11 @@ class SpectralTrustEstimator(Estimator):
         self.layer_aggregation, self.head_aggregation = layer_aggregation, head_aggregation
         self.sign, self.span, self.name = float(sign), span, name
         self.config = config or GSPConfig(device="cpu", verbose=False, save_plots=False)
+        namespace = self.metric.split(".", 1)[0]
+        option = {"graph": "edge_weights", "operator": "operator_edges"}.get(namespace)
+        if option and getattr(self.config, option, "attention") != "attention":
+            raise ValueError(f"{option}={getattr(self.config, option)!r} needs the model's value "
+                             "states; LM-Polygraph's forward-pass statistic has attention only")
         super().__init__(list(STATS), "sequence")
 
     def __str__(self) -> str:

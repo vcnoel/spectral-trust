@@ -2,7 +2,7 @@
 
 [LM-Polygraph](https://github.com/IINemo/lm-polygraph) (Fadeeva et al.,
 2023; MIT licence) is a benchmark of uncertainty estimators for language
-models: datasets, generation, quality metrics and some forty estimators,
+models: datasets, generation, quality metrics and several dozen estimators,
 all scored the same way. `spectral_trust.integrations.lm_polygraph` turns
 any attention metric of this library into one of its estimators, so that a
 spectral score can be compared with LM-Polygraph's baselines on its own
@@ -50,7 +50,8 @@ The metric can be any attention metric of the library:
 `graph.fiedler_value`, `graph.forman_curvature_mean`, `attn.hfer`, and so
 on, with the graph and operator options of a `GSPConfig` passed as
 `config=`. Hybrid metrics (which read hidden states) are refused, since the
-statistic holds attention only. `span="generated"` measures the subgraph
+statistic holds attention only, and so are value-weighted edges
+(`edge_weights`, `operator_edges`). `span="generated"` measures the subgraph
 of the generated tokens, the analogue of `token_span`; an empty span scores
 NaN, which LM-Polygraph leaves out of its metrics. `str(est)` names the
 estimator in LM-Polygraph's tables after its arguments, or `name=`.

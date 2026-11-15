@@ -116,6 +116,13 @@ def test_estimator_contract(bridge):
                 dict(layer_aggregation="last"), dict(span="answer")):
         with pytest.raises(ValueError):
             bridge.SpectralTrustEstimator(**bad)
+    for metric, field in (("graph.fiedler_value", "edge_weights"),
+                          ("operator.contraction", "operator_edges")):
+        cfg = st.GSPConfig(device="cpu", verbose=False, **{field: "value_per_head"})
+        with pytest.raises(ValueError, match=field):
+            bridge.SpectralTrustEstimator(metric, config=cfg)
+    cfg = st.GSPConfig(device="cpu", verbose=False, edge_weights="value_per_head")
+    bridge.SpectralTrustEstimator("operator.contraction", config=cfg)    # graph option unused
 
 
 def test_scores_are_finite_and_match_the_library(bridge, stats):
