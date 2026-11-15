@@ -19,6 +19,47 @@ diagonalises non-symmetric Laplacians with a general solver, and 0.3.0 made
 per-head functions, added in 0.3.0, had a related issue with `"rw"` that
 0.4.0 fixed (see v0.4.0).
 
+## Unreleased
+
+Directed and value-weighted attention graphs. No result changes for
+existing calls: with the new options at their defaults every result is
+bit-identical to 0.5.0.
+
+- Value-weighted edges (`spectral_trust.value_weighted`): the attention
+  output at token i splits into one vector per key token plus the output
+  bias, `c_ij = Σ_h a^h_ij W_O^h (g^h_i ⊙ v^h_j)`, and the edge from j to i
+  is `‖c_ij‖` (Kobayashi et al. 2020), or one norm per head. New names:
+  `value_weighted_attention`, `capture_attention_values`, `AttentionValues`
+  (`contributions`, `edge_weights`, `reconstruct`), `ValueCapture`,
+  `value_weighted_edges` and `attention_contributions`. Grouped-query
+  attention, fused projections (GPT-2, Phi-3, GPT-NeoX), value and output
+  biases (the output bias is in no contribution) and the output gates of
+  Qwen3.5 and Qwen3-Next are covered; on hybrid models only the
+  full-attention layers have a graph. The contributions rebuild the
+  attention output to a float32 relative error below 1e-4 on ten layouts.
+- Directed graphs (`spectral_trust.directed`): `directed_operator`
+  (`P = D_out⁻¹ A`), `directed_total_variation` (`‖x − P x‖² / ‖x‖²`, per
+  column with `per_column=True`), the magnetic Laplacian
+  (`magnetic_laplacian`, `magnetic_spectrum`, `magnetic_hfer`,
+  `magnetic_phase`), flow-imbalance clustering (`hermitian_clustering`,
+  `flow_imbalance`, `FlowClusters`) and `analyze_directed_layer`. The
+  magnetic HFER of a real signal is identical for a graph and its
+  transpose; the directed total variation is not.
+- `per_column_metrics(..., operator=P)` adds a `directed_tv` column.
+- `GSPConfig` gains `edge_weights` (`"attention"`, `"value"`,
+  `"value_per_head"`), `graph_direction` (`"symmetric"`, `"directed"`),
+  `magnetic_q` (default 0.25) and `sink_grounding`, a reserved hook that
+  raises `NotImplementedError` for any value other than None.
+  `GraphConstructor` gains `layer_graph`, `directed_operator` and
+  `magnetic_laplacian`; `EDGE_WEIGHTS`, `GRAPH_DIRECTIONS` and
+  `DIRECTED_GRAPH_METRIC_NAMES` are exported.
+- `SpectralModel.run_with_spectra` and `compute_spectra` (new argument
+  `edges=`) build the `graph` namespace from the options. Directed graphs
+  are measured on the magnetic Laplacian and add `graph.directed_tv` and
+  the array `graph.phase`. `GSPDiagnosticsFramework`, the graph filters
+  and frequency-resolved patching refuse the new options.
+- New page: Directed and value-weighted graphs.
+
 ## v0.5.0 (2026-11-15)
 
 Interventions: the TransformerLens basics (patching, ablation, steering)

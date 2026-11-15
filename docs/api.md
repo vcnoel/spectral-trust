@@ -116,6 +116,44 @@ and `st.weight_svd_full` are also top-level names. See the
 
 ::: spectral_trust.layer_delta_features
 
+## Directed and value-weighted graphs
+
+Added in 0.5.1. Graph options of `GSPConfig` (`edge_weights`,
+`graph_direction`, `magnetic_q`) and the functions behind them; see
+[Directed and value-weighted graphs](tutorials/directed-graphs.md).
+
+::: spectral_trust.value_weighted_attention
+
+::: spectral_trust.capture_attention_values
+
+::: spectral_trust.AttentionValues
+
+::: spectral_trust.ValueCapture
+
+::: spectral_trust.value_weighted_edges
+
+::: spectral_trust.attention_contributions
+
+::: spectral_trust.directed_operator
+
+::: spectral_trust.directed_total_variation
+
+::: spectral_trust.magnetic_laplacian
+
+::: spectral_trust.magnetic_spectrum
+
+::: spectral_trust.magnetic_hfer
+
+::: spectral_trust.magnetic_phase
+
+::: spectral_trust.hermitian_clustering
+
+::: spectral_trust.flow_imbalance
+
+::: spectral_trust.FlowClusters
+
+::: spectral_trust.directed.analyze_directed_layer
+
 ## Per-column diagnostics
 
 ::: spectral_trust.per_column_metrics

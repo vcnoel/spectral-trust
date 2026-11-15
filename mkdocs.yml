@@ -95,6 +95,7 @@ nav:
       - Per-head analysis: tutorials/per-head.md
       - TransformerLens and nnsight: tutorials/interop.md
       - Interventions: tutorials/interventions.md
+      - Directed and value-weighted graphs: tutorials/directed-graphs.md
   - Animated gallery: gallery.md
   - Use cases:
       - Overview: use-cases/index.md
