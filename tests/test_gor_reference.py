@@ -27,8 +27,9 @@ def _run(ref, name, seed="case"):
     n, over, case_seed = CASES[name]
     att = [torch.from_numpy(a) for a in ref[f"{name}/attentions"]]
     hid = [torch.from_numpy(h) for h in ref[f"{name}/hidden_states"]]
+    kw = {"normalization": "rw", **over}  # the stored fixture is the first released run
     out = F.geometry_of_reason(att, hid, arpack_seed=case_seed if seed == "case" else seed,
-                               **over)
+                               **kw)
     return np.stack([out[k] for k in F.GOR_FEATURES])
 
 

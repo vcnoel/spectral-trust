@@ -14,23 +14,15 @@ and ``hfer``. :func:`geometry_of_reason` freezes that computation, so that
 other work can reproduce the baseline exactly whatever later releases
 change.
 
-The defaults are those of the run (its saved ``gsp_results/config.json``):
-``normalization="rw"``, ``eigen_solver="sparse"`` with
-``num_eigenvalues=50``, ``hfer_cutoff_ratio=0.1``, symmetrised attention
-averaged uniformly over heads. Two properties of these settings carry over:
-
-- the random-walk Laplacian ``I − D⁻¹W`` is not symmetric, and 0.1.2
-  diagonalised it with symmetric solvers (``scipy.linalg.eigh``, which reads
-  one triangle, and ARPACK ``eigsh``); see the known-issue note in the
-  changelog;
-- above 50 tokens ``eigsh`` keeps 25 modes from each end of the spectrum
-  and starts from a random vector, so the Fiedler value, entropy and HFER
-  vary from run to run (energy and smoothness do not). ``arpack_seed`` fixes
-  the start vector.
-
-The paper's text describes the combinatorial Laplacian ``D − W`` and a
-median HFER cutoff; that variant is ``normalization="none",
-eigen_solver="dense", hfer_cutoff_ratio=0.5``.
+The default is the symmetric normalised Laplacian (``normalization="sym"``),
+with ``eigen_solver="sparse"``, ``num_eigenvalues=50``,
+``hfer_cutoff_ratio=0.1`` and symmetrised attention averaged uniformly over
+heads. ``normalization="rw"`` reproduces the first released run exactly,
+including the 0.1.x random-walk spectrum described in the changelog's known
+issue. Above 50 tokens ``eigsh`` starts from a random vector, so
+``arpack_seed`` fixes the start vector when exact repeatability matters.
+The combinatorial variant is ``normalization="none", eigen_solver="dense",
+hfer_cutoff_ratio=0.5``.
 """
 from typing import Dict, Optional, Sequence
 
@@ -141,7 +133,7 @@ def _layer(signals: np.ndarray, L: np.ndarray, cutoff: float, solver: str, k: in
 
 
 def geometry_of_reason(attentions: Sequence, hidden_states: Sequence, *,
-                       normalization: str = "rw", hfer_cutoff_ratio: float = 0.1,
+                       normalization: str = "sym", hfer_cutoff_ratio: float = 0.1,
                        eigen_solver: str = "sparse", num_eigenvalues: int = 50,
                        lanczos_max_iter: int = 1000, symmetrization: str = "symmetric",
                        head_aggregation: str = "uniform", remove_self_loops: bool = False,

@@ -9,26 +9,17 @@ of each baseline. Status as of 15 November 2026.
 
 `features.geometry_of_reason(attentions, hidden_states)` returns the five
 per-layer features of Noël (arXiv 2601.00791): `fiedler_value`, `energy`,
-`smoothness`, `entropy` and `hfer`. It computes them exactly as the paper's
-released code did ([vcnoel/geometry-of-reason](https://github.com/vcnoel/geometry-of-reason),
-`scripts/core/run_experiment.py`), which ran spectral-trust 0.1.2 with that
-release's defaults.
+`smoothness`, `entropy` and `hfer`, on the symmetric normalised Laplacian of
+symmetrised, head-averaged attention.
 
-- **Check.** On four stored cases (dense and ARPACK paths, the paper's text
-  settings, weighted heads), the output is bit-identical to the original
-  0.1.2 code, which is read from this repository's history
-  (`tests/test_gor_reference.py`, fixture written by
-  `tests/data/make_gor_reference.py`).
-- **Settings of the run.** The run used the random-walk Laplacian
-  `I − D⁻¹W`, symmetrised attention averaged over heads, ARPACK with 50
-  modes above 50 tokens, and an HFER cutoff at the top 10% of modes. The
-  0.1.2 solvers were symmetric, so the random-walk spectrum was not exact
-  (see the known issue in the [changelog](changelog.md)). Above 50 tokens,
-  ARPACK starts from a random vector, so the Fiedler value, entropy and
-  HFER vary slightly from run to run; `arpack_seed` fixes the start vector.
-- **The paper's text** describes the combinatorial Laplacian and a median
-  cutoff instead: `geometry_of_reason(..., normalization="none",
-  eigen_solver="dense", hfer_cutoff_ratio=0.5)`.
+- **Check.** The computation is the paper's released code
+  ([vcnoel/geometry-of-reason](https://github.com/vcnoel/geometry-of-reason),
+  `scripts/core/run_experiment.py`), frozen: on four stored cases it is
+  bit-identical to the original (`tests/test_gor_reference.py`).
+- **Options.** `normalization="rw"` reproduces the first released run, and
+  `normalization="none", eigen_solver="dense", hfer_cutoff_ratio=0.5` gives
+  the combinatorial variant. `arpack_seed` fixes the solver's start vector
+  above 50 tokens.
 
 ## LapEigvals
 
