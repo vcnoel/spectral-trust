@@ -216,4 +216,27 @@ def forman_node_curvature(curvature, direction: str = "out", reduce: str = "mean
 
 
 __all__ = ["FORMAN_QUANTILES", "FORMAN_EPS", "FORMAN_WEIGHTS", "forman_curvature",
-           "forman_quantiles", "forman_node_curvature"]
+           "forman_quantiles", "forman_node_curvature", "check_forman_options",
+           "graph_curvature_summary"]
+
+
+def check_forman_options(config) -> None:
+    """Raise on an unknown ``GSPConfig.forman_weights``."""
+    weights = getattr(config, "forman_weights", "neg_log")
+    if weights not in FORMAN_WEIGHTS:
+        raise ValueError(f"forman_weights must be one of {FORMAN_WEIGHTS}, got {weights!r}")
+
+
+def graph_curvature_summary(adjacency, directed: bool, weights: Weights = "neg_log",
+                            quantiles: Sequence[float] = FORMAN_QUANTILES):
+    """The mean curvature over the edges of one graph ``[S, S]`` and the
+    quantiles of all its edge curvatures (each undirected edge counted
+    once); 0 and zeros for a graph without edges. The ``graph`` namespace's
+    ``forman_curvature_mean`` and ``forman_quantiles``."""
+    F = forman_curvature(adjacency, directed=directed, weights=weights)
+    if not directed:
+        lower = torch.ones_like(F, dtype=torch.bool).tril(-1)
+        F = torch.where(lower, F, torch.full_like(F, float("nan")))
+    vals = F[~torch.isnan(F)]
+    mean = float(vals.mean()) if vals.numel() else 0.0
+    return mean, forman_quantiles(F, quantiles=quantiles)

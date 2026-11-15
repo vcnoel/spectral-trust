@@ -141,10 +141,11 @@ METRICS_0_5_0 = (
 @pytest.mark.parametrize("operator_opts", [
     {},
     dict(operator_measure="counting", operator_heads="mean", operator_edges="value"),
-    dict(operator_edges="value_per_head")])
+    dict(operator_edges="value_per_head"), dict(forman_weights="unit")])
 def test_operator_options_leave_default_runs_bit_identical(gpt2, operator_opts):
-    # The operator namespace is opt-in: a run that does not name it computes
-    # the metrics of 0.5.0, and its options change nothing.
+    # The operator namespace and the curvature metric are opt-in: a run that
+    # does not name them computes the metrics of 0.5.0, and their options
+    # change nothing.
     ids = _ids(2)
     plain = st.SpectralModel(gpt2, None, config=CFG).run_with_spectra(ids)
     assert plain.metric_names == METRICS_0_5_0

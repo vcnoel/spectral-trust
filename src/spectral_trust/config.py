@@ -127,3 +127,10 @@ class GSPConfig:
     # per head) or "value" (||sum_h a^h_ij W_O^h v^h_j||, one matrix per
     # layer, so operator_heads="mean" only).
     operator_edges: str = "attention"
+
+    # New in v0.5.1: edge weights of graph.forman_curvature_mean (computed only
+    # when named in metrics=; spectral_trust.forman), measured on the layer
+    # graph that edge_weights and graph_direction build (directed curvature
+    # on a directed graph, undirected on a symmetric one): "neg_log"
+    # (max(-log a, 1e-9)), "attention" (a) or "unit" (1).
+    forman_weights: str = "neg_log"

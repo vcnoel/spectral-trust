@@ -34,6 +34,7 @@ from .framework import attention_layer_indices
 from .graph import GraphConstructor, default_graph
 from .instrumentation import assert_finite_attention
 from .operator_spectra import check_operator_options, operator_metrics
+from .forman import check_forman_options, graph_curvature_summary
 from .per_head import (
     HeadSelection, _resolve_heads, per_head_hybrid_metrics, per_head_metrics,
 )
@@ -160,6 +161,14 @@ def compute_spectra(
     by their sums first: the span's own edges under ``token_span``, the
     value-weighted attention for value edges, and float rounding otherwise.
 
+    ``graph.forman_curvature_mean`` (computed only when named) is the mean
+    Forman curvature of the edges of the layer graph that the graph options
+    build (:mod:`spectral_trust.forman`, weights ``config.forman_weights``):
+    directed on a directed graph, undirected on a symmetric one, with the
+    quantiles of its edge curvatures in ``graph.forman_quantiles``. A
+    value-weighted symmetric graph holds raw norms: under ``"neg_log"`` it is
+    replaced by ``(P + Pᵀ)/2``, P the row-normalised value-weighted attention.
+
     The ``graph`` namespace follows ``config.edge_weights`` and
     ``config.graph_direction``. With ``graph_direction="directed"`` its
     metrics come from the magnetic Laplacian of the row-normalised operator
@@ -222,6 +231,10 @@ def compute_spectra(
     resid_names = [q.split(".", 1)[1] for q in selected if q.startswith("resid.")]
     graph_names = [q.split(".", 1)[1] for q in selected if q.startswith("graph.")]
     operator_names = [q.split(".", 1)[1] for q in selected if q.startswith("operator.")]
+    forman = "forman_curvature_mean" in graph_names
+    if forman:
+        check_forman_options(cfg)
+        graph_names = [m for m in graph_names if m != "forman_curvature_mean"]
     if operator_names and op_mode != "attention" and operator_edges is None:
         if op_mode == edge_mode and edges is not None:
             operator_edges = edges
@@ -307,6 +320,10 @@ def compute_spectra(
                 if hybrid:
                     rec[f"blocks.{lay}.graph.spectral_masses"] = np.asarray(
                         diag.spectral_masses, dtype=np.float32)
+            if forman:
+                src = a if edge_mode == "attention" else \
+                    edges[lay][b, ..., :n, :n].detach().to(device="cpu", dtype=torch.float32)
+                _forman_layer(rec, lay, src, (s, e), cfg, gc, directed, edge_mode)
             if operator_names:
                 src = a if op_mode == "attention" else \
                     operator_edges[lay][b, ..., :n, :n].detach().to(device="cpu")
@@ -360,6 +377,30 @@ def _option_graph(rec, lay, src, x, span, full, cfg, gc, analyzer, names, hybrid
     if hybrid:
         rec[f"blocks.{lay}.graph.spectral_masses"] = np.asarray(diag.spectral_masses,
                                                                 dtype=np.float32)
+
+
+def _forman_layer(rec, lay, src, span, cfg, gc, directed, edge_mode):
+    """``graph.forman_curvature_mean`` and ``graph.forman_quantiles`` of one
+    layer, on the layer graph of the graph options: the row-normalised
+    operator of the span's own edges (directed curvature), or the induced
+    subgraph of the symmetrised graph (undirected curvature)."""
+    s, e = span
+    weights = getattr(cfg, "forman_weights", "neg_log")
+    if directed:
+        G = gc.layer_graph(src[..., s:e, s:e].unsqueeze(0))[0]
+    elif edge_mode != "attention" and weights == "neg_log":
+        # Raw value norms are not probabilities, and -log needs weights in
+        # (0, 1]: the graph is (P + P^T) / 2 with P the row-normalised
+        # value-weighted attention, the counterpart of (A + A^T) / 2.
+        from .directed import directed_operator
+        src4 = src.unsqueeze(0) if src.dim() == 3 else src[None, None]
+        P = directed_operator(gc.aggregate_heads(src4)[0])
+        G = (0.5 * (P + P.transpose(-1, -2)))[s:e, s:e]
+    else:
+        G = gc.layer_graph(src.unsqueeze(0))[0][s:e, s:e]
+    mean, quant = graph_curvature_summary(G, directed=directed, weights=weights)
+    rec[f"blocks.{lay}.graph.forman_curvature_mean"] = mean
+    rec[f"blocks.{lay}.graph.forman_quantiles"] = quant.numpy().astype(np.float32)
 
 
 def _operator_layer(rec, lay, src, span, cfg, heads, n_heads, names):

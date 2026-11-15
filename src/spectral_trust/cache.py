@@ -68,6 +68,10 @@ GRAPH_METRIC_NAMES: List[str] = [
 #: (``GSPConfig(graph_direction="directed")``).
 DIRECTED_GRAPH_METRIC_NAMES: List[str] = ["directed_tv"]
 
+#: Scalar metrics of the graph namespace computed only when named in
+#: ``metrics=`` (neither ``None`` nor ``"graph"`` selects them).
+OPT_IN_GRAPH_METRIC_NAMES: List[str] = ["forman_curvature_mean"]
+
 #: Scalar metric names of each namespace.
 NAMESPACE_METRICS: Dict[str, List[str]] = {
     "attn": list(PER_HEAD_METRIC_NAMES),
@@ -84,7 +88,7 @@ OPT_IN_NAMESPACES = ("operator",)
 ARRAY_NAMES: Dict[str, List[str]] = {
     "attn": ["eigenvalues", "pattern"],
     "resid": [],
-    "graph": ["eigenvalues", "fiedler_vector", "spectral_masses", "phase"],
+    "graph": ["eigenvalues", "fiedler_vector", "spectral_masses", "phase", "forman_quantiles"],
     "operator": ["eigenvalues"],
 }
 
@@ -103,7 +107,8 @@ def metric_family(qualified: str) -> str:
         return "hybrid"
     if namespace == "operator":
         return "attention"
-    if name in ("fiedler_vector", "phase"):
+    if name in ("fiedler_vector", "phase", "forman_quantiles") \
+            or name in OPT_IN_GRAPH_METRIC_NAMES:
         return "attention"
     if name in DIRECTED_METRIC_FAMILIES:
         return DIRECTED_METRIC_FAMILIES[name]
@@ -123,7 +128,9 @@ def resolve_metrics(metrics, hybrid: bool = True, directed: bool = False) -> Lis
     (:data:`DIRECTED_GRAPH_METRIC_NAMES`). The namespaces of
     :data:`OPT_IN_NAMESPACES` (``operator``) are selected only by name
     (``"operator"``, ``"operator.contraction"`` or a bare name such as
-    ``"participation_ratio"``); ``None`` leaves them out.
+    ``"participation_ratio"``); ``None`` leaves them out, as it leaves out
+    :data:`OPT_IN_GRAPH_METRIC_NAMES` (``graph.forman_curvature_mean``),
+    which the namespace ``"graph"`` does not select either.
     """
     def allowed(q):
         return hybrid or metric_family(q) == "attention"
@@ -131,6 +138,8 @@ def resolve_metrics(metrics, hybrid: bool = True, directed: bool = False) -> Lis
     names_of = dict(NAMESPACE_METRICS)
     if directed:
         names_of["graph"] = list(GRAPH_METRIC_NAMES) + list(DIRECTED_GRAPH_METRIC_NAMES)
+    names_of["graph"] = list(names_of["graph"]) + list(OPT_IN_GRAPH_METRIC_NAMES)
+    opt_in = {f"graph.{m}" for m in OPT_IN_GRAPH_METRIC_NAMES}
     every = [f"{ns}.{m}" for ns, names in names_of.items() for m in names]
     if metrics is not None and not directed:
         entries = [metrics] if isinstance(metrics, str) else list(metrics)
@@ -140,8 +149,8 @@ def resolve_metrics(metrics, hybrid: bool = True, directed: bool = False) -> Lis
                 raise ValueError(f"{entry!r} is measured on directed graphs only; pass "
                                  "GSPConfig(graph_direction='directed')")
     if metrics is None:
-        return [q for q in every
-                if allowed(q) and q.split(".", 1)[0] not in OPT_IN_NAMESPACES]
+        return [q for q in every if allowed(q) and q not in opt_in
+                and q.split(".", 1)[0] not in OPT_IN_NAMESPACES]
     if isinstance(metrics, str):
         metrics = [metrics]
     out: List[str] = []
@@ -150,7 +159,7 @@ def resolve_metrics(metrics, hybrid: bool = True, directed: bool = False) -> Lis
         if entry.endswith(".*"):
             entry = entry[:-2]
         if entry in names_of:
-            chosen = [f"{entry}.{m}" for m in names_of[entry]]
+            chosen = [f"{entry}.{m}" for m in names_of[entry] if f"{entry}.{m}" not in opt_in]
             chosen = [q for q in chosen if allowed(q)]
         elif "." in entry:
             ns, _, name = entry.partition(".")
