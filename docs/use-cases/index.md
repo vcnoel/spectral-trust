@@ -1,5 +1,11 @@
 # Use cases
 
+!!! note "Experimental"
+    The interventions are new and experimental, and their API may change in a
+    minor release. Default results of existing calls are guarded by
+    bit-identity tests across releases. Audits are welcome: open a
+    ["wrong number" issue](https://github.com/vcnoel/spectral-trust/issues/new?template=wrong-number.yml).
+
 Each page below applies spectral-trust to a real model and data set,
 against controls that could have produced the same result, with bootstrap
 intervals over prompts. Each states what was measured, what it was compared

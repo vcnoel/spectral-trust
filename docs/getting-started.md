@@ -106,3 +106,11 @@ cache = st.SpectralCache.load(path)
 
 One `.npz` file holds every array and the metadata (tokens, layers, heads,
 configuration) as JSON; loading needs no pickle.
+
+## Stability
+
+The diagnostics API (`SpectralModel`, `SpectralCache`, the adapters, the
+views and the lower-level functions) is stable. `spectral_trust.interventions`
+(and, from 0.5.1, directed and value-weighted graphs) is experimental and may
+change in a minor release. Every change is listed in the
+[changelog](changelog.md).

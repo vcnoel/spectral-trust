@@ -2,6 +2,12 @@
 
 *Added in 0.5.0.*
 
+!!! note "Experimental"
+    The interventions are new and experimental, and their API may change in a
+    minor release. Default results of existing calls are guarded by
+    bit-identity tests across releases. Audits are welcome: open a
+    ["wrong number" issue](https://github.com/vcnoel/spectral-trust/issues/new?template=wrong-number.yml).
+
 `spectral_trust.interventions` edits a Hugging Face causal LM with PyTorch
 hooks.
 It covers the TransformerLens basics (activation patching, head ablation,
