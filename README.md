@@ -49,8 +49,8 @@ and École Polytechnique, including a paper accepted at EACL 2027
 ## New in 0.5.0: interventions
 
 The interventions are new and experimental: their API may change in a minor
-release, default results of existing calls are guarded by bit-identity tests
-across releases, and audits are welcome ([wrong number](https://github.com/vcnoel/spectral-trust/issues/new?template=wrong-number.yml)).
+release, changes to the results of existing calls are listed in the
+changelog, and audits are welcome ([wrong number](https://github.com/vcnoel/spectral-trust/issues/new?template=wrong-number.yml)).
 
 Every edit lives inside `st.intervene` and is undone on exit: hooks are
 removed, weights restored bit for bit, and the attention implementation put
