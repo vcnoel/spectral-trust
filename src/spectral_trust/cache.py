@@ -88,7 +88,8 @@ OPT_IN_NAMESPACES = ("operator",)
 ARRAY_NAMES: Dict[str, List[str]] = {
     "attn": ["eigenvalues", "pattern"],
     "resid": [],
-    "graph": ["eigenvalues", "fiedler_vector", "spectral_masses", "phase", "forman_quantiles"],
+    "graph": ["eigenvalues", "fiedler_vector", "spectral_masses", "phase", "forman_quantiles",
+              "adjacency"],
     "operator": ["eigenvalues"],
 }
 
@@ -107,7 +108,7 @@ def metric_family(qualified: str) -> str:
         return "hybrid"
     if namespace == "operator":
         return "attention"
-    if name in ("fiedler_vector", "phase", "forman_quantiles") \
+    if name in ("fiedler_vector", "phase", "forman_quantiles", "adjacency") \
             or name in OPT_IN_GRAPH_METRIC_NAMES:
         return "attention"
     if name in DIRECTED_METRIC_FAMILIES:

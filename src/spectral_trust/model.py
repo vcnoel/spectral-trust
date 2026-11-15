@@ -300,7 +300,7 @@ def compute_spectra(
                 src = a if edge_mode == "attention" else \
                     edges[lay][b, ..., :n, :n].detach().to(device="cpu", dtype=torch.float32)
                 _option_graph(rec, lay, src, x, (s, e), full, cfg, gc, analyzer,
-                              graph_names, hybrid, directed)
+                              graph_names, hybrid, directed, keep_patterns)
             elif graph_names:
                 sym = gc.symmetrize_attention(a.unsqueeze(0))             # [1, H, S, S]
                 adj = gc.aggregate_heads(sym)                             # [1, S, S]
@@ -345,10 +345,13 @@ def compute_spectra(
     return SpectralCache(records, tokens, chosen, n_heads, selected, cfg, info)
 
 
-def _option_graph(rec, lay, src, x, span, full, cfg, gc, analyzer, names, hybrid, directed):
+def _option_graph(rec, lay, src, x, span, full, cfg, gc, analyzer, names, hybrid, directed,
+                  keep=False):
     """The ``graph`` namespace of one layer for non-default graph options:
     value-weighted edges and/or a directed graph. ``src`` is ``[H, S, S]``
-    (attention, or per-head value-weighted edges) or ``[S, S]``."""
+    (attention, or per-head value-weighted edges) or ``[S, S]``. With
+    ``keep`` a symmetric graph also stores its adjacency
+    (``graph.adjacency``, the full sequence), which the graph views read."""
     s, e = span
     sig_full = x if x is not None else None
     if directed:
@@ -362,6 +365,8 @@ def _option_graph(rec, lay, src, x, span, full, cfg, gc, analyzer, names, hybrid
         rec[f"blocks.{lay}.graph.phase"] = np.asarray(extra["phase"], dtype=np.float32)
     else:
         adj = gc.layer_graph(src.unsqueeze(0))                               # [1, S, S]
+        if keep:
+            rec[f"blocks.{lay}.graph.adjacency"] = adj[0].numpy().copy()
         if full:
             lap = gc.construct_laplacian(adj)[0]
         else:

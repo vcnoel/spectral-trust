@@ -171,7 +171,8 @@ class GraphConstructor:
     
     def construct_laplacian(self, adjacency: torch.Tensor) -> torch.Tensor:
         """
-        Construct graph Laplacian from adjacency matrix
+        Construct graph Laplacian from adjacency matrix. Negative weights are
+        set to zero: signed graphs are not supported yet.
         Args:
             adjacency: [batch, seq_len, seq_len] adjacency matrix
         Returns:
