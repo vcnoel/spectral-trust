@@ -1,5 +1,24 @@
 # Changelog
 
+## Known issue in releases before 0.2.2
+
+Releases 0.1.0 to 0.2.1 computed the layer-level spectrum
+(`SpectralAnalyzer.compute_eigendecomposition`, used by
+`GSPDiagnosticsFramework`) with `scipy.linalg.eigh` (`eigsh` on the sparse
+path) for every normalization. Under `normalization="rw"`, the default until
+0.3.0, the Laplacian `I − D⁻¹W` is not symmetric: `eigh` reads only one
+triangle of it, so it returned the spectrum of a different, symmetric
+matrix, and negative eigenvalues were then clipped to 0. The Fiedler value
+and the other metrics computed from that eigendecomposition were wrong,
+mostly too low: recomputing the 0.1.2 construction on Phi-3-mini-4k-instruct
+gave Fiedler values up to 0.36 below the correct ones (and up to 0.07
+above). `normalization="sym"` and `"none"` were not affected. 0.2.2
+diagonalises non-symmetric Laplacians with a general solver, and 0.3.0 made
+`"sym"` the default. Results computed with 0.1.x, 0.2.0 or 0.2.1 under
+`normalization="rw"` should be recomputed with a current release. The
+per-head functions, added in 0.3.0, had a related issue with `"rw"` that
+0.4.0 fixed (see v0.4.0).
+
 ## v0.5.0 (2026-11-15)
 
 Interventions: the TransformerLens basics (patching, ablation, steering)
