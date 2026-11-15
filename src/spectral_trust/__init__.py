@@ -31,6 +31,10 @@ from .directed import (
     directed_operator, directed_total_variation, magnetic_laplacian, magnetic_spectrum,
     magnetic_hfer, magnetic_phase, hermitian_clustering, flow_imbalance, FlowClusters,
 )
+from .value_weighted import (
+    value_weighted_attention, value_weighted_edges, attention_contributions,
+    capture_attention_values, AttentionValues, ValueCapture,
+)
 from .cache import SpectralCache, LayerSpectra, HeadSpectra, GRAPH_METRIC_NAMES
 from .model import SpectralModel, compute_spectra
 from .interop import from_transformer_lens, from_nnsight, from_hf_outputs
@@ -89,6 +93,12 @@ __all__ = [
     "hermitian_clustering",
     "flow_imbalance",
     "FlowClusters",
+    "value_weighted_attention",
+    "value_weighted_edges",
+    "attention_contributions",
+    "capture_attention_values",
+    "AttentionValues",
+    "ValueCapture",
     "SpectralModel",
     "SpectralCache",
     "LayerSpectra",
