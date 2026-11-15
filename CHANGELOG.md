@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.5.0
+## v0.5.0 (2026-11-15)
 
 Interventions: the TransformerLens basics (patching, ablation, steering)
 on Hugging Face models, and interventions in the graph-spectral domain. No
@@ -14,6 +14,22 @@ result changes for existing calls.
   GPT-NeoX and OPT layouts). Interventions on one model may be nested and
   closed in any order. Positions are absolute, so position-dependent edits
   agree between cached generation and recomputation.
+- Public names of `spectral_trust.interventions`:
+  - edits: `intervene` (also `st.intervene`), `Intervention` (`resid`,
+    `attention`, `weights`, `hook`, `close`), `ResidSite` (`add`,
+    `graph_filter`), `AttentionSite` (`ablate`, `head_outputs`,
+    `edit_pattern`, `remove_edges`), `WeightSite` (`svd_scale`, `snr`,
+    `weight`), `Edit` (`remove`) and `remove_edges_from_pattern`;
+  - graph filters: `graph_filter` (also `st.graph_filter`), `FilterSpec`,
+    `filter_coefficients`, `filter_response`, `ideal_response`,
+    `attention_adjacency`, `path_adjacency`, `laplacian`, `laplacian64`,
+    `compute_placement`, `FILTER_KINDS`, `GRAPH_NAMES`, `PRECISIONS`;
+  - patching: `patch`, `Patcher`, `PatchSpec`, `equal_count_bands` (all
+    four also top-level), `select_modes`, `haar_basis`, `BASES`, `SITES`;
+  - weights: `weight_snr`, `weight_svd_full` (both also top-level),
+    `matrix_snr`, `lowrank_snr`, `svd_scale_matrix`;
+  - warning thresholds: `KEEP_SINK_WARN_FACTOR` (10) and
+    `GRAPH_FILTER_WARN_RELATIVE_EDIT` (0.5).
 - Graph-frequency steering: `iv.resid(layer).graph_filter(kind, cutoff= |
   band=, strength=, graph=, causal=)` filters the residual stream along the
   token axis on that layer's head-averaged attention graph (built as the
@@ -34,8 +50,12 @@ result changes for existing calls.
   later and say so at run time, while the package keeps requiring 4.30).
 - `remove_edges(key_mask, keep_sink=True)` removes attention edges and
   renormalises each edited row over its remaining non-sink keys with the
-  first token's entry held fixed. Plain renormalisation (`keep_sink=False`)
-  releases sink mass onto the content keys.
+  first token's entry held fixed; `keep_sink=False` renormalises over every
+  remaining key, the first token included, and `renormalize=False` only
+  zeroes. None of the three is a pure edge ablation when the removed edges
+  carry most of a row: holding the sink fixed then multiplies the edges
+  left by a large factor (13 to 181 for the GPT-2 name movers in the IOI
+  use case).
 - Weight-spectrum steering: `iv.weights(layer, module).svd_scale(alpha, k=)`
   applies the spectral-steering rescaling
   `σ' = σ (1 + α (σ − mean) / std)` and warns when a factor turns
@@ -58,7 +78,19 @@ result changes for existing calls.
   "corrupt_attention" | "path" | "random"`) takes one band of a token-axis
   eigenbasis from the clean run; the full band equals plain patching.
   `st.equal_count_bands` splits the modes into equal-count bands.
+- Warnings: `remove_edges` with `keep_sink=True` warns, once per call,
+  when it multiplies the kept non-sink attention of any edited row by more
+  than 10; `graph_filter` on the residual stream warns, once per call, when
+  its edit exceeds half the residual norm of the edited positions
+  (`‖X' − X‖ / ‖X‖ > 0.5`). `svd_scale` warns when a singular value's factor
+  turns non-positive.
 - New tutorial: Interventions.
+- Use cases (`docs/use-cases/`, with scripts and outputs in
+  `examples/use_cases/`): edge ablation and the attention sink on GPT-2 IOI,
+  graph-frequency steering against matched controls, frequency-resolved
+  patching on IOI, which words split Phi-3-mini's attention graph, the side
+  effects of `graph_filter` on GPT-2 and Phi-3-mini, and the design of a
+  band-stop injection defence, which has not been run.
 
 ## v0.4.2
 
