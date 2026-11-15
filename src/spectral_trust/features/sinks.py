@@ -33,7 +33,7 @@ __all__ = ["sink_mass", "value_norms", "value_weighted_sink", "effective_rank",
 #: only when values are given).
 ATTENTION_COVARIATES = ("sink_mass", "value_weighted_sink", "diagonal_mass",
                         "previous_token_mass", "row_entropy", "attention_effective_rank",
-                        "n_tokens")
+                        "asymmetry", "n_tokens")
 
 
 def _t(x) -> torch.Tensor:
@@ -179,6 +179,8 @@ def attention_covariates(attention, values=None, out_weight=None, sink: int = 0
         - ``row_entropy``: mean over queries of ``-Σ_j A[i, j] log A[i, j]``
           (nats);
         - ``attention_effective_rank``: :func:`effective_rank` of each map;
+        - ``asymmetry``: the coefficient ``G`` of Dahlem et al.
+          (:func:`spectral_trust.features.asymmetry`);
         - ``n_tokens``: ``S``.
     """
     A = _t(attention)
@@ -195,6 +197,8 @@ def attention_covariates(attention, values=None, out_weight=None, sink: int = 0
     logs = torch.log(torch.where(A > 0, A, torch.ones_like(A)))
     out["row_entropy"] = -(A * logs).sum(-1).mean(-1)
     out["attention_effective_rank"] = _t(effective_rank(A))
+    from .asymmetry import asymmetry
+    out["asymmetry"] = _t(asymmetry(A))
     result = {k: _out(v) for k, v in out.items()}
     result["n_tokens"] = int(S)
     return result
