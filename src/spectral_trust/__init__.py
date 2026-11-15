@@ -35,6 +35,10 @@ from .value_weighted import (
     value_weighted_attention, value_weighted_edges, attention_contributions,
     capture_attention_values, AttentionValues, ValueCapture,
 )
+from .operator_spectra import (
+    attention_operator, operator_spectrum, operator_measures, operator_metrics,
+    participation_ratio, OperatorSpectrum, OPERATOR_METRIC_NAMES,
+)
 from .cache import (
     SpectralCache, LayerSpectra, HeadSpectra, GRAPH_METRIC_NAMES, DIRECTED_GRAPH_METRIC_NAMES,
 )
@@ -103,6 +107,13 @@ __all__ = [
     "capture_attention_values",
     "AttentionValues",
     "ValueCapture",
+    "attention_operator",
+    "operator_spectrum",
+    "operator_measures",
+    "operator_metrics",
+    "participation_ratio",
+    "OperatorSpectrum",
+    "OPERATOR_METRIC_NAMES",
     "SpectralModel",
     "SpectralCache",
     "LayerSpectra",
