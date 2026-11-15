@@ -1,4 +1,4 @@
-# A band-stop filter as an injection defence (planned)
+# A band-stop filter as an injection defence (design, not run)
 
 !!! note "Planned, not run"
     This page describes an experiment design. It has not been run and gives
