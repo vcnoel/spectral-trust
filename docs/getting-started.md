@@ -13,7 +13,7 @@ matplotlib. Optional extras:
 |---|---|
 | `spectral-trust[tl]` | TransformerLens, for `from_transformer_lens` |
 | `spectral-trust[nnsight]` | nnsight, for `from_nnsight` |
-| `spectral-trust[viz]` | a matplotlib recent enough for the heatmap fallback (the SVG views need nothing) |
+| `spectral-trust[viz]` | imageio and imageio-ffmpeg, whose ffmpeg binary encodes the videos and GIFs of `cache.animate`, and a matplotlib recent enough for the heatmap fallback (the SVG views need nothing) |
 | `spectral-trust[docs]` | mkdocs-material and mkdocstrings, to build this site |
 | `spectral-trust[dev]` | pytest, build, twine and the notebook runner |
 
