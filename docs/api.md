@@ -23,6 +23,66 @@ as st`), except where a module path is shown.
 
 ::: spectral_trust.from_hf_outputs
 
+## Interventions
+
+Added in 0.5.0, in the subpackage `spectral_trust.interventions`. The
+context manager `st.intervene` and `st.patch`, `st.Patcher`,
+`st.PatchSpec`, `st.equal_count_bands`, `st.graph_filter`, `st.weight_snr`
+and `st.weight_svd_full` are also top-level names. See the
+[interventions tutorial](tutorials/interventions.md).
+
+::: spectral_trust.interventions.context.intervene
+
+::: spectral_trust.interventions.context.Intervention
+
+::: spectral_trust.interventions.context.ResidSite
+
+::: spectral_trust.interventions.context.AttentionSite
+
+::: spectral_trust.interventions.context.WeightSite
+
+::: spectral_trust.interventions.context.Edit
+
+::: spectral_trust.interventions.context.remove_edges_from_pattern
+
+::: spectral_trust.interventions.patching.patch
+
+::: spectral_trust.interventions.patching.Patcher
+
+::: spectral_trust.interventions.patching.PatchSpec
+
+::: spectral_trust.interventions.patching.equal_count_bands
+
+::: spectral_trust.interventions.patching.select_modes
+
+::: spectral_trust.interventions.patching.haar_basis
+
+::: spectral_trust.interventions.filters.graph_filter
+
+::: spectral_trust.interventions.filters.filter_coefficients
+
+::: spectral_trust.interventions.filters.filter_response
+
+::: spectral_trust.interventions.filters.ideal_response
+
+::: spectral_trust.interventions.filters.attention_adjacency
+
+::: spectral_trust.interventions.filters.path_adjacency
+
+::: spectral_trust.interventions.filters.laplacian64
+
+::: spectral_trust.interventions.filters.compute_placement
+
+::: spectral_trust.interventions.weights.weight_snr
+
+::: spectral_trust.interventions.weights.weight_svd_full
+
+::: spectral_trust.interventions.weights.svd_scale_matrix
+
+::: spectral_trust.interventions.weights.matrix_snr
+
+::: spectral_trust.interventions.weights.lowrank_snr
+
 ## Views
 
 `spectral_trust.viz`; also `SpectralCache.graph`, `.heatmap`, `.spectrum` and

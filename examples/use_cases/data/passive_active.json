@@ -1,0 +1,3624 @@
+[
+ {
+  "id": "en_t1_00_active",
+  "group": "en_pair",
+  "pair": "en_t1_00",
+  "voice": "active",
+  "lang": "en",
+  "text": "The scientist discovered the particle.",
+  "agent": "scientist",
+  "patient": "particle",
+  "verb": "discovered"
+ },
+ {
+  "id": "en_t1_00_passive",
+  "group": "en_pair",
+  "pair": "en_t1_00",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The particle was discovered by the scientist.",
+  "agent": "scientist",
+  "patient": "particle",
+  "verb": "discovered"
+ },
+ {
+  "id": "en_t2_00_active",
+  "group": "en_pair",
+  "pair": "en_t2_00",
+  "voice": "active",
+  "lang": "en",
+  "text": "The young scientist discovered the new particle.",
+  "agent": "scientist",
+  "patient": "particle",
+  "verb": "discovered"
+ },
+ {
+  "id": "en_t2_00_passive",
+  "group": "en_pair",
+  "pair": "en_t2_00",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The new particle was discovered by the young scientist.",
+  "agent": "scientist",
+  "patient": "particle",
+  "verb": "discovered"
+ },
+ {
+  "id": "en_t1_01_active",
+  "group": "en_pair",
+  "pair": "en_t1_01",
+  "voice": "active",
+  "lang": "en",
+  "text": "The chef cooked the meal.",
+  "agent": "chef",
+  "patient": "meal",
+  "verb": "cooked"
+ },
+ {
+  "id": "en_t1_01_passive",
+  "group": "en_pair",
+  "pair": "en_t1_01",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The meal was cooked by the chef.",
+  "agent": "chef",
+  "patient": "meal",
+  "verb": "cooked"
+ },
+ {
+  "id": "en_t2_01_active",
+  "group": "en_pair",
+  "pair": "en_t2_01",
+  "voice": "active",
+  "lang": "en",
+  "text": "The tired chef cooked the delicious meal.",
+  "agent": "chef",
+  "patient": "meal",
+  "verb": "cooked"
+ },
+ {
+  "id": "en_t2_01_passive",
+  "group": "en_pair",
+  "pair": "en_t2_01",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The delicious meal was cooked by the tired chef.",
+  "agent": "chef",
+  "patient": "meal",
+  "verb": "cooked"
+ },
+ {
+  "id": "en_t1_02_active",
+  "group": "en_pair",
+  "pair": "en_t1_02",
+  "voice": "active",
+  "lang": "en",
+  "text": "The dog chased the cat.",
+  "agent": "dog",
+  "patient": "cat",
+  "verb": "chased"
+ },
+ {
+  "id": "en_t1_02_passive",
+  "group": "en_pair",
+  "pair": "en_t1_02",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The cat was chased by the dog.",
+  "agent": "dog",
+  "patient": "cat",
+  "verb": "chased"
+ },
+ {
+  "id": "en_t2_02_active",
+  "group": "en_pair",
+  "pair": "en_t2_02",
+  "voice": "active",
+  "lang": "en",
+  "text": "The big dog chased the small cat.",
+  "agent": "dog",
+  "patient": "cat",
+  "verb": "chased"
+ },
+ {
+  "id": "en_t2_02_passive",
+  "group": "en_pair",
+  "pair": "en_t2_02",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The small cat was chased by the big dog.",
+  "agent": "dog",
+  "patient": "cat",
+  "verb": "chased"
+ },
+ {
+  "id": "en_t1_03_active",
+  "group": "en_pair",
+  "pair": "en_t1_03",
+  "voice": "active",
+  "lang": "en",
+  "text": "The boy threw the ball.",
+  "agent": "boy",
+  "patient": "ball",
+  "verb": "threw"
+ },
+ {
+  "id": "en_t1_03_passive",
+  "group": "en_pair",
+  "pair": "en_t1_03",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The ball was thrown by the boy.",
+  "agent": "boy",
+  "patient": "ball",
+  "verb": "thrown"
+ },
+ {
+  "id": "en_t2_03_active",
+  "group": "en_pair",
+  "pair": "en_t2_03",
+  "voice": "active",
+  "lang": "en",
+  "text": "The little boy threw the red ball.",
+  "agent": "boy",
+  "patient": "ball",
+  "verb": "threw"
+ },
+ {
+  "id": "en_t2_03_passive",
+  "group": "en_pair",
+  "pair": "en_t2_03",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The red ball was thrown by the little boy.",
+  "agent": "boy",
+  "patient": "ball",
+  "verb": "thrown"
+ },
+ {
+  "id": "en_t1_04_active",
+  "group": "en_pair",
+  "pair": "en_t1_04",
+  "voice": "active",
+  "lang": "en",
+  "text": "The woman drove the car.",
+  "agent": "woman",
+  "patient": "car",
+  "verb": "drove"
+ },
+ {
+  "id": "en_t1_04_passive",
+  "group": "en_pair",
+  "pair": "en_t1_04",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The car was driven by the woman.",
+  "agent": "woman",
+  "patient": "car",
+  "verb": "driven"
+ },
+ {
+  "id": "en_t2_04_active",
+  "group": "en_pair",
+  "pair": "en_t2_04",
+  "voice": "active",
+  "lang": "en",
+  "text": "The old woman drove the blue car.",
+  "agent": "woman",
+  "patient": "car",
+  "verb": "drove"
+ },
+ {
+  "id": "en_t2_04_passive",
+  "group": "en_pair",
+  "pair": "en_t2_04",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The blue car was driven by the old woman.",
+  "agent": "woman",
+  "patient": "car",
+  "verb": "driven"
+ },
+ {
+  "id": "en_t1_05_active",
+  "group": "en_pair",
+  "pair": "en_t1_05",
+  "voice": "active",
+  "lang": "en",
+  "text": "The man ate the apple.",
+  "agent": "man",
+  "patient": "apple",
+  "verb": "ate"
+ },
+ {
+  "id": "en_t1_05_passive",
+  "group": "en_pair",
+  "pair": "en_t1_05",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The apple was eaten by the man.",
+  "agent": "man",
+  "patient": "apple",
+  "verb": "eaten"
+ },
+ {
+  "id": "en_t2_05_active",
+  "group": "en_pair",
+  "pair": "en_t2_05",
+  "voice": "active",
+  "lang": "en",
+  "text": "The hungry man ate the green apple.",
+  "agent": "man",
+  "patient": "apple",
+  "verb": "ate"
+ },
+ {
+  "id": "en_t2_05_passive",
+  "group": "en_pair",
+  "pair": "en_t2_05",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The green apple was eaten by the hungry man.",
+  "agent": "man",
+  "patient": "apple",
+  "verb": "eaten"
+ },
+ {
+  "id": "en_t1_06_active",
+  "group": "en_pair",
+  "pair": "en_t1_06",
+  "voice": "active",
+  "lang": "en",
+  "text": "The bird built the nest.",
+  "agent": "bird",
+  "patient": "nest",
+  "verb": "built"
+ },
+ {
+  "id": "en_t1_06_passive",
+  "group": "en_pair",
+  "pair": "en_t1_06",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The nest was built by the bird.",
+  "agent": "bird",
+  "patient": "nest",
+  "verb": "built"
+ },
+ {
+  "id": "en_t2_06_active",
+  "group": "en_pair",
+  "pair": "en_t2_06",
+  "voice": "active",
+  "lang": "en",
+  "text": "The small bird built the tiny nest.",
+  "agent": "bird",
+  "patient": "nest",
+  "verb": "built"
+ },
+ {
+  "id": "en_t2_06_passive",
+  "group": "en_pair",
+  "pair": "en_t2_06",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The tiny nest was built by the small bird.",
+  "agent": "bird",
+  "patient": "nest",
+  "verb": "built"
+ },
+ {
+  "id": "en_t1_07_active",
+  "group": "en_pair",
+  "pair": "en_t1_07",
+  "voice": "active",
+  "lang": "en",
+  "text": "The teacher graded the exam.",
+  "agent": "teacher",
+  "patient": "exam",
+  "verb": "graded"
+ },
+ {
+  "id": "en_t1_07_passive",
+  "group": "en_pair",
+  "pair": "en_t1_07",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The exam was graded by the teacher.",
+  "agent": "teacher",
+  "patient": "exam",
+  "verb": "graded"
+ },
+ {
+  "id": "en_t2_07_active",
+  "group": "en_pair",
+  "pair": "en_t2_07",
+  "voice": "active",
+  "lang": "en",
+  "text": "The strict teacher graded the final exam.",
+  "agent": "teacher",
+  "patient": "exam",
+  "verb": "graded"
+ },
+ {
+  "id": "en_t2_07_passive",
+  "group": "en_pair",
+  "pair": "en_t2_07",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The final exam was graded by the strict teacher.",
+  "agent": "teacher",
+  "patient": "exam",
+  "verb": "graded"
+ },
+ {
+  "id": "en_t1_08_active",
+  "group": "en_pair",
+  "pair": "en_t1_08",
+  "voice": "active",
+  "lang": "en",
+  "text": "The artist painted the portrait.",
+  "agent": "artist",
+  "patient": "portrait",
+  "verb": "painted"
+ },
+ {
+  "id": "en_t1_08_passive",
+  "group": "en_pair",
+  "pair": "en_t1_08",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The portrait was painted by the artist.",
+  "agent": "artist",
+  "patient": "portrait",
+  "verb": "painted"
+ },
+ {
+  "id": "en_t2_08_active",
+  "group": "en_pair",
+  "pair": "en_t2_08",
+  "voice": "active",
+  "lang": "en",
+  "text": "The famous artist painted the large portrait.",
+  "agent": "artist",
+  "patient": "portrait",
+  "verb": "painted"
+ },
+ {
+  "id": "en_t2_08_passive",
+  "group": "en_pair",
+  "pair": "en_t2_08",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The large portrait was painted by the famous artist.",
+  "agent": "artist",
+  "patient": "portrait",
+  "verb": "painted"
+ },
+ {
+  "id": "en_t1_09_active",
+  "group": "en_pair",
+  "pair": "en_t1_09",
+  "voice": "active",
+  "lang": "en",
+  "text": "The author wrote the novel.",
+  "agent": "author",
+  "patient": "novel",
+  "verb": "wrote"
+ },
+ {
+  "id": "en_t1_09_passive",
+  "group": "en_pair",
+  "pair": "en_t1_09",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The novel was written by the author.",
+  "agent": "author",
+  "patient": "novel",
+  "verb": "written"
+ },
+ {
+  "id": "en_t2_09_active",
+  "group": "en_pair",
+  "pair": "en_t2_09",
+  "voice": "active",
+  "lang": "en",
+  "text": "The young author wrote the long novel.",
+  "agent": "author",
+  "patient": "novel",
+  "verb": "wrote"
+ },
+ {
+  "id": "en_t2_09_passive",
+  "group": "en_pair",
+  "pair": "en_t2_09",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The long novel was written by the young author.",
+  "agent": "author",
+  "patient": "novel",
+  "verb": "written"
+ },
+ {
+  "id": "en_t1_10_active",
+  "group": "en_pair",
+  "pair": "en_t1_10",
+  "voice": "active",
+  "lang": "en",
+  "text": "The engineer designed the bridge.",
+  "agent": "engineer",
+  "patient": "bridge",
+  "verb": "designed"
+ },
+ {
+  "id": "en_t1_10_passive",
+  "group": "en_pair",
+  "pair": "en_t1_10",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The bridge was designed by the engineer.",
+  "agent": "engineer",
+  "patient": "bridge",
+  "verb": "designed"
+ },
+ {
+  "id": "en_t2_10_active",
+  "group": "en_pair",
+  "pair": "en_t2_10",
+  "voice": "active",
+  "lang": "en",
+  "text": "The clever engineer designed the steel bridge.",
+  "agent": "engineer",
+  "patient": "bridge",
+  "verb": "designed"
+ },
+ {
+  "id": "en_t2_10_passive",
+  "group": "en_pair",
+  "pair": "en_t2_10",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The steel bridge was designed by the clever engineer.",
+  "agent": "engineer",
+  "patient": "bridge",
+  "verb": "designed"
+ },
+ {
+  "id": "en_t1_11_active",
+  "group": "en_pair",
+  "pair": "en_t1_11",
+  "voice": "active",
+  "lang": "en",
+  "text": "The officer arrested the thief.",
+  "agent": "officer",
+  "patient": "thief",
+  "verb": "arrested"
+ },
+ {
+  "id": "en_t1_11_passive",
+  "group": "en_pair",
+  "pair": "en_t1_11",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The thief was arrested by the officer.",
+  "agent": "officer",
+  "patient": "thief",
+  "verb": "arrested"
+ },
+ {
+  "id": "en_t2_11_active",
+  "group": "en_pair",
+  "pair": "en_t2_11",
+  "voice": "active",
+  "lang": "en",
+  "text": "The brave officer arrested the nervous thief.",
+  "agent": "officer",
+  "patient": "thief",
+  "verb": "arrested"
+ },
+ {
+  "id": "en_t2_11_passive",
+  "group": "en_pair",
+  "pair": "en_t2_11",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The nervous thief was arrested by the brave officer.",
+  "agent": "officer",
+  "patient": "thief",
+  "verb": "arrested"
+ },
+ {
+  "id": "en_t1_12_active",
+  "group": "en_pair",
+  "pair": "en_t1_12",
+  "voice": "active",
+  "lang": "en",
+  "text": "The doctor treated the patient.",
+  "agent": "doctor",
+  "patient": "patient",
+  "verb": "treated"
+ },
+ {
+  "id": "en_t1_12_passive",
+  "group": "en_pair",
+  "pair": "en_t1_12",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The patient was treated by the doctor.",
+  "agent": "doctor",
+  "patient": "patient",
+  "verb": "treated"
+ },
+ {
+  "id": "en_t2_12_active",
+  "group": "en_pair",
+  "pair": "en_t2_12",
+  "voice": "active",
+  "lang": "en",
+  "text": "The kind doctor treated the elderly patient.",
+  "agent": "doctor",
+  "patient": "patient",
+  "verb": "treated"
+ },
+ {
+  "id": "en_t2_12_passive",
+  "group": "en_pair",
+  "pair": "en_t2_12",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The elderly patient was treated by the kind doctor.",
+  "agent": "doctor",
+  "patient": "patient",
+  "verb": "treated"
+ },
+ {
+  "id": "en_t1_13_active",
+  "group": "en_pair",
+  "pair": "en_t1_13",
+  "voice": "active",
+  "lang": "en",
+  "text": "The storm destroyed the village.",
+  "agent": "storm",
+  "patient": "village",
+  "verb": "destroyed"
+ },
+ {
+  "id": "en_t1_13_passive",
+  "group": "en_pair",
+  "pair": "en_t1_13",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The village was destroyed by the storm.",
+  "agent": "storm",
+  "patient": "village",
+  "verb": "destroyed"
+ },
+ {
+  "id": "en_t2_13_active",
+  "group": "en_pair",
+  "pair": "en_t2_13",
+  "voice": "active",
+  "lang": "en",
+  "text": "The violent storm destroyed the quiet village.",
+  "agent": "storm",
+  "patient": "village",
+  "verb": "destroyed"
+ },
+ {
+  "id": "en_t2_13_passive",
+  "group": "en_pair",
+  "pair": "en_t2_13",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The quiet village was destroyed by the violent storm.",
+  "agent": "storm",
+  "patient": "village",
+  "verb": "destroyed"
+ },
+ {
+  "id": "en_t1_14_active",
+  "group": "en_pair",
+  "pair": "en_t1_14",
+  "voice": "active",
+  "lang": "en",
+  "text": "The company hired the manager.",
+  "agent": "company",
+  "patient": "manager",
+  "verb": "hired"
+ },
+ {
+  "id": "en_t1_14_passive",
+  "group": "en_pair",
+  "pair": "en_t1_14",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The manager was hired by the company.",
+  "agent": "company",
+  "patient": "manager",
+  "verb": "hired"
+ },
+ {
+  "id": "en_t2_14_active",
+  "group": "en_pair",
+  "pair": "en_t2_14",
+  "voice": "active",
+  "lang": "en",
+  "text": "The large company hired the new manager.",
+  "agent": "company",
+  "patient": "manager",
+  "verb": "hired"
+ },
+ {
+  "id": "en_t2_14_passive",
+  "group": "en_pair",
+  "pair": "en_t2_14",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The new manager was hired by the large company.",
+  "agent": "company",
+  "patient": "manager",
+  "verb": "hired"
+ },
+ {
+  "id": "en_t1_15_active",
+  "group": "en_pair",
+  "pair": "en_t1_15",
+  "voice": "active",
+  "lang": "en",
+  "text": "The committee approved the plan.",
+  "agent": "committee",
+  "patient": "plan",
+  "verb": "approved"
+ },
+ {
+  "id": "en_t1_15_passive",
+  "group": "en_pair",
+  "pair": "en_t1_15",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The plan was approved by the committee.",
+  "agent": "committee",
+  "patient": "plan",
+  "verb": "approved"
+ },
+ {
+  "id": "en_t2_15_active",
+  "group": "en_pair",
+  "pair": "en_t2_15",
+  "voice": "active",
+  "lang": "en",
+  "text": "The local committee approved the ambitious plan.",
+  "agent": "committee",
+  "patient": "plan",
+  "verb": "approved"
+ },
+ {
+  "id": "en_t2_15_passive",
+  "group": "en_pair",
+  "pair": "en_t2_15",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The ambitious plan was approved by the local committee.",
+  "agent": "committee",
+  "patient": "plan",
+  "verb": "approved"
+ },
+ {
+  "id": "en_t1_16_active",
+  "group": "en_pair",
+  "pair": "en_t1_16",
+  "voice": "active",
+  "lang": "en",
+  "text": "The farmer planted the tree.",
+  "agent": "farmer",
+  "patient": "tree",
+  "verb": "planted"
+ },
+ {
+  "id": "en_t1_16_passive",
+  "group": "en_pair",
+  "pair": "en_t1_16",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The tree was planted by the farmer.",
+  "agent": "farmer",
+  "patient": "tree",
+  "verb": "planted"
+ },
+ {
+  "id": "en_t2_16_active",
+  "group": "en_pair",
+  "pair": "en_t2_16",
+  "voice": "active",
+  "lang": "en",
+  "text": "The old farmer planted the young tree.",
+  "agent": "farmer",
+  "patient": "tree",
+  "verb": "planted"
+ },
+ {
+  "id": "en_t2_16_passive",
+  "group": "en_pair",
+  "pair": "en_t2_16",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The young tree was planted by the old farmer.",
+  "agent": "farmer",
+  "patient": "tree",
+  "verb": "planted"
+ },
+ {
+  "id": "en_t1_17_active",
+  "group": "en_pair",
+  "pair": "en_t1_17",
+  "voice": "active",
+  "lang": "en",
+  "text": "The pilot landed the plane.",
+  "agent": "pilot",
+  "patient": "plane",
+  "verb": "landed"
+ },
+ {
+  "id": "en_t1_17_passive",
+  "group": "en_pair",
+  "pair": "en_t1_17",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The plane was landed by the pilot.",
+  "agent": "pilot",
+  "patient": "plane",
+  "verb": "landed"
+ },
+ {
+  "id": "en_t2_17_active",
+  "group": "en_pair",
+  "pair": "en_t2_17",
+  "voice": "active",
+  "lang": "en",
+  "text": "The experienced pilot landed the damaged plane.",
+  "agent": "pilot",
+  "patient": "plane",
+  "verb": "landed"
+ },
+ {
+  "id": "en_t2_17_passive",
+  "group": "en_pair",
+  "pair": "en_t2_17",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The damaged plane was landed by the experienced pilot.",
+  "agent": "pilot",
+  "patient": "plane",
+  "verb": "landed"
+ },
+ {
+  "id": "en_t1_18_active",
+  "group": "en_pair",
+  "pair": "en_t1_18",
+  "voice": "active",
+  "lang": "en",
+  "text": "The child broke the window.",
+  "agent": "child",
+  "patient": "window",
+  "verb": "broke"
+ },
+ {
+  "id": "en_t1_18_passive",
+  "group": "en_pair",
+  "pair": "en_t1_18",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The window was broken by the child.",
+  "agent": "child",
+  "patient": "window",
+  "verb": "broken"
+ },
+ {
+  "id": "en_t3_18_active",
+  "group": "en_pair",
+  "pair": "en_t3_18",
+  "voice": "active",
+  "lang": "en",
+  "text": "Yesterday the child broke the window near the house.",
+  "agent": "child",
+  "patient": "window",
+  "verb": "broke"
+ },
+ {
+  "id": "en_t3_18_passive",
+  "group": "en_pair",
+  "pair": "en_t3_18",
+  "voice": "passive",
+  "lang": "en",
+  "text": "Yesterday the window was broken by the child near the house.",
+  "agent": "child",
+  "patient": "window",
+  "verb": "broken"
+ },
+ {
+  "id": "en_t1_19_active",
+  "group": "en_pair",
+  "pair": "en_t1_19",
+  "voice": "active",
+  "lang": "en",
+  "text": "The judge sentenced the criminal.",
+  "agent": "judge",
+  "patient": "criminal",
+  "verb": "sentenced"
+ },
+ {
+  "id": "en_t1_19_passive",
+  "group": "en_pair",
+  "pair": "en_t1_19",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The criminal was sentenced by the judge.",
+  "agent": "judge",
+  "patient": "criminal",
+  "verb": "sentenced"
+ },
+ {
+  "id": "en_t3_19_active",
+  "group": "en_pair",
+  "pair": "en_t3_19",
+  "voice": "active",
+  "lang": "en",
+  "text": "Yesterday the judge sentenced the criminal near the court.",
+  "agent": "judge",
+  "patient": "criminal",
+  "verb": "sentenced"
+ },
+ {
+  "id": "en_t3_19_passive",
+  "group": "en_pair",
+  "pair": "en_t3_19",
+  "voice": "passive",
+  "lang": "en",
+  "text": "Yesterday the criminal was sentenced by the judge near the court.",
+  "agent": "judge",
+  "patient": "criminal",
+  "verb": "sentenced"
+ },
+ {
+  "id": "en_t1_20_active",
+  "group": "en_pair",
+  "pair": "en_t1_20",
+  "voice": "active",
+  "lang": "en",
+  "text": "The student solved the problem.",
+  "agent": "student",
+  "patient": "problem",
+  "verb": "solved"
+ },
+ {
+  "id": "en_t1_20_passive",
+  "group": "en_pair",
+  "pair": "en_t1_20",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The problem was solved by the student.",
+  "agent": "student",
+  "patient": "problem",
+  "verb": "solved"
+ },
+ {
+  "id": "en_t3_20_active",
+  "group": "en_pair",
+  "pair": "en_t3_20",
+  "voice": "active",
+  "lang": "en",
+  "text": "Yesterday the student solved the problem near the library.",
+  "agent": "student",
+  "patient": "problem",
+  "verb": "solved"
+ },
+ {
+  "id": "en_t3_20_passive",
+  "group": "en_pair",
+  "pair": "en_t3_20",
+  "voice": "passive",
+  "lang": "en",
+  "text": "Yesterday the problem was solved by the student near the library.",
+  "agent": "student",
+  "patient": "problem",
+  "verb": "solved"
+ },
+ {
+  "id": "en_t1_21_active",
+  "group": "en_pair",
+  "pair": "en_t1_21",
+  "voice": "active",
+  "lang": "en",
+  "text": "The composer composed the symphony.",
+  "agent": "composer",
+  "patient": "symphony",
+  "verb": "composed"
+ },
+ {
+  "id": "en_t1_21_passive",
+  "group": "en_pair",
+  "pair": "en_t1_21",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The symphony was composed by the composer.",
+  "agent": "composer",
+  "patient": "symphony",
+  "verb": "composed"
+ },
+ {
+  "id": "en_t3_21_active",
+  "group": "en_pair",
+  "pair": "en_t3_21",
+  "voice": "active",
+  "lang": "en",
+  "text": "Yesterday the composer composed the symphony near the theatre.",
+  "agent": "composer",
+  "patient": "symphony",
+  "verb": "composed"
+ },
+ {
+  "id": "en_t3_21_passive",
+  "group": "en_pair",
+  "pair": "en_t3_21",
+  "voice": "passive",
+  "lang": "en",
+  "text": "Yesterday the symphony was composed by the composer near the theatre.",
+  "agent": "composer",
+  "patient": "symphony",
+  "verb": "composed"
+ },
+ {
+  "id": "en_t1_22_active",
+  "group": "en_pair",
+  "pair": "en_t1_22",
+  "voice": "active",
+  "lang": "en",
+  "text": "The mechanic repaired the engine.",
+  "agent": "mechanic",
+  "patient": "engine",
+  "verb": "repaired"
+ },
+ {
+  "id": "en_t1_22_passive",
+  "group": "en_pair",
+  "pair": "en_t1_22",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The engine was repaired by the mechanic.",
+  "agent": "mechanic",
+  "patient": "engine",
+  "verb": "repaired"
+ },
+ {
+  "id": "en_t3_22_active",
+  "group": "en_pair",
+  "pair": "en_t3_22",
+  "voice": "active",
+  "lang": "en",
+  "text": "Yesterday the mechanic repaired the engine near the garage.",
+  "agent": "mechanic",
+  "patient": "engine",
+  "verb": "repaired"
+ },
+ {
+  "id": "en_t3_22_passive",
+  "group": "en_pair",
+  "pair": "en_t3_22",
+  "voice": "passive",
+  "lang": "en",
+  "text": "Yesterday the engine was repaired by the mechanic near the garage.",
+  "agent": "mechanic",
+  "patient": "engine",
+  "verb": "repaired"
+ },
+ {
+  "id": "en_t1_23_active",
+  "group": "en_pair",
+  "pair": "en_t1_23",
+  "voice": "active",
+  "lang": "en",
+  "text": "The cat caught the mouse.",
+  "agent": "cat",
+  "patient": "mouse",
+  "verb": "caught"
+ },
+ {
+  "id": "en_t1_23_passive",
+  "group": "en_pair",
+  "pair": "en_t1_23",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The mouse was caught by the cat.",
+  "agent": "cat",
+  "patient": "mouse",
+  "verb": "caught"
+ },
+ {
+  "id": "en_t3_23_active",
+  "group": "en_pair",
+  "pair": "en_t3_23",
+  "voice": "active",
+  "lang": "en",
+  "text": "Yesterday the cat caught the mouse near the barn.",
+  "agent": "cat",
+  "patient": "mouse",
+  "verb": "caught"
+ },
+ {
+  "id": "en_t3_23_passive",
+  "group": "en_pair",
+  "pair": "en_t3_23",
+  "voice": "passive",
+  "lang": "en",
+  "text": "Yesterday the mouse was caught by the cat near the barn.",
+  "agent": "cat",
+  "patient": "mouse",
+  "verb": "caught"
+ },
+ {
+  "id": "en_t1_24_active",
+  "group": "en_pair",
+  "pair": "en_t1_24",
+  "voice": "active",
+  "lang": "en",
+  "text": "The gardener watered the garden.",
+  "agent": "gardener",
+  "patient": "garden",
+  "verb": "watered"
+ },
+ {
+  "id": "en_t1_24_passive",
+  "group": "en_pair",
+  "pair": "en_t1_24",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The garden was watered by the gardener.",
+  "agent": "gardener",
+  "patient": "garden",
+  "verb": "watered"
+ },
+ {
+  "id": "en_t3_24_active",
+  "group": "en_pair",
+  "pair": "en_t3_24",
+  "voice": "active",
+  "lang": "en",
+  "text": "Yesterday the gardener watered the garden near the estate.",
+  "agent": "gardener",
+  "patient": "garden",
+  "verb": "watered"
+ },
+ {
+  "id": "en_t3_24_passive",
+  "group": "en_pair",
+  "pair": "en_t3_24",
+  "voice": "passive",
+  "lang": "en",
+  "text": "Yesterday the garden was watered by the gardener near the estate.",
+  "agent": "gardener",
+  "patient": "garden",
+  "verb": "watered"
+ },
+ {
+  "id": "en_t1_25_active",
+  "group": "en_pair",
+  "pair": "en_t1_25",
+  "voice": "active",
+  "lang": "en",
+  "text": "The director filmed the scene.",
+  "agent": "director",
+  "patient": "scene",
+  "verb": "filmed"
+ },
+ {
+  "id": "en_t1_25_passive",
+  "group": "en_pair",
+  "pair": "en_t1_25",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The scene was filmed by the director.",
+  "agent": "director",
+  "patient": "scene",
+  "verb": "filmed"
+ },
+ {
+  "id": "en_t3_25_active",
+  "group": "en_pair",
+  "pair": "en_t3_25",
+  "voice": "active",
+  "lang": "en",
+  "text": "Yesterday the director filmed the scene near the desert.",
+  "agent": "director",
+  "patient": "scene",
+  "verb": "filmed"
+ },
+ {
+  "id": "en_t3_25_passive",
+  "group": "en_pair",
+  "pair": "en_t3_25",
+  "voice": "passive",
+  "lang": "en",
+  "text": "Yesterday the scene was filmed by the director near the desert.",
+  "agent": "director",
+  "patient": "scene",
+  "verb": "filmed"
+ },
+ {
+  "id": "en_t1_26_active",
+  "group": "en_pair",
+  "pair": "en_t1_26",
+  "voice": "active",
+  "lang": "en",
+  "text": "The baker baked the cake.",
+  "agent": "baker",
+  "patient": "cake",
+  "verb": "baked"
+ },
+ {
+  "id": "en_t1_26_passive",
+  "group": "en_pair",
+  "pair": "en_t1_26",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The cake was baked by the baker.",
+  "agent": "baker",
+  "patient": "cake",
+  "verb": "baked"
+ },
+ {
+  "id": "en_t3_26_active",
+  "group": "en_pair",
+  "pair": "en_t3_26",
+  "voice": "active",
+  "lang": "en",
+  "text": "Yesterday the baker baked the cake near the bakery.",
+  "agent": "baker",
+  "patient": "cake",
+  "verb": "baked"
+ },
+ {
+  "id": "en_t3_26_passive",
+  "group": "en_pair",
+  "pair": "en_t3_26",
+  "voice": "passive",
+  "lang": "en",
+  "text": "Yesterday the cake was baked by the baker near the bakery.",
+  "agent": "baker",
+  "patient": "cake",
+  "verb": "baked"
+ },
+ {
+  "id": "en_t1_27_active",
+  "group": "en_pair",
+  "pair": "en_t1_27",
+  "voice": "active",
+  "lang": "en",
+  "text": "The editor reviewed the article.",
+  "agent": "editor",
+  "patient": "article",
+  "verb": "reviewed"
+ },
+ {
+  "id": "en_t1_27_passive",
+  "group": "en_pair",
+  "pair": "en_t1_27",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The article was reviewed by the editor.",
+  "agent": "editor",
+  "patient": "article",
+  "verb": "reviewed"
+ },
+ {
+  "id": "en_t3_27_active",
+  "group": "en_pair",
+  "pair": "en_t3_27",
+  "voice": "active",
+  "lang": "en",
+  "text": "Yesterday the editor reviewed the article near the newsroom.",
+  "agent": "editor",
+  "patient": "article",
+  "verb": "reviewed"
+ },
+ {
+  "id": "en_t3_27_passive",
+  "group": "en_pair",
+  "pair": "en_t3_27",
+  "voice": "passive",
+  "lang": "en",
+  "text": "Yesterday the article was reviewed by the editor near the newsroom.",
+  "agent": "editor",
+  "patient": "article",
+  "verb": "reviewed"
+ },
+ {
+  "id": "en_t1_28_active",
+  "group": "en_pair",
+  "pair": "en_t1_28",
+  "voice": "active",
+  "lang": "en",
+  "text": "The army defeated the enemy.",
+  "agent": "army",
+  "patient": "enemy",
+  "verb": "defeated"
+ },
+ {
+  "id": "en_t1_28_passive",
+  "group": "en_pair",
+  "pair": "en_t1_28",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The enemy was defeated by the army.",
+  "agent": "army",
+  "patient": "enemy",
+  "verb": "defeated"
+ },
+ {
+  "id": "en_t3_28_active",
+  "group": "en_pair",
+  "pair": "en_t3_28",
+  "voice": "active",
+  "lang": "en",
+  "text": "Yesterday the army defeated the enemy near the valley.",
+  "agent": "army",
+  "patient": "enemy",
+  "verb": "defeated"
+ },
+ {
+  "id": "en_t3_28_passive",
+  "group": "en_pair",
+  "pair": "en_t3_28",
+  "voice": "passive",
+  "lang": "en",
+  "text": "Yesterday the enemy was defeated by the army near the valley.",
+  "agent": "army",
+  "patient": "enemy",
+  "verb": "defeated"
+ },
+ {
+  "id": "en_t1_29_active",
+  "group": "en_pair",
+  "pair": "en_t1_29",
+  "voice": "active",
+  "lang": "en",
+  "text": "The nurse helped the visitor.",
+  "agent": "nurse",
+  "patient": "visitor",
+  "verb": "helped"
+ },
+ {
+  "id": "en_t1_29_passive",
+  "group": "en_pair",
+  "pair": "en_t1_29",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The visitor was helped by the nurse.",
+  "agent": "nurse",
+  "patient": "visitor",
+  "verb": "helped"
+ },
+ {
+  "id": "en_t3_29_active",
+  "group": "en_pair",
+  "pair": "en_t3_29",
+  "voice": "active",
+  "lang": "en",
+  "text": "Yesterday the nurse helped the visitor near the clinic.",
+  "agent": "nurse",
+  "patient": "visitor",
+  "verb": "helped"
+ },
+ {
+  "id": "en_t3_29_passive",
+  "group": "en_pair",
+  "pair": "en_t3_29",
+  "voice": "passive",
+  "lang": "en",
+  "text": "Yesterday the visitor was helped by the nurse near the clinic.",
+  "agent": "nurse",
+  "patient": "visitor",
+  "verb": "helped"
+ },
+ {
+  "id": "en_t1_30_active",
+  "group": "en_pair",
+  "pair": "en_t1_30",
+  "voice": "active",
+  "lang": "en",
+  "text": "The architect drew the blueprint.",
+  "agent": "architect",
+  "patient": "blueprint",
+  "verb": "drew"
+ },
+ {
+  "id": "en_t1_30_passive",
+  "group": "en_pair",
+  "pair": "en_t1_30",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The blueprint was drawn by the architect.",
+  "agent": "architect",
+  "patient": "blueprint",
+  "verb": "drawn"
+ },
+ {
+  "id": "en_t3_30_active",
+  "group": "en_pair",
+  "pair": "en_t3_30",
+  "voice": "active",
+  "lang": "en",
+  "text": "Yesterday the architect drew the blueprint near the harbour.",
+  "agent": "architect",
+  "patient": "blueprint",
+  "verb": "drew"
+ },
+ {
+  "id": "en_t3_30_passive",
+  "group": "en_pair",
+  "pair": "en_t3_30",
+  "voice": "passive",
+  "lang": "en",
+  "text": "Yesterday the blueprint was drawn by the architect near the harbour.",
+  "agent": "architect",
+  "patient": "blueprint",
+  "verb": "drawn"
+ },
+ {
+  "id": "en_t1_31_active",
+  "group": "en_pair",
+  "pair": "en_t1_31",
+  "voice": "active",
+  "lang": "en",
+  "text": "The queen opened the museum.",
+  "agent": "queen",
+  "patient": "museum",
+  "verb": "opened"
+ },
+ {
+  "id": "en_t1_31_passive",
+  "group": "en_pair",
+  "pair": "en_t1_31",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The museum was opened by the queen.",
+  "agent": "queen",
+  "patient": "museum",
+  "verb": "opened"
+ },
+ {
+  "id": "en_t3_31_active",
+  "group": "en_pair",
+  "pair": "en_t3_31",
+  "voice": "active",
+  "lang": "en",
+  "text": "Yesterday the queen opened the museum near the capital.",
+  "agent": "queen",
+  "patient": "museum",
+  "verb": "opened"
+ },
+ {
+  "id": "en_t3_31_passive",
+  "group": "en_pair",
+  "pair": "en_t3_31",
+  "voice": "passive",
+  "lang": "en",
+  "text": "Yesterday the museum was opened by the queen near the capital.",
+  "agent": "queen",
+  "patient": "museum",
+  "verb": "opened"
+ },
+ {
+  "id": "en_t1_32_active",
+  "group": "en_pair",
+  "pair": "en_t1_32",
+  "voice": "active",
+  "lang": "en",
+  "text": "The hunter shot the deer.",
+  "agent": "hunter",
+  "patient": "deer",
+  "verb": "shot"
+ },
+ {
+  "id": "en_t1_32_passive",
+  "group": "en_pair",
+  "pair": "en_t1_32",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The deer was shot by the hunter.",
+  "agent": "hunter",
+  "patient": "deer",
+  "verb": "shot"
+ },
+ {
+  "id": "en_t3_32_active",
+  "group": "en_pair",
+  "pair": "en_t3_32",
+  "voice": "active",
+  "lang": "en",
+  "text": "Yesterday the hunter shot the deer near the mountains.",
+  "agent": "hunter",
+  "patient": "deer",
+  "verb": "shot"
+ },
+ {
+  "id": "en_t3_32_passive",
+  "group": "en_pair",
+  "pair": "en_t3_32",
+  "voice": "passive",
+  "lang": "en",
+  "text": "Yesterday the deer was shot by the hunter near the mountains.",
+  "agent": "hunter",
+  "patient": "deer",
+  "verb": "shot"
+ },
+ {
+  "id": "en_t1_33_active",
+  "group": "en_pair",
+  "pair": "en_t1_33",
+  "voice": "active",
+  "lang": "en",
+  "text": "The senator proposed the law.",
+  "agent": "senator",
+  "patient": "law",
+  "verb": "proposed"
+ },
+ {
+  "id": "en_t1_33_passive",
+  "group": "en_pair",
+  "pair": "en_t1_33",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The law was proposed by the senator.",
+  "agent": "senator",
+  "patient": "law",
+  "verb": "proposed"
+ },
+ {
+  "id": "en_t3_33_active",
+  "group": "en_pair",
+  "pair": "en_t3_33",
+  "voice": "active",
+  "lang": "en",
+  "text": "Yesterday the senator proposed the law near the parliament.",
+  "agent": "senator",
+  "patient": "law",
+  "verb": "proposed"
+ },
+ {
+  "id": "en_t3_33_passive",
+  "group": "en_pair",
+  "pair": "en_t3_33",
+  "voice": "passive",
+  "lang": "en",
+  "text": "Yesterday the law was proposed by the senator near the parliament.",
+  "agent": "senator",
+  "patient": "law",
+  "verb": "proposed"
+ },
+ {
+  "id": "en_t1_34_active",
+  "group": "en_pair",
+  "pair": "en_t1_34",
+  "voice": "active",
+  "lang": "en",
+  "text": "The programmer fixed the bug.",
+  "agent": "programmer",
+  "patient": "bug",
+  "verb": "fixed"
+ },
+ {
+  "id": "en_t1_34_passive",
+  "group": "en_pair",
+  "pair": "en_t1_34",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The bug was fixed by the programmer.",
+  "agent": "programmer",
+  "patient": "bug",
+  "verb": "fixed"
+ },
+ {
+  "id": "en_t3_34_active",
+  "group": "en_pair",
+  "pair": "en_t3_34",
+  "voice": "active",
+  "lang": "en",
+  "text": "Yesterday the programmer fixed the bug near the campus.",
+  "agent": "programmer",
+  "patient": "bug",
+  "verb": "fixed"
+ },
+ {
+  "id": "en_t3_34_passive",
+  "group": "en_pair",
+  "pair": "en_t3_34",
+  "voice": "passive",
+  "lang": "en",
+  "text": "Yesterday the bug was fixed by the programmer near the campus.",
+  "agent": "programmer",
+  "patient": "bug",
+  "verb": "fixed"
+ },
+ {
+  "id": "en_t1_35_active",
+  "group": "en_pair",
+  "pair": "en_t1_35",
+  "voice": "active",
+  "lang": "en",
+  "text": "The photographer took the picture.",
+  "agent": "photographer",
+  "patient": "picture",
+  "verb": "took"
+ },
+ {
+  "id": "en_t1_35_passive",
+  "group": "en_pair",
+  "pair": "en_t1_35",
+  "voice": "passive",
+  "lang": "en",
+  "text": "The picture was taken by the photographer.",
+  "agent": "photographer",
+  "patient": "picture",
+  "verb": "taken"
+ },
+ {
+  "id": "en_t3_35_active",
+  "group": "en_pair",
+  "pair": "en_t3_35",
+  "voice": "active",
+  "lang": "en",
+  "text": "Yesterday the photographer took the picture near the beach.",
+  "agent": "photographer",
+  "patient": "picture",
+  "verb": "took"
+ },
+ {
+  "id": "en_t3_35_passive",
+  "group": "en_pair",
+  "pair": "en_t3_35",
+  "voice": "passive",
+  "lang": "en",
+  "text": "Yesterday the picture was taken by the photographer near the beach.",
+  "agent": "photographer",
+  "patient": "picture",
+  "verb": "taken"
+ },
+ {
+  "id": "en_fw_00_active",
+  "group": "en_firstword",
+  "pair": "en_fw_00",
+  "voice": "active",
+  "lang": "en",
+  "text": "The scientist discovered a new particle.",
+  "agent": "scientist",
+  "patient": "particle",
+  "verb": "discovered"
+ },
+ {
+  "id": "en_fw_00_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_00",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A new particle was discovered by the scientist.",
+  "agent": "scientist",
+  "patient": "particle",
+  "verb": "discovered"
+ },
+ {
+  "id": "en_fw_01_active",
+  "group": "en_firstword",
+  "pair": "en_fw_01",
+  "voice": "active",
+  "lang": "en",
+  "text": "The chef cooked a delicious meal.",
+  "agent": "chef",
+  "patient": "meal",
+  "verb": "cooked"
+ },
+ {
+  "id": "en_fw_01_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_01",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A delicious meal was cooked by the chef.",
+  "agent": "chef",
+  "patient": "meal",
+  "verb": "cooked"
+ },
+ {
+  "id": "en_fw_02_active",
+  "group": "en_firstword",
+  "pair": "en_fw_02",
+  "voice": "active",
+  "lang": "en",
+  "text": "The dog chased a small cat.",
+  "agent": "dog",
+  "patient": "cat",
+  "verb": "chased"
+ },
+ {
+  "id": "en_fw_02_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_02",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A small cat was chased by the dog.",
+  "agent": "dog",
+  "patient": "cat",
+  "verb": "chased"
+ },
+ {
+  "id": "en_fw_03_active",
+  "group": "en_firstword",
+  "pair": "en_fw_03",
+  "voice": "active",
+  "lang": "en",
+  "text": "The boy threw a red ball.",
+  "agent": "boy",
+  "patient": "ball",
+  "verb": "threw"
+ },
+ {
+  "id": "en_fw_03_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_03",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A red ball was thrown by the boy.",
+  "agent": "boy",
+  "patient": "ball",
+  "verb": "thrown"
+ },
+ {
+  "id": "en_fw_04_active",
+  "group": "en_firstword",
+  "pair": "en_fw_04",
+  "voice": "active",
+  "lang": "en",
+  "text": "The woman drove a blue car.",
+  "agent": "woman",
+  "patient": "car",
+  "verb": "drove"
+ },
+ {
+  "id": "en_fw_04_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_04",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A blue car was driven by the woman.",
+  "agent": "woman",
+  "patient": "car",
+  "verb": "driven"
+ },
+ {
+  "id": "en_fw_05_active",
+  "group": "en_firstword",
+  "pair": "en_fw_05",
+  "voice": "active",
+  "lang": "en",
+  "text": "The man ate a green apple.",
+  "agent": "man",
+  "patient": "apple",
+  "verb": "ate"
+ },
+ {
+  "id": "en_fw_05_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_05",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A green apple was eaten by the man.",
+  "agent": "man",
+  "patient": "apple",
+  "verb": "eaten"
+ },
+ {
+  "id": "en_fw_06_active",
+  "group": "en_firstword",
+  "pair": "en_fw_06",
+  "voice": "active",
+  "lang": "en",
+  "text": "The bird built a tiny nest.",
+  "agent": "bird",
+  "patient": "nest",
+  "verb": "built"
+ },
+ {
+  "id": "en_fw_06_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_06",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A tiny nest was built by the bird.",
+  "agent": "bird",
+  "patient": "nest",
+  "verb": "built"
+ },
+ {
+  "id": "en_fw_07_active",
+  "group": "en_firstword",
+  "pair": "en_fw_07",
+  "voice": "active",
+  "lang": "en",
+  "text": "The teacher graded a final exam.",
+  "agent": "teacher",
+  "patient": "exam",
+  "verb": "graded"
+ },
+ {
+  "id": "en_fw_07_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_07",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A final exam was graded by the teacher.",
+  "agent": "teacher",
+  "patient": "exam",
+  "verb": "graded"
+ },
+ {
+  "id": "en_fw_08_active",
+  "group": "en_firstword",
+  "pair": "en_fw_08",
+  "voice": "active",
+  "lang": "en",
+  "text": "The artist painted a large portrait.",
+  "agent": "artist",
+  "patient": "portrait",
+  "verb": "painted"
+ },
+ {
+  "id": "en_fw_08_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_08",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A large portrait was painted by the artist.",
+  "agent": "artist",
+  "patient": "portrait",
+  "verb": "painted"
+ },
+ {
+  "id": "en_fw_09_active",
+  "group": "en_firstword",
+  "pair": "en_fw_09",
+  "voice": "active",
+  "lang": "en",
+  "text": "The author wrote a long novel.",
+  "agent": "author",
+  "patient": "novel",
+  "verb": "wrote"
+ },
+ {
+  "id": "en_fw_09_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_09",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A long novel was written by the author.",
+  "agent": "author",
+  "patient": "novel",
+  "verb": "written"
+ },
+ {
+  "id": "en_fw_10_active",
+  "group": "en_firstword",
+  "pair": "en_fw_10",
+  "voice": "active",
+  "lang": "en",
+  "text": "The engineer designed a steel bridge.",
+  "agent": "engineer",
+  "patient": "bridge",
+  "verb": "designed"
+ },
+ {
+  "id": "en_fw_10_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_10",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A steel bridge was designed by the engineer.",
+  "agent": "engineer",
+  "patient": "bridge",
+  "verb": "designed"
+ },
+ {
+  "id": "en_fw_11_active",
+  "group": "en_firstword",
+  "pair": "en_fw_11",
+  "voice": "active",
+  "lang": "en",
+  "text": "The officer arrested a nervous thief.",
+  "agent": "officer",
+  "patient": "thief",
+  "verb": "arrested"
+ },
+ {
+  "id": "en_fw_11_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_11",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A nervous thief was arrested by the officer.",
+  "agent": "officer",
+  "patient": "thief",
+  "verb": "arrested"
+ },
+ {
+  "id": "en_fw_12_active",
+  "group": "en_firstword",
+  "pair": "en_fw_12",
+  "voice": "active",
+  "lang": "en",
+  "text": "The doctor treated a elderly patient.",
+  "agent": "doctor",
+  "patient": "patient",
+  "verb": "treated"
+ },
+ {
+  "id": "en_fw_12_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_12",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A elderly patient was treated by the doctor.",
+  "agent": "doctor",
+  "patient": "patient",
+  "verb": "treated"
+ },
+ {
+  "id": "en_fw_13_active",
+  "group": "en_firstword",
+  "pair": "en_fw_13",
+  "voice": "active",
+  "lang": "en",
+  "text": "The storm destroyed a quiet village.",
+  "agent": "storm",
+  "patient": "village",
+  "verb": "destroyed"
+ },
+ {
+  "id": "en_fw_13_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_13",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A quiet village was destroyed by the storm.",
+  "agent": "storm",
+  "patient": "village",
+  "verb": "destroyed"
+ },
+ {
+  "id": "en_fw_14_active",
+  "group": "en_firstword",
+  "pair": "en_fw_14",
+  "voice": "active",
+  "lang": "en",
+  "text": "The company hired a new manager.",
+  "agent": "company",
+  "patient": "manager",
+  "verb": "hired"
+ },
+ {
+  "id": "en_fw_14_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_14",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A new manager was hired by the company.",
+  "agent": "company",
+  "patient": "manager",
+  "verb": "hired"
+ },
+ {
+  "id": "en_fw_15_active",
+  "group": "en_firstword",
+  "pair": "en_fw_15",
+  "voice": "active",
+  "lang": "en",
+  "text": "The committee approved a ambitious plan.",
+  "agent": "committee",
+  "patient": "plan",
+  "verb": "approved"
+ },
+ {
+  "id": "en_fw_15_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_15",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A ambitious plan was approved by the committee.",
+  "agent": "committee",
+  "patient": "plan",
+  "verb": "approved"
+ },
+ {
+  "id": "en_fw_16_active",
+  "group": "en_firstword",
+  "pair": "en_fw_16",
+  "voice": "active",
+  "lang": "en",
+  "text": "The farmer planted a young tree.",
+  "agent": "farmer",
+  "patient": "tree",
+  "verb": "planted"
+ },
+ {
+  "id": "en_fw_16_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_16",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A young tree was planted by the farmer.",
+  "agent": "farmer",
+  "patient": "tree",
+  "verb": "planted"
+ },
+ {
+  "id": "en_fw_17_active",
+  "group": "en_firstword",
+  "pair": "en_fw_17",
+  "voice": "active",
+  "lang": "en",
+  "text": "The pilot landed a damaged plane.",
+  "agent": "pilot",
+  "patient": "plane",
+  "verb": "landed"
+ },
+ {
+  "id": "en_fw_17_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_17",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A damaged plane was landed by the pilot.",
+  "agent": "pilot",
+  "patient": "plane",
+  "verb": "landed"
+ },
+ {
+  "id": "en_fw_18_active",
+  "group": "en_firstword",
+  "pair": "en_fw_18",
+  "voice": "active",
+  "lang": "en",
+  "text": "The child broke a glass window.",
+  "agent": "child",
+  "patient": "window",
+  "verb": "broke"
+ },
+ {
+  "id": "en_fw_18_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_18",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A glass window was broken by the child.",
+  "agent": "child",
+  "patient": "window",
+  "verb": "broken"
+ },
+ {
+  "id": "en_fw_19_active",
+  "group": "en_firstword",
+  "pair": "en_fw_19",
+  "voice": "active",
+  "lang": "en",
+  "text": "The judge sentenced a dangerous criminal.",
+  "agent": "judge",
+  "patient": "criminal",
+  "verb": "sentenced"
+ },
+ {
+  "id": "en_fw_19_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_19",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A dangerous criminal was sentenced by the judge.",
+  "agent": "judge",
+  "patient": "criminal",
+  "verb": "sentenced"
+ },
+ {
+  "id": "en_fw_20_active",
+  "group": "en_firstword",
+  "pair": "en_fw_20",
+  "voice": "active",
+  "lang": "en",
+  "text": "The student solved a difficult problem.",
+  "agent": "student",
+  "patient": "problem",
+  "verb": "solved"
+ },
+ {
+  "id": "en_fw_20_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_20",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A difficult problem was solved by the student.",
+  "agent": "student",
+  "patient": "problem",
+  "verb": "solved"
+ },
+ {
+  "id": "en_fw_21_active",
+  "group": "en_firstword",
+  "pair": "en_fw_21",
+  "voice": "active",
+  "lang": "en",
+  "text": "The composer composed a beautiful symphony.",
+  "agent": "composer",
+  "patient": "symphony",
+  "verb": "composed"
+ },
+ {
+  "id": "en_fw_21_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_21",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A beautiful symphony was composed by the composer.",
+  "agent": "composer",
+  "patient": "symphony",
+  "verb": "composed"
+ },
+ {
+  "id": "en_fw_22_active",
+  "group": "en_firstword",
+  "pair": "en_fw_22",
+  "voice": "active",
+  "lang": "en",
+  "text": "The mechanic repaired a broken engine.",
+  "agent": "mechanic",
+  "patient": "engine",
+  "verb": "repaired"
+ },
+ {
+  "id": "en_fw_22_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_22",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A broken engine was repaired by the mechanic.",
+  "agent": "mechanic",
+  "patient": "engine",
+  "verb": "repaired"
+ },
+ {
+  "id": "en_fw_23_active",
+  "group": "en_firstword",
+  "pair": "en_fw_23",
+  "voice": "active",
+  "lang": "en",
+  "text": "The cat caught a grey mouse.",
+  "agent": "cat",
+  "patient": "mouse",
+  "verb": "caught"
+ },
+ {
+  "id": "en_fw_23_passive",
+  "group": "en_firstword",
+  "pair": "en_fw_23",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A grey mouse was caught by the cat.",
+  "agent": "cat",
+  "patient": "mouse",
+  "verb": "caught"
+ },
+ {
+  "id": "en_al_00_active",
+  "group": "en_agentless",
+  "pair": "en_al_00",
+  "voice": "active",
+  "lang": "en",
+  "text": "The scientist discovered the particle.",
+  "agent": "scientist",
+  "patient": "particle",
+  "verb": "discovered"
+ },
+ {
+  "id": "en_al_00_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_00",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The particle was discovered.",
+  "agent": "scientist",
+  "patient": "particle",
+  "verb": "discovered"
+ },
+ {
+  "id": "en_al_01_active",
+  "group": "en_agentless",
+  "pair": "en_al_01",
+  "voice": "active",
+  "lang": "en",
+  "text": "The chef cooked the meal.",
+  "agent": "chef",
+  "patient": "meal",
+  "verb": "cooked"
+ },
+ {
+  "id": "en_al_01_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_01",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The meal was cooked.",
+  "agent": "chef",
+  "patient": "meal",
+  "verb": "cooked"
+ },
+ {
+  "id": "en_al_02_active",
+  "group": "en_agentless",
+  "pair": "en_al_02",
+  "voice": "active",
+  "lang": "en",
+  "text": "The dog chased the cat.",
+  "agent": "dog",
+  "patient": "cat",
+  "verb": "chased"
+ },
+ {
+  "id": "en_al_02_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_02",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The cat was chased.",
+  "agent": "dog",
+  "patient": "cat",
+  "verb": "chased"
+ },
+ {
+  "id": "en_al_03_active",
+  "group": "en_agentless",
+  "pair": "en_al_03",
+  "voice": "active",
+  "lang": "en",
+  "text": "The boy threw the ball.",
+  "agent": "boy",
+  "patient": "ball",
+  "verb": "threw"
+ },
+ {
+  "id": "en_al_03_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_03",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The ball was thrown.",
+  "agent": "boy",
+  "patient": "ball",
+  "verb": "thrown"
+ },
+ {
+  "id": "en_al_04_active",
+  "group": "en_agentless",
+  "pair": "en_al_04",
+  "voice": "active",
+  "lang": "en",
+  "text": "The woman drove the car.",
+  "agent": "woman",
+  "patient": "car",
+  "verb": "drove"
+ },
+ {
+  "id": "en_al_04_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_04",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The car was driven.",
+  "agent": "woman",
+  "patient": "car",
+  "verb": "driven"
+ },
+ {
+  "id": "en_al_05_active",
+  "group": "en_agentless",
+  "pair": "en_al_05",
+  "voice": "active",
+  "lang": "en",
+  "text": "The man ate the apple.",
+  "agent": "man",
+  "patient": "apple",
+  "verb": "ate"
+ },
+ {
+  "id": "en_al_05_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_05",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The apple was eaten.",
+  "agent": "man",
+  "patient": "apple",
+  "verb": "eaten"
+ },
+ {
+  "id": "en_al_06_active",
+  "group": "en_agentless",
+  "pair": "en_al_06",
+  "voice": "active",
+  "lang": "en",
+  "text": "The bird built the nest.",
+  "agent": "bird",
+  "patient": "nest",
+  "verb": "built"
+ },
+ {
+  "id": "en_al_06_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_06",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The nest was built.",
+  "agent": "bird",
+  "patient": "nest",
+  "verb": "built"
+ },
+ {
+  "id": "en_al_07_active",
+  "group": "en_agentless",
+  "pair": "en_al_07",
+  "voice": "active",
+  "lang": "en",
+  "text": "The teacher graded the exam.",
+  "agent": "teacher",
+  "patient": "exam",
+  "verb": "graded"
+ },
+ {
+  "id": "en_al_07_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_07",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The exam was graded.",
+  "agent": "teacher",
+  "patient": "exam",
+  "verb": "graded"
+ },
+ {
+  "id": "en_al_08_active",
+  "group": "en_agentless",
+  "pair": "en_al_08",
+  "voice": "active",
+  "lang": "en",
+  "text": "The artist painted the portrait.",
+  "agent": "artist",
+  "patient": "portrait",
+  "verb": "painted"
+ },
+ {
+  "id": "en_al_08_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_08",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The portrait was painted.",
+  "agent": "artist",
+  "patient": "portrait",
+  "verb": "painted"
+ },
+ {
+  "id": "en_al_09_active",
+  "group": "en_agentless",
+  "pair": "en_al_09",
+  "voice": "active",
+  "lang": "en",
+  "text": "The author wrote the novel.",
+  "agent": "author",
+  "patient": "novel",
+  "verb": "wrote"
+ },
+ {
+  "id": "en_al_09_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_09",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The novel was written.",
+  "agent": "author",
+  "patient": "novel",
+  "verb": "written"
+ },
+ {
+  "id": "en_al_10_active",
+  "group": "en_agentless",
+  "pair": "en_al_10",
+  "voice": "active",
+  "lang": "en",
+  "text": "The engineer designed the bridge.",
+  "agent": "engineer",
+  "patient": "bridge",
+  "verb": "designed"
+ },
+ {
+  "id": "en_al_10_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_10",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The bridge was designed.",
+  "agent": "engineer",
+  "patient": "bridge",
+  "verb": "designed"
+ },
+ {
+  "id": "en_al_11_active",
+  "group": "en_agentless",
+  "pair": "en_al_11",
+  "voice": "active",
+  "lang": "en",
+  "text": "The officer arrested the thief.",
+  "agent": "officer",
+  "patient": "thief",
+  "verb": "arrested"
+ },
+ {
+  "id": "en_al_11_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_11",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The thief was arrested.",
+  "agent": "officer",
+  "patient": "thief",
+  "verb": "arrested"
+ },
+ {
+  "id": "en_al_12_active",
+  "group": "en_agentless",
+  "pair": "en_al_12",
+  "voice": "active",
+  "lang": "en",
+  "text": "The doctor treated the patient.",
+  "agent": "doctor",
+  "patient": "patient",
+  "verb": "treated"
+ },
+ {
+  "id": "en_al_12_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_12",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The patient was treated.",
+  "agent": "doctor",
+  "patient": "patient",
+  "verb": "treated"
+ },
+ {
+  "id": "en_al_13_active",
+  "group": "en_agentless",
+  "pair": "en_al_13",
+  "voice": "active",
+  "lang": "en",
+  "text": "The storm destroyed the village.",
+  "agent": "storm",
+  "patient": "village",
+  "verb": "destroyed"
+ },
+ {
+  "id": "en_al_13_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_13",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The village was destroyed.",
+  "agent": "storm",
+  "patient": "village",
+  "verb": "destroyed"
+ },
+ {
+  "id": "en_al_14_active",
+  "group": "en_agentless",
+  "pair": "en_al_14",
+  "voice": "active",
+  "lang": "en",
+  "text": "The company hired the manager.",
+  "agent": "company",
+  "patient": "manager",
+  "verb": "hired"
+ },
+ {
+  "id": "en_al_14_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_14",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The manager was hired.",
+  "agent": "company",
+  "patient": "manager",
+  "verb": "hired"
+ },
+ {
+  "id": "en_al_15_active",
+  "group": "en_agentless",
+  "pair": "en_al_15",
+  "voice": "active",
+  "lang": "en",
+  "text": "The committee approved the plan.",
+  "agent": "committee",
+  "patient": "plan",
+  "verb": "approved"
+ },
+ {
+  "id": "en_al_15_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_15",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The plan was approved.",
+  "agent": "committee",
+  "patient": "plan",
+  "verb": "approved"
+ },
+ {
+  "id": "en_al_16_active",
+  "group": "en_agentless",
+  "pair": "en_al_16",
+  "voice": "active",
+  "lang": "en",
+  "text": "The farmer planted the tree.",
+  "agent": "farmer",
+  "patient": "tree",
+  "verb": "planted"
+ },
+ {
+  "id": "en_al_16_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_16",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The tree was planted.",
+  "agent": "farmer",
+  "patient": "tree",
+  "verb": "planted"
+ },
+ {
+  "id": "en_al_17_active",
+  "group": "en_agentless",
+  "pair": "en_al_17",
+  "voice": "active",
+  "lang": "en",
+  "text": "The pilot landed the plane.",
+  "agent": "pilot",
+  "patient": "plane",
+  "verb": "landed"
+ },
+ {
+  "id": "en_al_17_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_17",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The plane was landed.",
+  "agent": "pilot",
+  "patient": "plane",
+  "verb": "landed"
+ },
+ {
+  "id": "en_al_18_active",
+  "group": "en_agentless",
+  "pair": "en_al_18",
+  "voice": "active",
+  "lang": "en",
+  "text": "The child broke the window.",
+  "agent": "child",
+  "patient": "window",
+  "verb": "broke"
+ },
+ {
+  "id": "en_al_18_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_18",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The window was broken.",
+  "agent": "child",
+  "patient": "window",
+  "verb": "broken"
+ },
+ {
+  "id": "en_al_19_active",
+  "group": "en_agentless",
+  "pair": "en_al_19",
+  "voice": "active",
+  "lang": "en",
+  "text": "The judge sentenced the criminal.",
+  "agent": "judge",
+  "patient": "criminal",
+  "verb": "sentenced"
+ },
+ {
+  "id": "en_al_19_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_19",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The criminal was sentenced.",
+  "agent": "judge",
+  "patient": "criminal",
+  "verb": "sentenced"
+ },
+ {
+  "id": "en_al_20_active",
+  "group": "en_agentless",
+  "pair": "en_al_20",
+  "voice": "active",
+  "lang": "en",
+  "text": "The student solved the problem.",
+  "agent": "student",
+  "patient": "problem",
+  "verb": "solved"
+ },
+ {
+  "id": "en_al_20_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_20",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The problem was solved.",
+  "agent": "student",
+  "patient": "problem",
+  "verb": "solved"
+ },
+ {
+  "id": "en_al_21_active",
+  "group": "en_agentless",
+  "pair": "en_al_21",
+  "voice": "active",
+  "lang": "en",
+  "text": "The composer composed the symphony.",
+  "agent": "composer",
+  "patient": "symphony",
+  "verb": "composed"
+ },
+ {
+  "id": "en_al_21_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_21",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The symphony was composed.",
+  "agent": "composer",
+  "patient": "symphony",
+  "verb": "composed"
+ },
+ {
+  "id": "en_al_22_active",
+  "group": "en_agentless",
+  "pair": "en_al_22",
+  "voice": "active",
+  "lang": "en",
+  "text": "The mechanic repaired the engine.",
+  "agent": "mechanic",
+  "patient": "engine",
+  "verb": "repaired"
+ },
+ {
+  "id": "en_al_22_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_22",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The engine was repaired.",
+  "agent": "mechanic",
+  "patient": "engine",
+  "verb": "repaired"
+ },
+ {
+  "id": "en_al_23_active",
+  "group": "en_agentless",
+  "pair": "en_al_23",
+  "voice": "active",
+  "lang": "en",
+  "text": "The cat caught the mouse.",
+  "agent": "cat",
+  "patient": "mouse",
+  "verb": "caught"
+ },
+ {
+  "id": "en_al_23_agentless",
+  "group": "en_agentless",
+  "pair": "en_al_23",
+  "voice": "agentless",
+  "lang": "en",
+  "text": "The mouse was caught.",
+  "agent": "cat",
+  "patient": "mouse",
+  "verb": "caught"
+ },
+ {
+  "id": "en_by_00_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_00",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The cat slept by the door."
+ },
+ {
+  "id": "en_by_01_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_01",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The man waited by the window."
+ },
+ {
+  "id": "en_by_02_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_02",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The children played by the river."
+ },
+ {
+  "id": "en_by_03_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_03",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The dog sat by the fire."
+ },
+ {
+  "id": "en_by_04_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_04",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The woman stood by the gate."
+ },
+ {
+  "id": "en_by_05_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_05",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The boat drifted by the shore."
+ },
+ {
+  "id": "en_by_06_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_06",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The girl read by the lamp."
+ },
+ {
+  "id": "en_by_07_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_07",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The soldier stood by the wall."
+ },
+ {
+  "id": "en_by_08_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_08",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The old man rested by the tree."
+ },
+ {
+  "id": "en_by_09_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_09",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The students gathered by the fountain."
+ },
+ {
+  "id": "en_by_10_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_10",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The car stopped by the station."
+ },
+ {
+  "id": "en_by_11_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_11",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The horse drank by the stream."
+ },
+ {
+  "id": "en_by_12_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_12",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The fisherman sat by the lake."
+ },
+ {
+  "id": "en_by_13_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_13",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The couple danced by the sea."
+ },
+ {
+  "id": "en_by_14_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_14",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The guard waited by the entrance."
+ },
+ {
+  "id": "en_by_15_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_15",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The bird landed by the pond."
+ },
+ {
+  "id": "en_by_16_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_16",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The family camped by the forest."
+ },
+ {
+  "id": "en_by_17_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_17",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The boy sat by the window."
+ },
+ {
+  "id": "en_by_18_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_18",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The train passed by the farm."
+ },
+ {
+  "id": "en_by_19_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_19",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The runner rested by the bench."
+ },
+ {
+  "id": "en_by_20_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_20",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The artist painted by the harbour."
+ },
+ {
+  "id": "en_by_21_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_21",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The teacher stood by the board."
+ },
+ {
+  "id": "en_by_22_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_22",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The visitor waited by the counter."
+ },
+ {
+  "id": "en_by_23_by_active",
+  "group": "en_by_active",
+  "pair": "en_by_23",
+  "voice": "by_active",
+  "lang": "en",
+  "text": "The deer grazed by the road."
+ },
+ {
+  "id": "fr_00_active",
+  "group": "fr_pair",
+  "pair": "fr_00",
+  "voice": "active",
+  "lang": "fr",
+  "text": "Le scientifique a découvert la particule."
+ },
+ {
+  "id": "fr_00_passive",
+  "group": "fr_pair",
+  "pair": "fr_00",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "La particule a été découverte par le scientifique."
+ },
+ {
+  "id": "fr_01_active",
+  "group": "fr_pair",
+  "pair": "fr_01",
+  "voice": "active",
+  "lang": "fr",
+  "text": "Le chef a préparé le repas."
+ },
+ {
+  "id": "fr_01_passive",
+  "group": "fr_pair",
+  "pair": "fr_01",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "Le repas a été préparé par le chef."
+ },
+ {
+  "id": "fr_02_active",
+  "group": "fr_pair",
+  "pair": "fr_02",
+  "voice": "active",
+  "lang": "fr",
+  "text": "Le chien a poursuivi le chat."
+ },
+ {
+  "id": "fr_02_passive",
+  "group": "fr_pair",
+  "pair": "fr_02",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "Le chat a été poursuivi par le chien."
+ },
+ {
+  "id": "fr_03_active",
+  "group": "fr_pair",
+  "pair": "fr_03",
+  "voice": "active",
+  "lang": "fr",
+  "text": "Le garçon a lancé le ballon."
+ },
+ {
+  "id": "fr_03_passive",
+  "group": "fr_pair",
+  "pair": "fr_03",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "Le ballon a été lancé par le garçon."
+ },
+ {
+  "id": "fr_04_active",
+  "group": "fr_pair",
+  "pair": "fr_04",
+  "voice": "active",
+  "lang": "fr",
+  "text": "La femme a conduit la voiture."
+ },
+ {
+  "id": "fr_04_passive",
+  "group": "fr_pair",
+  "pair": "fr_04",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "La voiture a été conduite par la femme."
+ },
+ {
+  "id": "fr_05_active",
+  "group": "fr_pair",
+  "pair": "fr_05",
+  "voice": "active",
+  "lang": "fr",
+  "text": "L'homme a mangé la pomme."
+ },
+ {
+  "id": "fr_05_passive",
+  "group": "fr_pair",
+  "pair": "fr_05",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "La pomme a été mangée par l'homme."
+ },
+ {
+  "id": "fr_06_active",
+  "group": "fr_pair",
+  "pair": "fr_06",
+  "voice": "active",
+  "lang": "fr",
+  "text": "L'oiseau a construit le nid."
+ },
+ {
+  "id": "fr_06_passive",
+  "group": "fr_pair",
+  "pair": "fr_06",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "Le nid a été construit par l'oiseau."
+ },
+ {
+  "id": "fr_07_active",
+  "group": "fr_pair",
+  "pair": "fr_07",
+  "voice": "active",
+  "lang": "fr",
+  "text": "Le professeur a corrigé l'examen."
+ },
+ {
+  "id": "fr_07_passive",
+  "group": "fr_pair",
+  "pair": "fr_07",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "L'examen a été corrigé par le professeur."
+ },
+ {
+  "id": "fr_08_active",
+  "group": "fr_pair",
+  "pair": "fr_08",
+  "voice": "active",
+  "lang": "fr",
+  "text": "L'artiste a peint le portrait."
+ },
+ {
+  "id": "fr_08_passive",
+  "group": "fr_pair",
+  "pair": "fr_08",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "Le portrait a été peint par l'artiste."
+ },
+ {
+  "id": "fr_09_active",
+  "group": "fr_pair",
+  "pair": "fr_09",
+  "voice": "active",
+  "lang": "fr",
+  "text": "L'auteur a écrit le roman."
+ },
+ {
+  "id": "fr_09_passive",
+  "group": "fr_pair",
+  "pair": "fr_09",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "Le roman a été écrit par l'auteur."
+ },
+ {
+  "id": "fr_10_active",
+  "group": "fr_pair",
+  "pair": "fr_10",
+  "voice": "active",
+  "lang": "fr",
+  "text": "L'ingénieur a conçu le pont."
+ },
+ {
+  "id": "fr_10_passive",
+  "group": "fr_pair",
+  "pair": "fr_10",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "Le pont a été conçu par l'ingénieur."
+ },
+ {
+  "id": "fr_11_active",
+  "group": "fr_pair",
+  "pair": "fr_11",
+  "voice": "active",
+  "lang": "fr",
+  "text": "Le médecin a soigné le patient."
+ },
+ {
+  "id": "fr_11_passive",
+  "group": "fr_pair",
+  "pair": "fr_11",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "Le patient a été soigné par le médecin."
+ },
+ {
+  "id": "fr_12_active",
+  "group": "fr_pair",
+  "pair": "fr_12",
+  "voice": "active",
+  "lang": "fr",
+  "text": "La tempête a détruit le village."
+ },
+ {
+  "id": "fr_12_passive",
+  "group": "fr_pair",
+  "pair": "fr_12",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "Le village a été détruit par la tempête."
+ },
+ {
+  "id": "fr_13_active",
+  "group": "fr_pair",
+  "pair": "fr_13",
+  "voice": "active",
+  "lang": "fr",
+  "text": "L'entreprise a embauché le directeur."
+ },
+ {
+  "id": "fr_13_passive",
+  "group": "fr_pair",
+  "pair": "fr_13",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "Le directeur a été embauché par l'entreprise."
+ },
+ {
+  "id": "fr_14_active",
+  "group": "fr_pair",
+  "pair": "fr_14",
+  "voice": "active",
+  "lang": "fr",
+  "text": "Le comité a approuvé le projet."
+ },
+ {
+  "id": "fr_14_passive",
+  "group": "fr_pair",
+  "pair": "fr_14",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "Le projet a été approuvé par le comité."
+ },
+ {
+  "id": "fr_15_active",
+  "group": "fr_pair",
+  "pair": "fr_15",
+  "voice": "active",
+  "lang": "fr",
+  "text": "Le fermier a planté l'arbre."
+ },
+ {
+  "id": "fr_15_passive",
+  "group": "fr_pair",
+  "pair": "fr_15",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "L'arbre a été planté par le fermier."
+ },
+ {
+  "id": "fr_16_active",
+  "group": "fr_pair",
+  "pair": "fr_16",
+  "voice": "active",
+  "lang": "fr",
+  "text": "L'enfant a cassé la fenêtre."
+ },
+ {
+  "id": "fr_16_passive",
+  "group": "fr_pair",
+  "pair": "fr_16",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "La fenêtre a été cassée par l'enfant."
+ },
+ {
+  "id": "fr_17_active",
+  "group": "fr_pair",
+  "pair": "fr_17",
+  "voice": "active",
+  "lang": "fr",
+  "text": "Le juge a condamné le criminel."
+ },
+ {
+  "id": "fr_17_passive",
+  "group": "fr_pair",
+  "pair": "fr_17",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "Le criminel a été condamné par le juge."
+ },
+ {
+  "id": "fr_18_active",
+  "group": "fr_pair",
+  "pair": "fr_18",
+  "voice": "active",
+  "lang": "fr",
+  "text": "L'étudiant a résolu le problème."
+ },
+ {
+  "id": "fr_18_passive",
+  "group": "fr_pair",
+  "pair": "fr_18",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "Le problème a été résolu par l'étudiant."
+ },
+ {
+  "id": "fr_19_active",
+  "group": "fr_pair",
+  "pair": "fr_19",
+  "voice": "active",
+  "lang": "fr",
+  "text": "Le mécanicien a réparé le moteur."
+ },
+ {
+  "id": "fr_19_passive",
+  "group": "fr_pair",
+  "pair": "fr_19",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "Le moteur a été réparé par le mécanicien."
+ },
+ {
+  "id": "fr_20_active",
+  "group": "fr_pair",
+  "pair": "fr_20",
+  "voice": "active",
+  "lang": "fr",
+  "text": "Le chat a attrapé la souris."
+ },
+ {
+  "id": "fr_20_passive",
+  "group": "fr_pair",
+  "pair": "fr_20",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "La souris a été attrapée par le chat."
+ },
+ {
+  "id": "fr_21_active",
+  "group": "fr_pair",
+  "pair": "fr_21",
+  "voice": "active",
+  "lang": "fr",
+  "text": "Le boulanger a cuit le gâteau."
+ },
+ {
+  "id": "fr_21_passive",
+  "group": "fr_pair",
+  "pair": "fr_21",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "Le gâteau a été cuit par le boulanger."
+ },
+ {
+  "id": "fr_22_active",
+  "group": "fr_pair",
+  "pair": "fr_22",
+  "voice": "active",
+  "lang": "fr",
+  "text": "L'éditeur a relu l'article."
+ },
+ {
+  "id": "fr_22_passive",
+  "group": "fr_pair",
+  "pair": "fr_22",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "L'article a été relu par l'éditeur."
+ },
+ {
+  "id": "fr_23_active",
+  "group": "fr_pair",
+  "pair": "fr_23",
+  "voice": "active",
+  "lang": "fr",
+  "text": "Le programmeur a corrigé le bogue."
+ },
+ {
+  "id": "fr_23_passive",
+  "group": "fr_pair",
+  "pair": "fr_23",
+  "voice": "passive",
+  "lang": "fr",
+  "text": "Le bogue a été corrigé par le programmeur."
+ },
+ {
+  "id": "de_00_active",
+  "group": "de_pair",
+  "pair": "de_00",
+  "voice": "active",
+  "lang": "de",
+  "text": "Der Wissenschaftler entdeckte das Teilchen."
+ },
+ {
+  "id": "de_00_passive",
+  "group": "de_pair",
+  "pair": "de_00",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Das Teilchen wurde vom Wissenschaftler entdeckt."
+ },
+ {
+  "id": "de_01_active",
+  "group": "de_pair",
+  "pair": "de_01",
+  "voice": "active",
+  "lang": "de",
+  "text": "Der Koch kochte das Essen."
+ },
+ {
+  "id": "de_01_passive",
+  "group": "de_pair",
+  "pair": "de_01",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Das Essen wurde vom Koch gekocht."
+ },
+ {
+  "id": "de_02_active",
+  "group": "de_pair",
+  "pair": "de_02",
+  "voice": "active",
+  "lang": "de",
+  "text": "Der Hund jagte die Katze."
+ },
+ {
+  "id": "de_02_passive",
+  "group": "de_pair",
+  "pair": "de_02",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Die Katze wurde vom Hund gejagt."
+ },
+ {
+  "id": "de_03_active",
+  "group": "de_pair",
+  "pair": "de_03",
+  "voice": "active",
+  "lang": "de",
+  "text": "Der Junge warf den Ball."
+ },
+ {
+  "id": "de_03_passive",
+  "group": "de_pair",
+  "pair": "de_03",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Der Ball wurde vom Jungen geworfen."
+ },
+ {
+  "id": "de_04_active",
+  "group": "de_pair",
+  "pair": "de_04",
+  "voice": "active",
+  "lang": "de",
+  "text": "Die Frau fuhr das Auto."
+ },
+ {
+  "id": "de_04_passive",
+  "group": "de_pair",
+  "pair": "de_04",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Das Auto wurde von der Frau gefahren."
+ },
+ {
+  "id": "de_05_active",
+  "group": "de_pair",
+  "pair": "de_05",
+  "voice": "active",
+  "lang": "de",
+  "text": "Der Mann aß den Apfel."
+ },
+ {
+  "id": "de_05_passive",
+  "group": "de_pair",
+  "pair": "de_05",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Der Apfel wurde vom Mann gegessen."
+ },
+ {
+  "id": "de_06_active",
+  "group": "de_pair",
+  "pair": "de_06",
+  "voice": "active",
+  "lang": "de",
+  "text": "Der Vogel baute das Nest."
+ },
+ {
+  "id": "de_06_passive",
+  "group": "de_pair",
+  "pair": "de_06",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Das Nest wurde vom Vogel gebaut."
+ },
+ {
+  "id": "de_07_active",
+  "group": "de_pair",
+  "pair": "de_07",
+  "voice": "active",
+  "lang": "de",
+  "text": "Der Lehrer korrigierte die Prüfung."
+ },
+ {
+  "id": "de_07_passive",
+  "group": "de_pair",
+  "pair": "de_07",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Die Prüfung wurde vom Lehrer korrigiert."
+ },
+ {
+  "id": "de_08_active",
+  "group": "de_pair",
+  "pair": "de_08",
+  "voice": "active",
+  "lang": "de",
+  "text": "Der Künstler malte das Porträt."
+ },
+ {
+  "id": "de_08_passive",
+  "group": "de_pair",
+  "pair": "de_08",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Das Porträt wurde vom Künstler gemalt."
+ },
+ {
+  "id": "de_09_active",
+  "group": "de_pair",
+  "pair": "de_09",
+  "voice": "active",
+  "lang": "de",
+  "text": "Der Autor schrieb den Roman."
+ },
+ {
+  "id": "de_09_passive",
+  "group": "de_pair",
+  "pair": "de_09",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Der Roman wurde vom Autor geschrieben."
+ },
+ {
+  "id": "de_10_active",
+  "group": "de_pair",
+  "pair": "de_10",
+  "voice": "active",
+  "lang": "de",
+  "text": "Der Ingenieur entwarf die Brücke."
+ },
+ {
+  "id": "de_10_passive",
+  "group": "de_pair",
+  "pair": "de_10",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Die Brücke wurde vom Ingenieur entworfen."
+ },
+ {
+  "id": "de_11_active",
+  "group": "de_pair",
+  "pair": "de_11",
+  "voice": "active",
+  "lang": "de",
+  "text": "Der Arzt behandelte den Patienten."
+ },
+ {
+  "id": "de_11_passive",
+  "group": "de_pair",
+  "pair": "de_11",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Der Patient wurde vom Arzt behandelt."
+ },
+ {
+  "id": "de_12_active",
+  "group": "de_pair",
+  "pair": "de_12",
+  "voice": "active",
+  "lang": "de",
+  "text": "Der Sturm zerstörte das Dorf."
+ },
+ {
+  "id": "de_12_passive",
+  "group": "de_pair",
+  "pair": "de_12",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Das Dorf wurde vom Sturm zerstört."
+ },
+ {
+  "id": "de_13_active",
+  "group": "de_pair",
+  "pair": "de_13",
+  "voice": "active",
+  "lang": "de",
+  "text": "Die Firma kaufte das Gebäude."
+ },
+ {
+  "id": "de_13_passive",
+  "group": "de_pair",
+  "pair": "de_13",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Das Gebäude wurde von der Firma gekauft."
+ },
+ {
+  "id": "de_14_active",
+  "group": "de_pair",
+  "pair": "de_14",
+  "voice": "active",
+  "lang": "de",
+  "text": "Der Ausschuss genehmigte den Plan."
+ },
+ {
+  "id": "de_14_passive",
+  "group": "de_pair",
+  "pair": "de_14",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Der Plan wurde vom Ausschuss genehmigt."
+ },
+ {
+  "id": "de_15_active",
+  "group": "de_pair",
+  "pair": "de_15",
+  "voice": "active",
+  "lang": "de",
+  "text": "Der Bauer pflanzte den Baum."
+ },
+ {
+  "id": "de_15_passive",
+  "group": "de_pair",
+  "pair": "de_15",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Der Baum wurde vom Bauern gepflanzt."
+ },
+ {
+  "id": "de_16_active",
+  "group": "de_pair",
+  "pair": "de_16",
+  "voice": "active",
+  "lang": "de",
+  "text": "Das Kind zerbrach das Fenster."
+ },
+ {
+  "id": "de_16_passive",
+  "group": "de_pair",
+  "pair": "de_16",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Das Fenster wurde vom Kind zerbrochen."
+ },
+ {
+  "id": "de_17_active",
+  "group": "de_pair",
+  "pair": "de_17",
+  "voice": "active",
+  "lang": "de",
+  "text": "Der Richter verurteilte den Verbrecher."
+ },
+ {
+  "id": "de_17_passive",
+  "group": "de_pair",
+  "pair": "de_17",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Der Verbrecher wurde vom Richter verurteilt."
+ },
+ {
+  "id": "de_18_active",
+  "group": "de_pair",
+  "pair": "de_18",
+  "voice": "active",
+  "lang": "de",
+  "text": "Der Student löste das Problem."
+ },
+ {
+  "id": "de_18_passive",
+  "group": "de_pair",
+  "pair": "de_18",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Das Problem wurde vom Studenten gelöst."
+ },
+ {
+  "id": "de_19_active",
+  "group": "de_pair",
+  "pair": "de_19",
+  "voice": "active",
+  "lang": "de",
+  "text": "Der Mechaniker reparierte den Motor."
+ },
+ {
+  "id": "de_19_passive",
+  "group": "de_pair",
+  "pair": "de_19",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Der Motor wurde vom Mechaniker repariert."
+ },
+ {
+  "id": "de_20_active",
+  "group": "de_pair",
+  "pair": "de_20",
+  "voice": "active",
+  "lang": "de",
+  "text": "Die Katze fing die Maus."
+ },
+ {
+  "id": "de_20_passive",
+  "group": "de_pair",
+  "pair": "de_20",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Die Maus wurde von der Katze gefangen."
+ },
+ {
+  "id": "de_21_active",
+  "group": "de_pair",
+  "pair": "de_21",
+  "voice": "active",
+  "lang": "de",
+  "text": "Der Bäcker backte den Kuchen."
+ },
+ {
+  "id": "de_21_passive",
+  "group": "de_pair",
+  "pair": "de_21",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Der Kuchen wurde vom Bäcker gebacken."
+ },
+ {
+  "id": "de_22_active",
+  "group": "de_pair",
+  "pair": "de_22",
+  "voice": "active",
+  "lang": "de",
+  "text": "Der Redakteur prüfte den Artikel."
+ },
+ {
+  "id": "de_22_passive",
+  "group": "de_pair",
+  "pair": "de_22",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Der Artikel wurde vom Redakteur geprüft."
+ },
+ {
+  "id": "de_23_active",
+  "group": "de_pair",
+  "pair": "de_23",
+  "voice": "active",
+  "lang": "de",
+  "text": "Der Programmierer behob den Fehler."
+ },
+ {
+  "id": "de_23_passive",
+  "group": "de_pair",
+  "pair": "de_23",
+  "voice": "passive",
+  "lang": "de",
+  "text": "Der Fehler wurde vom Programmierer behoben."
+ },
+ {
+  "id": "original_active",
+  "group": "original",
+  "pair": "original",
+  "voice": "active",
+  "lang": "en",
+  "text": "The scientist discovered a new particle.",
+  "agent": "scientist",
+  "patient": "particle",
+  "verb": "discovered"
+ },
+ {
+  "id": "original_passive",
+  "group": "original",
+  "pair": "original",
+  "voice": "passive",
+  "lang": "en",
+  "text": "A new particle was discovered by the scientist.",
+  "agent": "scientist",
+  "patient": "particle",
+  "verb": "discovered"
+ }
+]

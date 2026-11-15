@@ -1,5 +1,65 @@
 # Changelog
 
+## v0.5.0
+
+Interventions: the TransformerLens basics (patching, ablation, steering)
+on Hugging Face models, and interventions in the graph-spectral domain. No
+result changes for existing calls.
+
+- New subpackage `spectral_trust.interventions` and context manager
+  `st.intervene(model)`: hook-based edits, all undone on exit (hooks
+  removed, weights restored bit for bit, the attention implementation and
+  any wrapped `transformers` function put back). It takes a `SpectralModel`
+  or a plain `transformers` causal LM (GPT-2, Llama, Qwen, Mistral, Gemma,
+  GPT-NeoX and OPT layouts). Interventions on one model may be nested and
+  closed in any order. Positions are absolute, so position-dependent edits
+  agree between cached generation and recomputation.
+- Graph-frequency steering: `iv.resid(layer).graph_filter(kind, cutoff= |
+  band=, strength=, graph=, causal=)` filters the residual stream along the
+  token axis on that layer's head-averaged attention graph (built as the
+  measurements build it), the chain graph, or a given graph:
+  `X' = X + s (g(L) X − X)`. Low-pass, high-pass, band-pass and band-stop
+  responses use the Jackson-damped Chebyshev machinery of `band_energies`
+  (no eigendecomposition), computed in float64 by default (on the CPU when
+  the model is on Apple MPS) or in float32 with `precision="float32"`,
+  faster on GPUs; `method="dense"` applies the ideal band indicator. `causal=True` filters each position on the graph
+  of its prefix, a lower-triangular operator, so generation with a KV cache
+  matches recomputation, beam search included; a cached step under the
+  symmetric filter raises.
+- Head ablation (`ablate("zero" | "mean" | "resample")` on the per-head
+  outputs; mean and resample take a reference, and resample draws its items
+  once per input, shared by its beams), activation steering
+  (`resid(l).add`), custom hooks (`iv.hook(site, layer, fn)`) and
+  attention-pattern edits (`edit_pattern`; these need transformers 4.48 or
+  later and say so at run time, while the package keeps requiring 4.30).
+- `remove_edges(key_mask, keep_sink=True)` removes attention edges and
+  renormalises each edited row over its remaining non-sink keys with the
+  first token's entry held fixed. Plain renormalisation (`keep_sink=False`)
+  releases sink mass onto the content keys.
+- Weight-spectrum steering: `iv.weights(layer, module).svd_scale(alpha, k=)`
+  applies the spectral-steering rescaling
+  `σ' = σ (1 + α (σ − mean) / std)` and warns when a factor turns
+  non-positive. The rebuilt matrix equals spectral-steering's reference code
+  bit for bit; the two give the same model for bias-free `nn.Linear`
+  projections (the Llama-family `mlp.down_proj`), since the reference swaps
+  in a bias-free layer while `svd_scale` edits the weight in place, keeps
+  the bias and also handles GPT-2's `Conv1D`. Edits of one matrix stack and
+  can be removed in any order.
+- `st.weight_snr(model, layer, module)` is `σ₁ / median(σ)` over the full
+  spectrum (`layer=None`: every layer). `st.weight_snr(W, k)` on a tensor and
+  the new `st.weight_svd_full(W)` are the two functions of the unreleased
+  0.2.3 branch that spectral-steering's scripts import, so they run on this
+  release.
+- Activation patching: `st.patch(model, clean, corrupt, site=, layer=,
+  head=, positions=)` and `st.Patcher`, which runs the clean and corrupt
+  inputs once, captures activations as patches need them, batches many
+  patches, and raises if the model changed since the capture.
+  Frequency-resolved patching (`band=`, `basis="clean_attention" |
+  "corrupt_attention" | "path" | "random"`) takes one band of a token-axis
+  eigenbasis from the clean run; the full band equals plain patching.
+  `st.equal_count_bands` splits the modes into equal-count bands.
+- New tutorial: Interventions.
+
 ## v0.4.2
 
 Animated views. One call writes a video, a GIF or an interactive page of a

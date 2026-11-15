@@ -31,6 +31,11 @@ from .cache import SpectralCache, LayerSpectra, HeadSpectra, GRAPH_METRIC_NAMES
 from .model import SpectralModel, compute_spectra
 from .interop import from_transformer_lens, from_nnsight, from_hf_outputs
 from . import viz
+from . import interventions
+from .interventions import (
+    Patcher, PatchSpec, equal_count_bands, graph_filter, intervene, patch, weight_snr,
+    weight_svd_full,
+)
 
 __version__ = "0.4.2"
 
@@ -81,5 +86,14 @@ __all__ = [
     "from_nnsight",
     "from_hf_outputs",
     "viz",
+    "interventions",
+    "intervene",
+    "patch",
+    "Patcher",
+    "PatchSpec",
+    "equal_count_bands",
+    "graph_filter",
+    "weight_snr",
+    "weight_svd_full",
     "__version__",
 ]
