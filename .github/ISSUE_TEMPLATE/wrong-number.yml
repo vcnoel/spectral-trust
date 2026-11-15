@@ -1,0 +1,46 @@
+name: Wrong number
+description: A number in the docs, a use case or a notebook that does not reproduce, or a result that a control explains.
+title: "Wrong number: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for checking a result. Give enough detail for someone else to rerun it.
+  - type: input
+    id: where
+    attributes:
+      label: Page, script or notebook
+      description: For example docs/use-cases/sink-ablation.md, examples/use_cases/sink_ablation.py or notebooks/03_interventions.ipynb.
+    validations:
+      required: true
+  - type: textarea
+    id: numbers
+    attributes:
+      label: Number reported and number obtained
+      placeholder: "Reported: change in logit difference -0.79 (keep_sink=True). Obtained: -0.52."
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      value: |
+        spectral-trust:
+        torch:
+        transformers:
+        device:
+        dtype:
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: Command or code
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: control
+    attributes:
+      label: Control or explanation (optional)
+      description: A control that explains the result, or what you think goes wrong.

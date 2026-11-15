@@ -1,0 +1,33 @@
+name: Bug report
+description: Something raises, crashes or does not do what its documentation says.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: Code to reproduce
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      value: |
+        spectral-trust:
+        torch:
+        transformers:
+        python:
+        device:
+    validations:
+      required: true
