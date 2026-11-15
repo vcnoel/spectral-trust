@@ -23,8 +23,8 @@ The top-level package exports ``st.intervene`` (the context manager),
 ``st.graph_filter``, ``st.weight_snr`` and ``st.weight_svd_full``.
 """
 from .context import (
-    KEEP_SINK_WARN_FACTOR, AttentionSite, Edit, Intervention, ResidSite, WeightSite, intervene,
-    remove_edges_from_pattern,
+    GRAPH_FILTER_WARN_RELATIVE_EDIT, KEEP_SINK_WARN_FACTOR, AttentionSite, Edit, Intervention,
+    ResidSite, WeightSite, intervene, remove_edges_from_pattern,
 )
 from .filters import (
     FILTER_KINDS, GRAPH_NAMES, PRECISIONS, FilterSpec, attention_adjacency, compute_placement,
@@ -41,7 +41,7 @@ from .weights import (
 
 __all__ = [
     "intervene", "Intervention", "Edit", "ResidSite", "AttentionSite", "WeightSite",
-    "remove_edges_from_pattern", "KEEP_SINK_WARN_FACTOR",
+    "remove_edges_from_pattern", "KEEP_SINK_WARN_FACTOR", "GRAPH_FILTER_WARN_RELATIVE_EDIT",
     "graph_filter", "FilterSpec", "filter_coefficients", "filter_response", "ideal_response",
     "attention_adjacency", "path_adjacency", "laplacian", "laplacian64", "FILTER_KINDS",
     "GRAPH_NAMES", "PRECISIONS", "compute_placement",

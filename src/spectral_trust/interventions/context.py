@@ -38,6 +38,10 @@ logger = logging.getLogger(__name__)
 #: multiplies the remaining non-sink attention of a row by more than this.
 KEEP_SINK_WARN_FACTOR = 10.0
 
+#: :meth:`ResidSite.graph_filter` warns when its edit exceeds this fraction of
+#: the residual norm on the positions it edits (``||X' - X|| / ||X||``).
+GRAPH_FILTER_WARN_RELATIVE_EDIT = 0.5
+
 Heads = Union[None, int, Sequence[int]]
 Positions = Union[None, int, slice, Sequence[int], torch.Tensor]
 
@@ -424,6 +428,18 @@ class ResidSite:
         Padded positions (from a 2-D ``attention_mask`` passed as a keyword)
         are left out of the graph. Attention is switched to the eager
         implementation for the duration of the intervention.
+
+        Size of the edit: a ``UserWarning`` is issued, once per
+        ``graph_filter`` call, when the relative edit ``||X' - X|| / ||X||``
+        (Frobenius norms over the edited positions of one sequence) exceeds
+        ``GRAPH_FILTER_WARN_RELATIVE_EDIT`` (0.5). In the side-effect
+        measurements on GPT-2 small and Phi-3-mini (use case "Graph-filter
+        side effects"), causal low-pass edits up to 0.29 of the residual left
+        greedy generation as clean as the unedited model, while high-pass and
+        band-pass edits at strength 1 (0.72 to 1.16 of the residual) raised
+        the next-token KL to 2.0 to 12.9 nats and made up to 90% of greedy
+        continuations degenerate; norm-matched controls did comparable
+        damage.
         """
         if self.site != "post":
             raise ValueError("graph_filter acts on the residual stream after the block, paired "
@@ -442,6 +458,7 @@ class ResidSite:
         attn, block = arch.attention(layer), arch.block(layer)
         state = {"w": None, "X": None, "A": None, "reordered": False}
         edit = iv._new_edit(f"graph_filter at resid_post layer {layer}: {spec}")
+        warned = [False]                       # one warning per graph_filter call
         if causal:
             iv._causal_states.append(state)
             reg.acquire_beam_hooks(iv.model, iv, iv._on_reorder)
@@ -473,6 +490,15 @@ class ResidSite:
             if not spec.causal:
                 sub = sub[:, sub_rows]
             out[:, inside] = sub
+            if not warned[0]:
+                at = torch.as_tensor([rows[j] for j in inside], device=Xf.device)
+                keep = torch.ones(Xf.shape[0], len(inside), dtype=torch.bool, device=Xf.device)
+                if pmask is not None:
+                    keep = keep & pmask[at].view(1, -1)
+                if valid is not None:
+                    keep = keep & valid[:, at].bool()
+                rel = _relative_edit(Xf[:, at], sub, keep)
+                warned[0] = _warn_relative_edit(rel, GRAPH_FILTER_WARN_RELATIVE_EDIT, layer)
             return out
 
         def on_block(module, args, out):
@@ -516,6 +542,34 @@ class ResidSite:
         edit.handles.append(attn.register_forward_hook(on_attn))
         edit.handles.append(block.register_forward_hook(on_block))
         return edit
+
+
+def _relative_edit(X: torch.Tensor, Y: torch.Tensor, keep: torch.Tensor) -> torch.Tensor:
+    """``||Y - X|| / ||X||`` per sequence ``[B]`` (Frobenius norms over the
+    positions where ``keep [B, n]`` is True), in float32."""
+    m = keep.unsqueeze(-1).to(torch.float32)
+    x = X.detach().to(torch.float32) * m
+    d = (Y.detach().to(torch.float32) - X.detach().to(torch.float32)) * m
+    nx = x.flatten(1).norm(dim=1)
+    return torch.where(nx > 0, d.flatten(1).norm(dim=1) / nx.clamp_min(1e-30),
+                       torch.zeros_like(nx))
+
+
+def _warn_relative_edit(rel: torch.Tensor, limit: float, layer: int) -> bool:
+    """Warn if any sequence's relative edit exceeds ``limit``; returns
+    whether it warned."""
+    if rel.numel() == 0:
+        return False
+    top = float(rel.max())
+    if not top > limit:
+        return False
+    warnings.warn(
+        f"graph_filter at layer {layer}: the edit is {top:.3f} of the residual norm on the "
+        f"edited positions (above {limit:g}). Edits of this size changed next-token "
+        f"predictions strongly in the side-effect measurements, and high-pass and band-pass "
+        f"edits of this size made many greedy continuations degenerate; consider a lower "
+        f"strength.", UserWarning, stacklevel=3)
+    return True
 
 
 class AttentionSite:

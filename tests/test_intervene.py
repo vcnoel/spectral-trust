@@ -24,6 +24,10 @@ from spectral_trust.interventions import (  # noqa: E402
 )
 from spectral_trust.interventions._hooks import register_site_hook  # noqa: E402
 
+# Random tiny models have high-frequency residuals, so most filters here make
+# large edits on purpose; the size warning has its own test.
+pytestmark = pytest.mark.filterwarnings("ignore:graph_filter at layer")
+
 torch.set_num_threads(2)
 CFG = GSPConfig(device="cpu", verbose=False, save_plots=False)
 V = 40
@@ -254,6 +258,33 @@ def test_resid_filter_matches_functional_filter_and_lowers_energy(gpt2):
         iv.hook("resid_post", lay, lambda x: got.__setitem__("h", x.clone()))
         _logits(gpt2, ids)
     assert _rayleigh(got["h"][0], L)[1] > _rayleigh(X[0], L)[1]
+
+
+def test_resid_filter_warns_once_when_the_edit_is_large(gpt2):
+    import re
+    import warnings
+    ids = _ids(5, n=12)
+    out = _forward_attn(gpt2, ids)
+    X, A = out.hidden_states[2], out.attentions[1]
+    full = graph_filter(X, A, kind="highpass", cutoff=0.8)            # strength 1
+    r1 = float((full - X).norm() / X.norm())                          # edit size per unit strength
+
+    def run(strength, passes=2, **kw):
+        with warnings.catch_warnings(record=True) as rec:
+            warnings.simplefilter("always")
+            with st.intervene(gpt2) as iv:
+                iv.resid(1).graph_filter("highpass", cutoff=0.8, strength=strength, **kw)
+                for _ in range(passes):
+                    _logits(gpt2, ids)
+        return [str(r.message) for r in rec if "graph_filter at layer 1" in str(r.message)]
+
+    assert run(0.45 / r1) == []                                       # 0.45 of the residual
+    msgs = run(0.55 / r1)                                             # 0.55: one warning, two passes
+    assert len(msgs) == 1
+    assert abs(float(re.search(r"the edit is ([0-9.]+)", msgs[0]).group(1)) - 0.55) < 2e-3
+    assert run(0.0) == []
+    assert len(run(0.55 / r1, positions=list(range(12)))) == 1        # positions given: same size
+    assert len(run(1.0, causal=True, token_span=(1, None))) <= 1
 
 
 def test_causal_filter_in_model_does_not_read_future_tokens(gpt2):
