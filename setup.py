@@ -9,10 +9,15 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="spectral_trust",
-    version="0.4.1",
+    version="0.4.2",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
-    package_data={"spectral_trust.cli": ["data/*.json"]},
+    package_data={
+        "spectral_trust.cli": ["data/*.json"],
+        # three.js r160 (MIT, see its LICENSE) for the flow view's pages
+        "spectral_trust.animation": ["assets/three/*.js", "assets/three/LICENSE",
+                                     "assets/three/addons/*/*.js"],
+    },
     include_package_data=True,
     install_requires=[
         "numpy",
@@ -31,8 +36,11 @@ setup(
         "tl": ["transformer_lens>=2.0"],
         "nnsight": ["nnsight>=0.4"],
         # The SVG views need nothing beyond numpy; the heatmap's matplotlib
-        # fallback uses Colormap.with_extremes (matplotlib 3.4).
-        "viz": ["matplotlib>=3.4"],
+        # fallback uses Colormap.with_extremes (matplotlib 3.4). The animated
+        # views (viz.animate) encode .mp4, .webm and .gif with the ffmpeg
+        # binary that imageio-ffmpeg ships; their .html pages load plotly.js
+        # from a pinned CDN, or embed it when the plotly package is present.
+        "viz": ["matplotlib>=3.4", "imageio>=2.9", "imageio-ffmpeg>=0.4.5"],
         "docs": [
             "mkdocs>=1.6",
             "mkdocs-material>=9.5",

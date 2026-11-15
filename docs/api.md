@@ -25,7 +25,8 @@ as st`), except where a module path is shown.
 
 ## Views
 
-`spectral_trust.viz`; also `SpectralCache.graph`, `.heatmap` and `.spectrum`.
+`spectral_trust.viz`; also `SpectralCache.graph`, `.heatmap`, `.spectrum` and
+`.animate` (see the [animated gallery](gallery.md)).
 
 ::: spectral_trust.viz.graph
 
@@ -34,6 +35,8 @@ as st`), except where a module path is shown.
 ::: spectral_trust.viz.spectrum
 
 ::: spectral_trust.viz.View
+
+::: spectral_trust.animation.animate
 
 ## Per-head diagnostics
 

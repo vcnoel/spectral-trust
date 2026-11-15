@@ -478,6 +478,17 @@ class SpectralCache:
         from . import viz
         return viz.spectrum(self, layer, head, **kwargs)
 
+    def animate(self, kind: str = "embedding3d", out="spectral.mp4", **kwargs) -> Path:
+        """Write an animated (``.mp4``, ``.webm``, ``.gif``) or interactive
+        (``.html``) view to ``out`` (see :func:`spectral_trust.viz.animate`).
+        Added in 0.4.2.
+
+        >>> cache.animate("embedding3d", "hero.mp4")
+        >>> cache.animate("waterfall", "waterfall.gif", theme="dark")
+        """
+        from . import viz
+        return viz.animate(self, kind, out, **kwargs)
+
     def __repr__(self) -> str:
         counts = {ns: sum(q.startswith(ns + ".") for q in self._metric_names)
                   for ns in NAMESPACE_METRICS}

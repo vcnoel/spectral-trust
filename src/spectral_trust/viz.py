@@ -183,9 +183,10 @@ def _span(cache) -> Optional[Tuple[int, int]]:
     return tuple(sp) if sp is not None else None
 
 
-def _graph_data(cache, layer: int, head: Optional[int]):
+def _graph_data(cache, layer: int, head: Optional[int], vectors: bool = False):
     """Adjacency, Laplacian eigenpairs and tokens of the graph the metrics
-    were computed on (span applied)."""
+    were computed on (span applied). With ``vectors`` the eigenvectors are
+    appended to the returned tuple."""
     import torch
 
     from .graph import GraphConstructor
@@ -221,7 +222,10 @@ def _graph_data(cache, layer: int, head: Optional[int]):
         u = np.asarray(cache[f"blocks.{layer}.graph.fiedler_vector"], dtype=np.float64)
     elif u.size and u[np.argmax(np.abs(u))] < 0:
         u = -u
-    return adj.numpy().astype(np.float64), np.asarray(vals, float), u, tokens, offset
+    out = (adj.numpy().astype(np.float64), np.asarray(vals, float), u, tokens, offset)
+    if vectors:
+        out += (np.asarray(vecs, dtype=np.float64),)
+    return out
 
 
 # ── graph ───────────────────────────────────────────────────────────────────
@@ -527,4 +531,19 @@ def spectrum(cache, layer: int, head: Optional[int] = None, text: int = 0,
     return View("".join(out), f"Spectrum: layer {layer}, {what}", "spectrum")
 
 
-__all__ = ["View", "graph", "heatmap", "spectrum"]
+# ── animations ──────────────────────────────────────────────────────────────
+
+def animate(cache, kind: str = "embedding3d", out="spectral.mp4", **kwargs) -> Path:
+    """Write an animated (``.mp4``, ``.webm``, ``.gif``) or interactive
+    (``.html``) view of ``cache`` to ``out``, the format chosen by the
+    suffix. Kinds: ``embedding3d``, ``waterfall``, ``compare``,
+    ``graph_movie``, ``head_atlas``. Added in 0.4.2; see
+    :func:`spectral_trust.animation.animate` for every option.
+
+    >>> st.viz.animate(cache, "embedding3d", "hero.mp4", theme="dark")
+    """
+    from .animation import animate as _animate
+    return _animate(cache, kind, out, **kwargs)
+
+
+__all__ = ["View", "animate", "graph", "heatmap", "spectrum"]

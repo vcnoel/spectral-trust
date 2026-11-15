@@ -1,5 +1,40 @@
 # Changelog
 
+## v0.4.2
+
+Animated views. One call writes a video, a GIF or an interactive page of a
+`SpectralCache`. No computed value changes.
+
+- New `SpectralCache.animate(kind, out, ...)` and
+  `st.viz.animate(cache, kind, out, ...)`. The file suffix picks the format:
+  `.mp4` (H.264), `.webm` (VP9), `.gif`, or `.html` (interactive).
+- Kinds:
+  - `flow`: each token is a tube through depth, from layer 0 to the last.
+    Its position at each layer is the attention graph's Fiedler vector
+    (sign-matched from layer to layer) and third eigenvector, its colour is
+    the Fiedler side, and its thickness is the attention it receives.
+    `other=` outlines the tokens missing from a second prompt, for example an
+    injected instruction. Drawn with three.js; videos are captured frame by
+    frame from the same page in headless Chrome, with no new Python
+    dependency, and fall back to matplotlib when no browser is found.
+  - `waterfall`: the energy share of each graph-frequency mode as 3D
+    ridgelines through depth, with the HFER band marked.
+  - `compare`: two prompts on shared token positions, with the tokens present
+    in only one outlined, and the Fiedler value and HFER of both traced
+    through depth.
+  - `graph_movie`: the circular attention graph morphing through the layers.
+  - `head_atlas`: every head of a layer as small multiples sorted by a
+    per-head metric, sweeping over the layers.
+  - `embedding3d`: tokens in 3D by Laplacian eigenvectors 2 to 4.
+- Okabe–Ito palette, light and dark themes, and deterministic output for a
+  fixed `seed`. Rendering runs on the CPU, and ffmpeg uses two threads by
+  default (`threads=`).
+- The `viz` extra adds imageio and imageio-ffmpeg. Interactive plotly pages
+  embed plotly.js when the `plotly` package is installed, and load a pinned
+  CDN copy otherwise. Flow pages embed three.js r160 (MIT; its licence ships
+  with the package).
+- Docs: an animated gallery page.
+
 ## v0.4.1
 
 A new licence, a per-column metric, parallel layers for the per-head
