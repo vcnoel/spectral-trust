@@ -34,7 +34,12 @@ from . import viz
 from . import interventions
 from .interventions import (
     Patcher, PatchSpec, equal_count_bands, graph_filter, intervene, patch, weight_snr,
-    weight_svd_full,
+    weight_svd_full, edit_with_controls, EditControlResult,
+)
+from . import numeric
+from .audit import (
+    confound_audit, AuditResult, confound_covariates, covariates_from_cache, effective_rank,
+    bootstrap_ci, paired_bootstrap, auroc,
 )
 
 __version__ = "0.5.0"
@@ -95,5 +100,16 @@ __all__ = [
     "graph_filter",
     "weight_snr",
     "weight_svd_full",
+    "edit_with_controls",
+    "EditControlResult",
+    "numeric",
+    "confound_audit",
+    "AuditResult",
+    "confound_covariates",
+    "covariates_from_cache",
+    "effective_rank",
+    "bootstrap_ci",
+    "paired_bootstrap",
+    "auroc",
     "__version__",
 ]
