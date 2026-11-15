@@ -12,7 +12,7 @@ from .instrumentation import (
     LLMInstrumenter, NonFiniteAttentionError, assert_finite_attention,
 )
 from .directed_topology import DirectedTopologist
-from . import features
+from . import features, pseudospectra
 from .per_head import (
     PerHeadDiagnostics, per_head_metrics, per_head_metrics_all_layers,
     stack_feature_vector, layer_delta_features,
@@ -54,6 +54,7 @@ __all__ = [
     "assert_finite_attention",
     "DirectedTopologist",
     "features",
+    "pseudospectra",
     "PerHeadDiagnostics",
     "per_head_metrics",
     "per_head_metrics_all_layers",
