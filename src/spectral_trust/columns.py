@@ -57,8 +57,8 @@ def _as_numpy(x) -> np.ndarray:
     return np.asarray(x, dtype=np.float32)
 
 
-def per_column_metrics(signals, laplacian, config: Optional[GSPConfig] = None
-                       ) -> ColumnDiagnostics:
+def per_column_metrics(signals, laplacian, config: Optional[GSPConfig] = None,
+                       operator=None) -> ColumnDiagnostics:
     """
     Energy, smoothness index, spectral entropy and HFER of each column of
     ``signals`` on the graph of ``laplacian``.
@@ -86,9 +86,16 @@ def per_column_metrics(signals, laplacian, config: Optional[GSPConfig] = None
             accepted), e.g. from :meth:`GraphConstructor.construct_laplacian`.
         config: supplies ``eigen_solver`` and ``hfer_cutoff_ratio``.
             Defaults to ``GSPConfig(device="cpu")``.
+        operator: optional ``[seq, seq]`` row-normalised directed operator
+            ``P`` (:func:`~spectral_trust.directed.directed_operator`). When
+            given, a fifth column ``"directed_tv"`` holds each column's
+            directed total variation ``‖x − P x‖² / ‖x‖²``
+            (:func:`~spectral_trust.directed.directed_total_variation`), how
+            much one step of attention transport changes the feature.
 
     Returns:
-        :class:`ColumnDiagnostics` with a ``[d, 4]`` value matrix.
+        :class:`ColumnDiagnostics` with a ``[d, 4]`` value matrix
+        (``[d, 5]`` with ``operator``).
     """
     cfg = config or GSPConfig(device="cpu", verbose=False)
     X = _as_numpy(signals)
@@ -118,6 +125,17 @@ def per_column_metrics(signals, laplacian, config: Optional[GSPConfig] = None
     p = np.maximum(masses / safe, 1e-12)
     entropy = np.where(live, -(p * np.log(p)).sum(axis=0), 0.0)
 
-    values = np.stack([energy, smoothness, entropy, hfer], axis=1).astype(np.float32)
-    return ColumnDiagnostics(values=values, metric_names=list(COLUMN_METRIC_NAMES),
+    columns = [energy, smoothness, entropy, hfer]
+    names = list(COLUMN_METRIC_NAMES)
+    if operator is not None:
+        from .directed import directed_total_variation
+        P = _as_numpy(operator)
+        if P.ndim > 2:
+            P = P.reshape(P.shape[-2:])
+        if P.shape != L.shape:
+            raise ValueError(f"operator must be [seq, seq] = {L.shape}, got {P.shape}")
+        columns.append(directed_total_variation(X, P, per_column=True).numpy())
+        names.append("directed_tv")
+    values = np.stack(columns, axis=1).astype(np.float32)
+    return ColumnDiagnostics(values=values, metric_names=names,
                              eigenvalues=np.asarray(eigenvalues, dtype=np.float32))

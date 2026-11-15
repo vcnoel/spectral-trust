@@ -87,3 +87,10 @@ class GSPConfig:
     # from the model config (layer_types) when the model returns attention for
     # only some layers, as hybrid linear-attention models do.
     attention_layer_map: Optional[list] = None
+
+    # New in v0.5.1: charge q of the magnetic Laplacian of a directed graph
+    # (spectral_trust.directed). With edge weights in [0, 1] (rows of a
+    # row-normalised operator), the phase 2*pi*q*(A_ij - A_ji) stays in
+    # [-pi/2, pi/2] for q <= 1/4, and at q = 1/4 a one-way edge of weight 1
+    # gets the phase pi/2 (see spectral_trust.directed.magnetic_laplacian).
+    magnetic_q: float = 0.25

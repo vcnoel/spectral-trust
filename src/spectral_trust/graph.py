@@ -13,6 +13,25 @@ class GraphConstructor:
     
     def __init__(self, config: GSPConfig):
         self.config = config
+
+    def directed_operator(self, adjacency: torch.Tensor) -> torch.Tensor:
+        """Row-normalised operator ``P = D_out^-1 A`` of a directed adjacency
+        (``config.remove_self_loops`` applies); see
+        :func:`spectral_trust.directed.directed_operator`."""
+        from .directed import directed_operator
+        return directed_operator(adjacency, remove_self_loops=self.config.remove_self_loops)
+
+    def magnetic_laplacian(self, adjacency: torch.Tensor, q: Optional[float] = None,
+                           dtype: torch.dtype = torch.complex128) -> torch.Tensor:
+        """Magnetic Laplacian of a directed adjacency, normalised for
+        ``normalization="sym"`` and unnormalised for ``"none"``, with charge
+        ``q`` (default ``config.magnetic_q``); see
+        :func:`spectral_trust.directed.magnetic_laplacian`."""
+        from .directed import magnetic_laplacian, magnetic_normalized
+        q = getattr(self.config, "magnetic_q", 0.25) if q is None else q
+        return magnetic_laplacian(adjacency, q=q,
+                                  normalized=magnetic_normalized(self.config.normalization),
+                                  remove_self_loops=self.config.remove_self_loops, dtype=dtype)
         
     def symmetrize_attention(self, attention: torch.Tensor) -> torch.Tensor:
         """

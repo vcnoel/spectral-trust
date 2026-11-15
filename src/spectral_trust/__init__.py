@@ -27,6 +27,10 @@ from .fast import (
     band_energies, band_entropy, band_filter_response,
 )
 from .columns import ColumnDiagnostics, per_column_metrics, COLUMN_METRIC_NAMES
+from .directed import (
+    directed_operator, directed_total_variation, magnetic_laplacian, magnetic_spectrum,
+    magnetic_hfer, magnetic_phase, hermitian_clustering, flow_imbalance, FlowClusters,
+)
 from .cache import SpectralCache, LayerSpectra, HeadSpectra, GRAPH_METRIC_NAMES
 from .model import SpectralModel, compute_spectra
 from .interop import from_transformer_lens, from_nnsight, from_hf_outputs
@@ -76,6 +80,15 @@ __all__ = [
     "ColumnDiagnostics",
     "per_column_metrics",
     "COLUMN_METRIC_NAMES",
+    "directed_operator",
+    "directed_total_variation",
+    "magnetic_laplacian",
+    "magnetic_spectrum",
+    "magnetic_hfer",
+    "magnetic_phase",
+    "hermitian_clustering",
+    "flow_imbalance",
+    "FlowClusters",
     "SpectralModel",
     "SpectralCache",
     "LayerSpectra",
