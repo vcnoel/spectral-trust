@@ -38,10 +38,9 @@ Binkowski, Janiak, Sawczyn, Gabrys and Kajdanowicz, EMNLP 2025
 - **Official code.**
   [graphml-lab-pwr/lapeigvals](https://github.com/graphml-lab-pwr/lapeigvals)
   (commit `74f885c`).
-- **Licence.** None declared: no licence file, and none in the README or
-  the package metadata.
-- **Status.** Without a licence the code cannot be ported, so spectral-trust
-  ships no LapEigvals feature and no numerical check.
+- **Status.** Not included yet. spectral-trust ports baselines only from the
+  authors' released code with their agreement and a numerical check against
+  it, and that is in progress.
 - **What it computes.** Per layer and head, the diagonal of `L = D − A` with
   `D_jj = (Σ_i A_ij)/(T − j)`, the mean attention that token j receives
   (`hallucinations/features/attention_weights.py`). `L` is lower-triangular,
@@ -56,8 +55,7 @@ Binkowski, Adamczewski and Kajdanowicz, ICML 2026 (arXiv 2604.10697).
 - **Official code.**
   [graphml-lab-pwr/sink-probe](https://github.com/graphml-lab-pwr/sink-probe)
   (commit `8108351`).
-- **Licence.** None declared.
-- **Status.** Not ported, and no numerical check.
+- **Status.** Not included yet, for the same reason as LapEigvals.
 - **What it computes.** Per layer and head, the sink score of each token j
   is `(Σ_i A_ij)/(T − j)` (`hallucinations/features/sink_scores.py`). The
   scores are sorted, and the top k (1 to 100) are fed to a logistic
