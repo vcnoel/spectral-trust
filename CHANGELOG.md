@@ -19,6 +19,22 @@ diagonalises non-symmetric Laplacians with a general solver, and 0.3.0 made
 per-head functions, added in 0.3.0, had a related issue with `"rw"` that
 0.4.0 fixed (see v0.4.0).
 
+## Unreleased
+
+Numerical in-context learning, a confound audit and edits with matched
+controls. No result changes for existing calls.
+
+- `spectral_trust.numeric`: the serialisation of Bao et al. (2026), value
+  token spans, the next-value distribution (restricted softmax or
+  hierarchical digit-wise) and the paper's layer diagnostics with its
+  non-graph controls (`profile_from_outputs`).
+- `st.confound_audit`: raw and covariate-adjusted effects of spectral
+  readouts with bootstrap intervals.
+- `st.edit_with_controls`: a graph filter or band patch next to
+  norm-matched permuted-graph, path-graph, random-subspace and scaling
+  controls.
+- Use case "Numerical ICL" and notebook `05_numerical_icl.ipynb`.
+
 ## v0.5.0 (2026-11-15)
 
 Interventions: the TransformerLens basics (patching, ablation, steering)
