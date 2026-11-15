@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """Graph options of the layer graph (GSPConfig.edge_weights,
-graph_direction, magnetic_q, sink_grounding) in GraphConstructor,
+graph_direction, magnetic_q) in GraphConstructor,
 compute_spectra and SpectralModel.run_with_spectra.
 
 The regression tests pin the default path: every call that does not set the
 new options gives bit-identical results to the construction of 0.5.0, copied
 verbatim below so that the library is checked against it and not against
 itself."""
-from dataclasses import replace
+from dataclasses import fields, replace
 
 import numpy as np
 import pytest
@@ -121,8 +121,8 @@ def test_explicit_defaults_equal_the_plain_config(gpt2):
     ids = _ids(1)
     plain = st.SpectralModel(gpt2, None, config=CFG).run_with_spectra(ids)
     explicit = st.SpectralModel(gpt2, None, config=replace(
-        CFG, edge_weights="attention", graph_direction="symmetric", magnetic_q=0.7,
-        sink_grounding=None)).run_with_spectra(ids)
+        CFG, edge_weights="attention", graph_direction="symmetric", magnetic_q=0.7
+        )).run_with_spectra(ids)
     assert plain.keys() == explicit.keys() and plain.metric_names == explicit.metric_names
     for key in plain.keys():
         assert np.array_equal(np.asarray(plain[key]), np.asarray(explicit[key])), key
@@ -148,7 +148,7 @@ def test_default_run_does_not_capture_values(gpt2, monkeypatch):
     assert not reg.CAPTURES
 
 
-# ── option checks and the sink-grounding hook ───────────────────────────────
+# ── option checks ────────────────────────────────────────────────────────────
 
 def test_unknown_options_raise(gpt2):
     gc = GraphConstructor(replace(CFG, edge_weights="values"))
@@ -159,14 +159,12 @@ def test_unknown_options_raise(gpt2):
                          ).run_with_spectra(_ids(4))
 
 
-def test_sink_grounding_is_reserved(gpt2):
-    cfg = replace(CFG, sink_grounding="sink")
-    with pytest.raises(NotImplementedError, match="sink_grounding"):
-        GraphConstructor(cfg).layer_graph(torch.rand(1, 2, 4, 4))
-    with pytest.raises(NotImplementedError, match="sink_grounding"):
-        st.SpectralModel(gpt2, None, config=cfg).run_with_spectra(_ids(4))
-    with pytest.raises(NotImplementedError, match="sink_grounding"):
-        st.compute_spectra({0: torch.rand(1, 2, 4, 4)}, tokens=[list("abcd")], config=cfg)
+def test_sink_grounding_is_removed():
+    # A pilot found that grounding the layer graph at the sink adds nothing;
+    # the reserved option and its NotImplementedError hook are gone.
+    assert "sink_grounding" not in {f.name for f in fields(GSPConfig)}
+    with pytest.raises(TypeError):
+        GSPConfig(sink_grounding="sink")
 
 
 def test_value_edges_need_the_values():

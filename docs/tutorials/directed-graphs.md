@@ -259,7 +259,6 @@ Block 1 reads from block 0 and block 2 from both, about 95% one way.
 | `edge_weights` | `"attention"`, `"value"`, `"value_per_head"` | `"attention"` |
 | `graph_direction` | `"symmetric"`, `"directed"` | `"symmetric"` |
 | `magnetic_q` | charge of the magnetic Laplacian, `≥ 0` | `0.25` |
-| `sink_grounding` | reserved, not implemented (any value raises) | `None` |
 
 The options apply to the head-averaged graph: the `graph` namespace of
 `SpectralModel.run_with_spectra` and `compute_spectra` (which takes

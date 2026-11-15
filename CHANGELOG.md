@@ -47,11 +47,9 @@ bit-identical to 0.5.0.
   transpose; the directed total variation is not.
 - `per_column_metrics(..., operator=P)` adds a `directed_tv` column.
 - `GSPConfig` gains `edge_weights` (`"attention"`, `"value"`,
-  `"value_per_head"`), `graph_direction` (`"symmetric"`, `"directed"`),
-  `magnetic_q` (default 0.25) and `sink_grounding`, a reserved hook that
-  raises `NotImplementedError` for any value other than None.
-  `GraphConstructor` gains `layer_graph`, `directed_operator` and
-  `magnetic_laplacian`; `EDGE_WEIGHTS`, `GRAPH_DIRECTIONS` and
+  `"value_per_head"`), `graph_direction` (`"symmetric"`, `"directed"`)
+  and `magnetic_q` (default 0.25). `GraphConstructor` gains
+  `layer_graph`, `directed_operator` and `magnetic_laplacian`; `EDGE_WEIGHTS`, `GRAPH_DIRECTIONS` and
   `DIRECTED_GRAPH_METRIC_NAMES` are exported.
 - `SpectralModel.run_with_spectra` and `compute_spectra` (new argument
   `edges=`) build the `graph` namespace from the options. Directed graphs

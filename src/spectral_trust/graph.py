@@ -18,21 +18,13 @@ GRAPH_DIRECTIONS = ("symmetric", "directed")
 
 
 def check_graph_options(config) -> None:
-    """Raise on an unknown ``edge_weights`` or ``graph_direction``, and on
-    ``sink_grounding``, which is reserved and not implemented."""
+    """Raise on an unknown ``edge_weights`` or ``graph_direction``."""
     edge = getattr(config, "edge_weights", "attention")
     if edge not in EDGE_WEIGHTS:
         raise ValueError(f"edge_weights must be one of {EDGE_WEIGHTS}, got {edge!r}")
     direction = getattr(config, "graph_direction", "symmetric")
     if direction not in GRAPH_DIRECTIONS:
         raise ValueError(f"graph_direction must be one of {GRAPH_DIRECTIONS}, got {direction!r}")
-    # TODO(sink grounding): hook for grounding the layer graph at the
-    # attention sink. Its definition is pending; until it lands, any value
-    # other than None is refused.
-    if getattr(config, "sink_grounding", None) is not None:
-        raise NotImplementedError(
-            "GSPConfig.sink_grounding is reserved for sink grounding of the layer graph, "
-            "which is not implemented yet; leave it None")
 
 
 def default_graph(config) -> bool:

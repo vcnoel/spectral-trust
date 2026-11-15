@@ -103,10 +103,6 @@ class GSPConfig:
     # P = D_out^-1 A, measured through its magnetic Laplacian and the directed
     # total variation (spectral_trust.directed).
     graph_direction: str = "symmetric"
-    # TODO(sink grounding): reserved for grounding the layer graph at the
-    # attention sink, whose definition is pending. Not implemented: any value
-    # other than None raises NotImplementedError (graph.check_graph_options).
-    sink_grounding: Optional[str] = None
 
     # New in v0.5.1: charge q of the magnetic Laplacian of a directed graph
     # (spectral_trust.directed). With edge weights in [0, 1] (rows of a
