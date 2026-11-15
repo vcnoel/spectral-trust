@@ -132,6 +132,9 @@ class GSPDiagnosticsFramework:
             # Remove batch dimension (assuming batch_size=1)
             attention = attention.squeeze(0)  # [heads, seq_len, seq_len]
             signals = signals.squeeze(0)  # [seq_len, hidden_dim]
+            if target_indices and getattr(self.config, "subgraph_renormalize", False):
+                from .graph import renormalized_within
+                attention = renormalized_within(attention, target_indices)
             
             attention_sym = self.graph_constructor.symmetrize_attention(
                 attention.unsqueeze(0)

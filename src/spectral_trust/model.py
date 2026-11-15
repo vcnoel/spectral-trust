@@ -215,6 +215,9 @@ def compute_spectra(
             layer_attn[lay] = a
             if keep_patterns:
                 rec[f"blocks.{lay}.attn.pattern"] = a.numpy().copy()
+            if getattr(cfg, "subgraph_renormalize", False) and not full:
+                from .graph import renormalized_within
+                layer_attn[lay] = renormalized_within(a, range(s, e))
 
         if attn_names:
             _per_head_attention(rec, layer_attn, chosen, head_lists, n_heads, (s, e),
@@ -531,6 +534,10 @@ class SpectralModel:
             token_span: ``(start, end)`` tokens to measure, with slice
                 semantics (``(-5, None)`` is the last five tokens). The
                 induced subgraph is taken before the Laplacian is built.
+                With ``GSPConfig(subgraph_renormalize=True)`` each head's
+                kept rows are renormalised first, so ``token_span=(1, None)``
+                drops the BOS sink and renormalises
+                (:func:`spectral_trust.graph.drop_and_renormalize`).
             hybrid: compute the metrics that read the hidden states
                 (``resid.*`` and the hybrid ``graph.*`` metrics). With False
                 only attention-only metrics are computed.
