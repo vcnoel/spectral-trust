@@ -14,10 +14,29 @@ high-frequency energy. The paper reports no intervention and names the
 causal question as open: "frequency-band ablations could test the
 functional importance of particular bands".
 
-This page extends their study with the library: their diagnostics on two
-small open models, a confound audit of the complexity signal, and the two
-interventions they propose in spirit, graph-frequency steering and
-frequency-resolved patching, each against matched controls.
+This page extends their study with the library's tools for that open
+question, on small open models: their diagnostics on Llama-3.2-1B (the
+smallest model of the paper), a confound audit of the complexity signal, and
+two interventions in the spirit of the band ablations they propose,
+graph-frequency steering and frequency-resolved patching, each against
+matched controls, on Llama-3.2-1B and Qwen3-0.6B. In short:
+
+- their contrast reproduces on Llama-3.2-1B (chaotic against the rest:
+  AUROC 1.00 for λ2 and HFER, 0.84 for exp(SE) at 800 tokens);
+- the audit adds two covariates worth reporting next to the diagnostics,
+  sink mass and the effective rank of the hidden states, which separate the
+  same inputs on their own, and control families that locate what the
+  diagnostics measure: a smooth, predictable sine sits beyond the chaotic
+  map on all three (lower λ2, higher HFER and exp(SE)), so they follow the
+  local variation of the sequence more than its predictability;
+- low-pass steering along the attention graph makes the predicted next
+  value less certain, not more, on both models;
+- the lowest attention-graph band carries the prediction of a periodic
+  input beyond random and positional bands of the same size, with a
+  dose-response, and patching the last positions recovers as much or more.
+
+The notebook `notebooks/05_numerical_icl.ipynb` shows each tool on
+Qwen2.5-0.5B on a CPU in under five minutes (see [Reproduce](#reproduce)).
 
 ```python
 import torch
@@ -99,13 +118,16 @@ effect is removed from readout and target. Last two columns: AUROC between
 two families (8 inputs each; above 0.5 means higher in the second). 95%
 bootstrap intervals over realizations.*
 
-**The chaotic split needs no graph.** Sink mass alone separates chaotic from
-the other inputs with an AUROC of 0.96 [0.93, 0.99], and the effective rank
-of the hidden states with 1.00. A cross-validated logistic regression on
-length, sink mass, effective rank and position already reaches an AUROC of
-1.00, and none of λ2, HFER or exp(SE) adds to it.
+**Two covariates to report next to the diagnostics.** Sink mass alone
+separates chaotic from the other inputs with an AUROC of 0.96 [0.93, 0.99],
+and the effective rank of the hidden states with 1.00. A cross-validated
+logistic regression on length, sink mass, effective rank and position
+already reaches an AUROC of 1.00, and none of λ2, HFER or exp(SE) adds to
+it on this split. The graph diagnostics and these simpler quantities carry
+the same chaotic split; the finer comparisons below show where the
+diagnostics carry more.
 
-**The ordering along the ladder partly survives.** Against the complexity
+**Along the ladder, the diagnostics add to the covariates.** Against the complexity
 rank of the 10 families, λ2 keeps a partial correlation of −0.53 [−0.67,
 −0.39] given length, sink mass, effective rank and position, HFER +0.27
 [+0.06, +0.45] and exp(SE) +0.20 [+0.04, +0.34]. Adding the number of
@@ -117,11 +139,12 @@ are the cleaner test. The positional (DCT) HFER of the paper's App. H
 separates the chaotic inputs as well as the graph HFER (AUROC 1.00) and
 keeps a larger partial correlation with the rank (+0.68).
 
-**Order matters, but the diagnostics do not track predictability.** Shuffling
-the period-16 values moves all three diagnostics towards the chaotic inputs
-(λ2 0.228 to 0.213, HFER 0.171 to 0.194, exp(SE) 32 to 34; AUROC 1.00 for
-each), so the signal is not only the set of tokens. But the controls break
-the link to dynamical complexity. The sine, which the model continues with
+**Order matters, and the control families locate what the diagnostics
+measure.** Shuffling the period-16 values moves all three diagnostics
+towards the chaotic inputs (λ2 0.228 to 0.213, HFER 0.171 to 0.194, exp(SE)
+32 to 34; AUROC 1.00 for each), so the signal is not only the set of
+tokens: the diagnostics see temporal structure. The other controls separate
+that structure from predictability. The sine, which the model continues with
 a predictive entropy of 1.5 nats (5.1 for the chaotic map, 6.9 for i.i.d.
 noise), has the lowest λ2 of all 14 families (0.138), the highest HFER
 (0.219) and the highest exp(SE) (48): it looks more complex than the
@@ -130,8 +153,17 @@ predictable input, has a higher λ2 (0.211) and a lower HFER and exp(SE)
 than the chaotic map (AUROC 0.98 and 1.00). Across all 14 families, λ2
 correlates at −0.69 with the model's predictive entropy, but at +0.49
 [+0.40, +0.57] once the covariates are removed; HFER goes from +0.67 to
-−0.42 [−0.58, −0.27]. The raw association with the model's uncertainty is
-carried by the covariates.
+−0.42 [−0.58, −0.27]. The covariates account for the raw association with
+the model's uncertainty; what remains is the local variation of the
+sequence, which the sine has in abundance.
+
+**For follow-up studies.** The paper's families are a well-chosen ladder of
+dynamical complexity; three additions make it sharper at little cost:
+report sink mass and the effective rank of the hidden states next to λ2,
+HFER and exp(SE) (one `st.confound_audit` call gives the table above), add
+a shuffled control of a periodic family, and add a smooth, predictable
+family such as a sine, which tells local variation apart from
+predictability.
 
 ## Steering: does smoothing the numeric tokens smooth the prediction?
 
@@ -182,10 +214,14 @@ raises the predictive entropy by 0.60 [0.39, 0.84] nats and its standard
 deviation by 48 [30, 69] (values 0 to 999), with a monotone dose-response
 (+0.08, +0.20, +0.60 nats at relative edits 0.06, 0.13, 0.26). On
 Qwen3-0.6B, at a relative edit of 0.20, the entropy rises by 0.12 [0.04,
-0.22] (+0.02, +0.05, +0.12 along the dose). The paper's account predicts a
-decrease; the registered gate fails on both models.
+0.22] (+0.02, +0.05, +0.12 along the dose). The test was registered with a
+decrease as its prediction, the direction a smoothness account suggests;
+on both models the entropy rises instead. Smoother hidden states go with
+confident continuations, but making a residual smoother does not make its
+continuation confident; the next section asks which band carries the
+prediction.
 
-**The graph matters, but not as the account says.** At equal norm, the
+**The graph matters, in its own way.** At equal norm, the
 permuted graph raises the entropy more than the attention graph (target
 minus permuted: −0.26 [−0.37, −0.16] on Llama, −0.12 [−0.29, −0.02] on
 Qwen), the path graph as much or less (+0.15 [+0.02, +0.28] on Llama, +0.00
@@ -275,10 +311,10 @@ wide.
 
 ## Controls and limits
 
-- Two small models (Llama-3.2-1B, the smallest of the paper, and
-  Qwen3-0.6B), not the paper's main Llama-3.2-3B; at most 800 tokens
-  instead of 2000; 8 realizations per family instead of 20 (4 in the Qwen
-  reproduction).
+- Small models only: the reproduction and the confound audit on
+  Llama-3.2-1B (the smallest model of the paper), the two interventions on
+  Llama-3.2-1B and Qwen3-0.6B; not the paper's main Llama-3.2-3B. At most
+  800 tokens instead of 2000; 8 realizations per family instead of 20.
 - The confound audit removes linear effects of the covariates. The paper's
   ten families make the complexity rank, the number of distinct values and
   the repeat fraction almost collinear, so the control families (shuffled,
@@ -293,9 +329,11 @@ wide.
   read on its first digit only. Intervals are 95% bootstrap intervals over
   pairs or realizations; no correction for the number of layers.
 - The paper's construction drops BOS and renormalises the rows. Qwen3 has
-  no BOS: its first token is the sink, and with the paper's rule (special
-  tokens only) it stays in the graph and dominates HFER (0.83 on a period-4
-  input at N = 100). The Qwen reproduction therefore also drops position 0.
+  no BOS: its first token is the sink, and under the paper's rule (special
+  tokens only) it stays in the graph. On a single period-4 input at
+  N = 100 it then carried most of the residual energy (HFER 0.83, against
+  0.11 to 0.23 on Llama-3.2-1B). For models without BOS, pass `drop=(0,)` to
+  `profile_from_outputs` and report both.
 
 ## Reproduce
 
@@ -303,9 +341,20 @@ The pilot's scripts (data generation, run scripts, result files and
 figures) live outside the library and call only the functions above:
 `quantize`, `serialize`, `value_spans`, `next_value_distribution`,
 `profile_from_outputs`, `st.confound_audit`, `st.edit_with_controls`,
-`st.Patcher` and `st.bootstrap_ci`. The notebook
-`notebooks/05_numerical_icl.ipynb` runs a small version of the reproduction,
-the audit and the steering test on a CPU runtime in a few minutes.
+`st.Patcher` and `st.bootstrap_ci`.
+
+The notebook `notebooks/05_numerical_icl.ipynb` shows the toolkit on
+Qwen2.5-0.5B on a CPU: serialising a sequence and reading its next-value
+distribution, the spectral contrast of a constant, period 4, period 16 and
+the chaotic logistic map at 100 to 400 tokens (three realisations each), the
+confound audit of that contrast, and the low-pass edit with its permuted,
+path and scaling controls on six chaotic sequences. It runs in about 4
+minutes 20 s with 4 threads once the model (about 1 GB) is downloaded, and it is
+saved with its outputs. At that scale it is a demonstration of the
+interface: its contrast follows the paper's ordering in HFER at every
+length, its four families let the covariates separate chaotic inputs on
+their own, and its edit shows the pattern of the steering section against
+the permuted graph, within wide intervals.
 
 Runtimes on a laptop CPU with 4 threads: the Llama-3.2-1B reproduction
 (14 families, 8 realizations, 4 lengths) 1 h 51 min; the steering dose
