@@ -40,6 +40,9 @@ def test_matches_the_original_code(ref, name):
     got, want = _run(ref, name), ref[f"{name}/features"]
     if str(ref["__env__"]) == env:
         assert np.array_equal(got, want)
+    elif name.startswith("sparse"):
+        # ARPACK's iterations differ across platforms even from a fixed start vector
+        np.testing.assert_allclose(got, want, rtol=1e-2, atol=1e-4)
     else:
         np.testing.assert_allclose(got, want, rtol=1e-5, atol=1e-6)
 

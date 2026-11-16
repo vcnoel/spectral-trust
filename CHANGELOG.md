@@ -19,6 +19,18 @@ diagonalises non-symmetric Laplacians with a general solver, and 0.3.0 made
 per-head functions, added in 0.3.0, had a related issue with `"rw"` that
 0.4.0 fixed (see v0.4.0).
 
+## v0.5.2 (2026-11-16)
+
+A fix for recent `transformers` releases. No result changes.
+
+- `numeric` hierarchical next-value readout: the key-value cache is cropped
+  with a negative length, which every `transformers` release accepts; recent
+  releases refused the positive length 0.5.1 passed.
+- Tests: across platforms, the 0.5.0 regression test skips the outputs that
+  depend on the eigenvector basis (Fiedler vector, spectral masses), and the
+  sparse Geometry of Reason case allows for ARPACK's platform differences.
+  Bit-identity is still asserted in the environment that wrote the fixtures.
+
 ## v0.5.1 (2026-11-16)
 
 Directed and value-weighted attention graphs, measure-aware operator

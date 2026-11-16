@@ -184,7 +184,9 @@ def _hierarchical(hf, ids, dig: List[int], digits: int, min_prob: float, chunk: 
             part = children[start:start + chunk]
             new = torch.as_tensor([[dig[d] for d in p] for p, _ in part], device=ids.device)
             if can_cache:
-                cache.crop(S)
+                extra = cache.get_seq_length() - S
+                if extra > 0:  # negative crop works on old and new transformers
+                    cache.crop(-extra)
                 cache.batch_select_indices(torch.zeros(1, dtype=torch.long, device=ids.device))
                 cache.batch_repeat_interleave(len(part))
                 logits = hf(input_ids=new, past_key_values=cache, use_cache=True).logits

@@ -60,7 +60,7 @@ from .audit import (
     bootstrap_ci, paired_bootstrap, auroc,
 )
 
-__version__ = "0.5.1"
+__version__ = "0.5.2"
 
 __all__ = [
     "GSPConfig",
