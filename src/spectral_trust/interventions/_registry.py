@@ -62,8 +62,16 @@ def release_eager(model, owner) -> None:
 PATTERN_EDITS: Dict[int, List] = {}
 #: id(attention module) -> whether the wrapper ran for it in the current call
 PATTERN_CALLED: Dict[int, bool] = {}
+#: id(attention module) -> [(owner id, fn(module, value, weights, out))], read-only
+#: observers of the attention's values, weights and output (after any edit)
+CAPTURES: Dict[int, List] = {}
 _VERIFIED = set()
 _EAGER_FN: Dict[str, dict] = {}
+
+
+def _notify(module, value, weights, out) -> None:
+    for _, fn in list(CAPTURES.get(id(module), ())):
+        fn(module, value, weights, out)
 
 
 def _make_wrapper(orig):
@@ -71,6 +79,8 @@ def _make_wrapper(orig):
         out, weights = orig(module, query, key, value, attention_mask, *args, **kwargs)
         edits = PATTERN_EDITS.get(id(module))
         if not edits:
+            if CAPTURES:
+                _notify(module, value, weights, out)
             return out, weights
         PATTERN_CALLED[id(module)] = True
         if weights is None:
@@ -94,6 +104,8 @@ def _make_wrapper(orig):
         for _, fn in list(edits):
             new = fn(new, module)
         out = torch.matmul(new.to(v.dtype), v).transpose(1, 2).contiguous()
+        if CAPTURES:
+            _notify(module, value, new, out)
         return out, new
     return eager_attention_forward
 
@@ -129,9 +141,9 @@ def check_pattern_edit_support() -> None:
             f"older versions.")
 
 
-def acquire_pattern_editor(attn_module, owner, fn) -> Callable[[], None]:
-    """Route ``attn_module``'s eager attention through ``fn``. Returns the
-    function that undoes it."""
+def _eager_module(attn_module, what: str):
+    """The modeling module whose ``eager_attention_forward`` ``attn_module``
+    calls, and its name."""
     check_pattern_edit_support()
     modname = type(attn_module).__module__
     mod = sys.modules.get(modname)
@@ -139,16 +151,39 @@ def acquire_pattern_editor(attn_module, owner, fn) -> Callable[[], None]:
         import transformers
         raise ValueError(
             f"{type(attn_module).__name__} has no module-level eager_attention_forward "
-            f"(transformers {transformers.__version__}); attention-pattern edits need "
+            f"(transformers {transformers.__version__}); {what} need "
             f"transformers >= 4.48 and a model that uses it")
+    return modname, mod
+
+
+def _wrap_eager(modname: str, mod) -> None:
+    """Wrap ``mod.eager_attention_forward`` (once per module; counted).
+    Call with ``_LOCK`` held."""
+    st = _EAGER_FN.get(modname)
+    if st is None:
+        st = {"orig": mod.eager_attention_forward, "mod": mod, "count": 0}
+        _EAGER_FN[modname] = st
+        mod.eager_attention_forward = _make_wrapper(st["orig"])
+    st["count"] += 1
+
+
+def _unwrap_eager(modname: str) -> None:
+    """Undo one :func:`_wrap_eager`. Call with ``_LOCK`` held."""
+    s = _EAGER_FN.get(modname)
+    if s is not None:
+        s["count"] -= 1
+        if s["count"] <= 0:
+            s["mod"].eager_attention_forward = s["orig"]
+            del _EAGER_FN[modname]
+
+
+def acquire_pattern_editor(attn_module, owner, fn) -> Callable[[], None]:
+    """Route ``attn_module``'s eager attention through ``fn``. Returns the
+    function that undoes it."""
+    modname, mod = _eager_module(attn_module, "attention-pattern edits")
     entry = (id(owner), fn)
     with _LOCK:
-        st = _EAGER_FN.get(modname)
-        if st is None:
-            st = {"orig": mod.eager_attention_forward, "mod": mod, "count": 0}
-            _EAGER_FN[modname] = st
-            mod.eager_attention_forward = _make_wrapper(st["orig"])
-        st["count"] += 1
+        _wrap_eager(modname, mod)
         PATTERN_EDITS.setdefault(id(attn_module), []).append(entry)
 
     def release():
@@ -159,12 +194,29 @@ def acquire_pattern_editor(attn_module, owner, fn) -> Callable[[], None]:
             if not lst:
                 PATTERN_EDITS.pop(id(attn_module), None)
                 _VERIFIED.discard(id(attn_module))
-            s = _EAGER_FN.get(modname)
-            if s is not None:
-                s["count"] -= 1
-                if s["count"] <= 0:
-                    s["mod"].eager_attention_forward = s["orig"]
-                    del _EAGER_FN[modname]
+            _unwrap_eager(modname)
+    return release
+
+
+def acquire_capture(attn_module, owner, fn) -> Callable[[], None]:
+    """Call ``fn(module, value, weights, out)`` each time ``attn_module``'s
+    eager attention runs, with the value states it read, its weights and its
+    output (after any pattern edit). Nothing is changed. Returns the function
+    that undoes it."""
+    modname, mod = _eager_module(attn_module, "value-weighted attention graphs")
+    entry = (id(owner), fn)
+    with _LOCK:
+        _wrap_eager(modname, mod)
+        CAPTURES.setdefault(id(attn_module), []).append(entry)
+
+    def release():
+        with _LOCK:
+            lst = CAPTURES.get(id(attn_module), [])
+            if entry in lst:
+                lst.remove(entry)
+            if not lst:
+                CAPTURES.pop(id(attn_module), None)
+            _unwrap_eager(modname)
     return release
 
 

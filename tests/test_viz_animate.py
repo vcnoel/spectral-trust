@@ -262,3 +262,28 @@ def test_flow_finds_the_injected_tokens_and_labels_few(pair):
                                                       "hacked", "instead"]
     assert 0 < len(d.labels) <= 9                                  # never a label cloud
     assert d.P.shape == (len(toks), len(d.layers), 3)
+
+
+def test_browser_no_sandbox_when_root_or_asked(monkeypatch):
+    from spectral_trust.animation import _browser as br
+    monkeypatch.delenv(br.NO_SANDBOX_ENV, raising=False)
+
+    def args(**kw):
+        return br.browser_args("chrome", 320, 200, 2, "/tmp/profile", **kw)
+
+    monkeypatch.setattr(br, "_running_as_root", lambda: False)
+    plain = args()
+    assert "--no-sandbox" not in plain and plain[0] == "chrome" and plain[-1] == "about:blank"
+    assert "--window-size=640,480" in plain and "--user-data-dir=/tmp/profile" in plain
+    monkeypatch.setattr(br, "_running_as_root", lambda: True)          # Colab, containers
+    root = args()
+    assert "--no-sandbox" in root and root[-1] == "about:blank"
+    assert [a for a in root if a != "--no-sandbox"] == plain
+    assert "--no-sandbox" not in args(no_sandbox=False)               # explicit choice wins
+    monkeypatch.setattr(br, "_running_as_root", lambda: False)
+    assert "--no-sandbox" in args(no_sandbox=True)
+    for value, want in (("1", True), ("yes", True), ("0", False), ("off", False)):
+        monkeypatch.setenv(br.NO_SANDBOX_ENV, value)
+        assert ("--no-sandbox" in args()) is want
+    monkeypatch.setenv(br.NO_SANDBOX_ENV, "0")
+    assert "--no-sandbox" in args(no_sandbox=True)

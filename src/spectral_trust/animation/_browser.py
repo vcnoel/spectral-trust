@@ -158,26 +158,60 @@ class _WebSocket:
         self.sock.close()
 
 
+#: Environment variable that forces ``--no-sandbox`` on ("1", "true", "yes")
+#: or off ("0", "false", "no"); unset, it is on only when running as root.
+NO_SANDBOX_ENV = "SPECTRAL_TRUST_BROWSER_NO_SANDBOX"
+
+
+def _running_as_root() -> bool:
+    geteuid = getattr(os, "geteuid", None)          # absent on Windows
+    return bool(geteuid is not None and geteuid() == 0)
+
+
+def needs_no_sandbox(no_sandbox: Optional[bool] = None) -> bool:
+    """Whether to pass ``--no-sandbox``: Chrome refuses to start its sandbox
+    as root (Colab, most containers). An explicit ``no_sandbox`` wins, then
+    the environment variable :data:`NO_SANDBOX_ENV`, then running as root."""
+    if no_sandbox is not None:
+        return bool(no_sandbox)
+    env = os.environ.get(NO_SANDBOX_ENV, "").strip().lower()
+    if env in ("1", "true", "yes", "on"):
+        return True
+    if env in ("0", "false", "no", "off"):
+        return False
+    return _running_as_root()
+
+
+def browser_args(exe: str, width: int, height: int, threads: int, profile: str,
+                 no_sandbox: Optional[bool] = None) -> List[str]:
+    """The command line of the headless browser."""
+    # Headless Chrome stalls on screenshots of very small windows; the
+    # window keeps a usual size and the page is emulated at the exact one.
+    win_w, win_h = max(int(width), 640), max(int(height), 480)
+    args = [exe, "--headless=new", "--remote-debugging-port=0",
+            f"--user-data-dir={profile}", "--no-first-run",
+            "--no-default-browser-check", "--disable-extensions", "--mute-audio",
+            "--disable-background-networking", "--disable-sync", "--hide-scrollbars",
+            "--use-angle=swiftshader", "--enable-unsafe-swiftshader",
+            "--force-device-scale-factor=1", "--renderer-process-limit=1",
+            f"--num-raster-threads={max(1, int(threads))}",
+            "--allow-file-access-from-files", f"--window-size={win_w},{win_h}"]
+    if needs_no_sandbox(no_sandbox):
+        args.append("--no-sandbox")
+    return args + ["about:blank"]
+
+
 class Browser:
-    """A headless browser with one page, driven through DevTools."""
+    """A headless browser with one page, driven through DevTools.
+    ``no_sandbox`` as in :func:`needs_no_sandbox`."""
 
     def __init__(self, width: int, height: int, threads: int = 2,
-                 executable: Optional[str] = None, timeout: float = 60.0):
+                 executable: Optional[str] = None, timeout: float = 60.0,
+                 no_sandbox: Optional[bool] = None):
         exe = find_browser(executable)
         self.width, self.height = int(width), int(height)
-        # Headless Chrome stalls on screenshots of very small windows; the
-        # window keeps a usual size and the page is emulated at the exact one.
-        win_w, win_h = max(self.width, 640), max(self.height, 480)
         self.profile = tempfile.mkdtemp(prefix="st-browser-")
-        args = [exe, "--headless=new", "--remote-debugging-port=0",
-                f"--user-data-dir={self.profile}", "--no-first-run",
-                "--no-default-browser-check", "--disable-extensions", "--mute-audio",
-                "--disable-background-networking", "--disable-sync", "--hide-scrollbars",
-                "--use-angle=swiftshader", "--enable-unsafe-swiftshader",
-                "--force-device-scale-factor=1", "--renderer-process-limit=1",
-                f"--num-raster-threads={max(1, int(threads))}",
-                "--allow-file-access-from-files", f"--window-size={win_w},{win_h}",
-                "about:blank"]
+        args = browser_args(exe, self.width, self.height, threads, self.profile, no_sandbox)
         self.proc = subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         self.threads = max(1, int(threads))
         self._pin()

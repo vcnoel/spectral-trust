@@ -8,11 +8,88 @@ from .config import GSPConfig
 
 logger = logging.getLogger(__name__)
 
+#: Accepted ``GSPConfig.edge_weights``: the attention weights, the norm of
+#: what each token adds to the attention output (summed over heads inside
+#: the norm), or that norm per head (see :mod:`spectral_trust.value_weighted`).
+EDGE_WEIGHTS = ("attention", "value", "value_per_head")
+
+#: Accepted ``GSPConfig.graph_direction``.
+GRAPH_DIRECTIONS = ("symmetric", "directed")
+
+
+def check_graph_options(config) -> None:
+    """Raise on an unknown ``edge_weights`` or ``graph_direction``."""
+    edge = getattr(config, "edge_weights", "attention")
+    if edge not in EDGE_WEIGHTS:
+        raise ValueError(f"edge_weights must be one of {EDGE_WEIGHTS}, got {edge!r}")
+    direction = getattr(config, "graph_direction", "symmetric")
+    if direction not in GRAPH_DIRECTIONS:
+        raise ValueError(f"graph_direction must be one of {GRAPH_DIRECTIONS}, got {direction!r}")
+
+
+def default_graph(config) -> bool:
+    """True when the config builds the graph of every earlier release:
+    attention edges, symmetrised. Checks the options first."""
+    check_graph_options(config)
+    return (getattr(config, "edge_weights", "attention") == "attention"
+            and getattr(config, "graph_direction", "symmetric") == "symmetric")
+
+
 class GraphConstructor:
     """Constructs dynamic attention graphs from transformer attention patterns"""
     
     def __init__(self, config: GSPConfig):
         self.config = config
+
+    def layer_graph(self, edges: torch.Tensor,
+                    attn_mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+        """The head-averaged graph of a layer, as ``config`` defines it.
+
+        With ``graph_direction="symmetric"`` (the default) it is
+        ``aggregate_heads(symmetrize_attention(edges))``, the adjacency every
+        measurement of the library builds. With ``"directed"`` it is
+        ``directed_operator(aggregate_heads(edges))``: heads are aggregated
+        without symmetrisation and each row is divided by its sum, which
+        gives the causal row-normalised operator ``P``
+        (:func:`spectral_trust.directed.directed_operator`;
+        ``symmetrization`` does not apply).
+
+        Args:
+            edges: ``[B, H, S, S]`` per-head edge weights (attention, or
+                :func:`~spectral_trust.value_weighted.value_weighted_edges`
+                with ``per_head=True``), or ``[B, S, S]`` for one edge matrix
+                per item (value-weighted edges summed over heads), row i
+                reading column j.
+            attn_mask: as in :meth:`aggregate_heads`.
+
+        Returns:
+            ``[B, S, S]``.
+        """
+        check_graph_options(self.config)
+        if edges.dim() == 3:
+            edges = edges.unsqueeze(1)
+        if getattr(self.config, "graph_direction", "symmetric") == "directed":
+            return self.directed_operator(self.aggregate_heads(edges, attn_mask=attn_mask))
+        return self.aggregate_heads(self.symmetrize_attention(edges), attn_mask=attn_mask)
+
+    def directed_operator(self, adjacency: torch.Tensor) -> torch.Tensor:
+        """Row-normalised operator ``P = D_out^-1 A`` of a directed adjacency
+        (``config.remove_self_loops`` applies); see
+        :func:`spectral_trust.directed.directed_operator`."""
+        from .directed import directed_operator
+        return directed_operator(adjacency, remove_self_loops=self.config.remove_self_loops)
+
+    def magnetic_laplacian(self, adjacency: torch.Tensor, q: Optional[float] = None,
+                           dtype: torch.dtype = torch.complex128) -> torch.Tensor:
+        """Magnetic Laplacian of a directed adjacency, normalised for
+        ``normalization="sym"`` and unnormalised for ``"none"``, with charge
+        ``q`` (default ``config.magnetic_q``); see
+        :func:`spectral_trust.directed.magnetic_laplacian`."""
+        from .directed import magnetic_laplacian, magnetic_normalized
+        q = getattr(self.config, "magnetic_q", 0.25) if q is None else q
+        return magnetic_laplacian(adjacency, q=q,
+                                  normalized=magnetic_normalized(self.config.normalization),
+                                  remove_self_loops=self.config.remove_self_loops, dtype=dtype)
         
     def symmetrize_attention(self, attention: torch.Tensor) -> torch.Tensor:
         """
@@ -94,7 +171,8 @@ class GraphConstructor:
     
     def construct_laplacian(self, adjacency: torch.Tensor) -> torch.Tensor:
         """
-        Construct graph Laplacian from adjacency matrix
+        Construct graph Laplacian from adjacency matrix. Negative weights are
+        set to zero: signed graphs are not supported yet.
         Args:
             adjacency: [batch, seq_len, seq_len] adjacency matrix
         Returns:

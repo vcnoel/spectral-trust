@@ -19,6 +19,89 @@ diagonalises non-symmetric Laplacians with a general solver, and 0.3.0 made
 per-head functions, added in 0.3.0, had a related issue with `"rw"` that
 0.4.0 fixed (see v0.4.0).
 
+## Unreleased
+
+Directed and value-weighted attention graphs, measure-aware operator
+spectra, Forman curvature and an LM-Polygraph bridge. No result changes for
+existing calls: with the new options at their defaults, and without naming
+the new opt-in metrics, every result is bit-identical to 0.5.0.
+
+- Value-weighted edges (`spectral_trust.value_weighted`): the attention
+  output at token i splits into one vector per key token plus the output
+  bias, `c_ij = Σ_h a^h_ij W_O^h (g^h_i ⊙ v^h_j)`, and the edge from j to i
+  is `‖c_ij‖` (Kobayashi et al. 2020), or one norm per head. New names:
+  `value_weighted_attention`, `capture_attention_values`, `AttentionValues`
+  (`contributions`, `edge_weights`, `reconstruct`), `ValueCapture`,
+  `value_weighted_edges` and `attention_contributions`. Grouped-query
+  attention, fused projections (GPT-2, Phi-3, GPT-NeoX), value and output
+  biases (the output bias is in no contribution) and the output gates of
+  Qwen3.5 and Qwen3-Next are covered; on hybrid models only the
+  full-attention layers have a graph. The contributions rebuild the
+  attention output to a float32 relative error below 1e-4 on ten layouts.
+- Directed graphs (`spectral_trust.directed`): `directed_operator`
+  (`P = D_out⁻¹ A`), `directed_total_variation` (`‖x − P x‖² / ‖x‖²`, per
+  column with `per_column=True`), the magnetic Laplacian
+  (`magnetic_laplacian`, `magnetic_spectrum`, `magnetic_hfer`,
+  `magnetic_phase`), flow-imbalance clustering (`hermitian_clustering`,
+  `flow_imbalance`, `FlowClusters`) and `analyze_directed_layer`. The
+  magnetic HFER of a real signal is identical for a graph and its
+  transpose; the directed total variation is not.
+- `per_column_metrics(..., operator=P)` adds a `directed_tv` column.
+- `GSPConfig` gains `edge_weights` (`"attention"`, `"value"`,
+  `"value_per_head"`), `graph_direction` (`"symmetric"`, `"directed"`)
+  and `magnetic_q` (default 0.25). `GraphConstructor` gains
+  `layer_graph`, `directed_operator` and `magnetic_laplacian`; `EDGE_WEIGHTS`, `GRAPH_DIRECTIONS` and
+  `DIRECTED_GRAPH_METRIC_NAMES` are exported.
+- `SpectralModel.run_with_spectra` and `compute_spectra` (new argument
+  `edges=`) build the `graph` namespace from the options. Directed graphs
+  are measured on the magnetic Laplacian and add `graph.directed_tv` and
+  the array `graph.phase`. `GSPDiagnosticsFramework`, the graph filters
+  and frequency-resolved patching refuse the new options.
+- New page: Directed and value-weighted graphs.
+- Operator spectra (`spectral_trust.operator_spectra`): the attention as a
+  map `L²(μ) → L²(π)` and its self-adjoint operator `D = Ω_μ⁻¹ Aᵀ Ω_π A`,
+  under the pullback measure (`π` uniform, `μ = Aᵀπ`; `λ₁ = 1` on the
+  constant function) or the counting measure (`AᵀA`), or any pair of
+  measures. New names: `attention_operator`, `operator_spectrum`,
+  `operator_measures`, `operator_metrics`, `participation_ratio` (and its
+  centred variant), `OperatorSpectrum`, `OPERATOR_METRIC_NAMES`. A key no
+  query attends to has zero mass; `Ω_μ⁻¹` is then read as a pseudo-inverse,
+  which gives it the eigenvalue 0. Implemented from the equations of
+  Viganò, Melzi and Ovsjanikov (NeurIPS 2026); not checked against official
+  code, which is not released.
+- The opt-in `operator` namespace of `run_with_spectra` and
+  `compute_spectra` (computed only when named in `metrics=`):
+  `participation_ratio`, `participation_ratio_centered`, `contraction`
+  (`√λ₂`) and `eigenvalues`, per head or per layer, on attention or on the
+  row-normalised value-weighted attention. `GSPConfig` gains
+  `operator_measure`, `operator_heads` and `operator_edges`;
+  `compute_spectra` gains `operator_edges=`.
+- Forman curvature (`spectral_trust.forman`): `forman_curvature` per edge,
+  directed or undirected, with negative-log, attention or unit edge
+  weights; `forman_quantiles` and `forman_node_curvature` summarise it over
+  tokens or spans. The opt-in `graph.forman_curvature_mean` (with the array
+  `graph.forman_quantiles`) measures the layer graph of the graph options;
+  `GSPConfig` gains `forman_weights`. Implemented from the equations of
+  Kim, Lutzeyer and Guo (2026); not checked against official code.
+- LM-Polygraph bridge (`spectral_trust.integrations.lm_polygraph`,
+  optional extra `polygraph`): `SpectralTrustEstimator` scores any attention
+  metric as a sequence-level LM-Polygraph estimator. The core package never
+  imports lm-polygraph. Tested end to end with lm-polygraph 0.7.0 (its
+  manager, stat calculators and metrics) on GPT-2 and CoQA items.
+- Fixed: with value-weighted edges, the graph view and the animations
+  rebuilt the plain attention graph and mixed its eigenpairs with the value
+  graph's Fiedler vector. A symmetric value-weighted layer graph is now
+  stored as `graph.adjacency` when the patterns are kept, and the views use
+  it; a directed layer graph raises a clear error there.
+- Fixed: headless Chrome, which the animations use for video, refuses to
+  start its sandbox as root (Colab, most containers). The launcher now
+  passes `--no-sandbox` when running as root, or as the environment
+  variable `SPECTRAL_TRUST_BROWSER_NO_SANDBOX` (`1` or `0`) says.
+- `GraphConstructor.construct_laplacian` documents that negative weights are
+  set to zero (signed graphs are not supported yet).
+- New pages: Operator spectra in the attention geometry; LM-Polygraph
+  bridge. The directed-graphs page gains a Forman curvature section.
+
 ## v0.5.0 (2026-11-15)
 
 Interventions: the TransformerLens basics (patching, ablation, steering)

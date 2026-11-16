@@ -116,6 +116,91 @@ and `st.weight_svd_full` are also top-level names. See the
 
 ::: spectral_trust.layer_delta_features
 
+## Directed and value-weighted graphs
+
+Added in 0.5.1. Graph options of `GSPConfig` (`edge_weights`,
+`graph_direction`, `magnetic_q`) and the functions behind them; see
+[Directed and value-weighted graphs](tutorials/directed-graphs.md).
+
+::: spectral_trust.value_weighted_attention
+
+::: spectral_trust.capture_attention_values
+
+::: spectral_trust.AttentionValues
+
+::: spectral_trust.ValueCapture
+
+::: spectral_trust.value_weighted_edges
+
+::: spectral_trust.attention_contributions
+
+::: spectral_trust.directed_operator
+
+::: spectral_trust.directed_total_variation
+
+::: spectral_trust.magnetic_laplacian
+
+::: spectral_trust.magnetic_spectrum
+
+::: spectral_trust.magnetic_hfer
+
+::: spectral_trust.magnetic_phase
+
+::: spectral_trust.hermitian_clustering
+
+::: spectral_trust.flow_imbalance
+
+::: spectral_trust.FlowClusters
+
+::: spectral_trust.directed.analyze_directed_layer
+
+## Operator spectra
+
+Added in 0.5.1. The attention as an operator between weighted function
+spaces (the `operator` namespace, options `operator_measure`,
+`operator_heads`, `operator_edges`); see
+[Operator spectra in the attention geometry](tutorials/operator-spectra.md).
+Implemented from the equations of Viganò, Melzi and Ovsjanikov (NeurIPS
+2026); not checked against official code, which is not released as of 15
+Nov 2026.
+
+::: spectral_trust.attention_operator
+
+::: spectral_trust.operator_spectrum
+
+::: spectral_trust.operator_measures
+
+::: spectral_trust.operator_metrics
+
+::: spectral_trust.participation_ratio
+
+::: spectral_trust.OperatorSpectrum
+
+::: spectral_trust.operator_spectra.spectrum_metrics
+
+## Forman curvature
+
+Added in 0.5.1. Per-edge curvature of attention graphs and its summaries
+(`graph.forman_curvature_mean`, option `forman_weights`); see
+[Directed and value-weighted graphs](tutorials/directed-graphs.md#forman-curvature).
+Implemented from the equations of Kim, Lutzeyer and Guo (2026); not checked
+against official code.
+
+::: spectral_trust.forman_curvature
+
+::: spectral_trust.forman_quantiles
+
+::: spectral_trust.forman_node_curvature
+
+::: spectral_trust.forman.graph_curvature_summary
+
+## Integrations
+
+Added in 0.5.1. Each needs its optional extra; see
+[LM-Polygraph bridge](tutorials/lm-polygraph.md).
+
+::: spectral_trust.integrations.lm_polygraph.SpectralTrustEstimator
+
 ## Per-column diagnostics
 
 ::: spectral_trust.per_column_metrics

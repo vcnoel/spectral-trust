@@ -14,7 +14,7 @@ import torch
 
 from .config import GSPConfig
 from .instrumentation import LLMInstrumenter
-from .graph import GraphConstructor
+from .graph import GraphConstructor, default_graph
 from .spectral import SpectralAnalyzer, calculate_spectral_velocity
 from .directed_topology import DirectedTopologist
 
@@ -97,6 +97,11 @@ class GSPDiagnosticsFramework:
             Complete analysis results
         """
         logger.info(f"Analyzing text: {text[:100]}...")
+        if not default_graph(self.config):
+            raise ValueError(
+                "GSPDiagnosticsFramework builds the symmetric attention graph only; for "
+                "edge_weights='value' or graph_direction='directed' use "
+                "SpectralModel.run_with_spectra")
         
         # Use config indices if none provided
         target_indices = subgraph_indices or self.config.subgraph_indices
