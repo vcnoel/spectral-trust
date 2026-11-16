@@ -35,6 +35,7 @@ from .patching import (
     BASES, PatchSpec, Patcher, equal_count_bands, haar_basis, patch, select_modes,
 )
 from ._hooks import SITES
+from .controls import CONTROLS, EDITS, EditControlResult, edit_with_controls
 from .weights import (
     lowrank_snr, matrix_snr, svd_scale_matrix, weight_snr, weight_svd_full,
 )
@@ -47,5 +48,6 @@ __all__ = [
     "GRAPH_NAMES", "PRECISIONS", "compute_placement",
     "patch", "Patcher", "PatchSpec", "equal_count_bands", "haar_basis", "select_modes", "BASES",
     "SITES",
+    "edit_with_controls", "EditControlResult", "EDITS", "CONTROLS",
     "weight_snr", "weight_svd_full", "matrix_snr", "lowrank_snr", "svd_scale_matrix",
 ]

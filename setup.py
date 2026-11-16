@@ -9,7 +9,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="spectral_trust",
-    version="0.5.0",
+    version="0.5.1",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
     package_data={
@@ -45,6 +45,10 @@ setup(
         # binary that imageio-ffmpeg ships; their .html pages load plotly.js
         # from a pinned CDN, or embed it when the plotly package is present.
         "viz": ["matplotlib>=3.4", "imageio>=2.9", "imageio-ffmpeg>=0.4.5"],
+        # spectral_trust.integrations.lm_polygraph: spectral-trust metrics as
+        # LM-Polygraph uncertainty estimators (MIT; it needs Python >= 3.10 and
+        # torch >= 2.6). The core package never imports it.
+        "polygraph": ["lm-polygraph>=0.7; python_version >= '3.10'"],
         "docs": [
             "mkdocs>=1.6",
             "mkdocs-material>=9.5",

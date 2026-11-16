@@ -7,11 +7,12 @@ from .spectral import (
     SpectralDiagnostics, SpectralAnalyzer, calculate_spectral_velocity,
     METRIC_FAMILIES,
 )
-from .graph import GraphConstructor
+from .graph import GraphConstructor, EDGE_WEIGHTS, GRAPH_DIRECTIONS
 from .instrumentation import (
     LLMInstrumenter, NonFiniteAttentionError, assert_finite_attention,
 )
 from .directed_topology import DirectedTopologist
+from . import features, pseudospectra
 from .per_head import (
     PerHeadDiagnostics, per_head_metrics, per_head_metrics_all_layers,
     stack_feature_vector, layer_delta_features,
@@ -27,17 +28,39 @@ from .fast import (
     band_energies, band_entropy, band_filter_response,
 )
 from .columns import ColumnDiagnostics, per_column_metrics, COLUMN_METRIC_NAMES
-from .cache import SpectralCache, LayerSpectra, HeadSpectra, GRAPH_METRIC_NAMES
+from .directed import (
+    directed_operator, directed_total_variation, magnetic_laplacian, magnetic_spectrum,
+    magnetic_hfer, magnetic_phase, hermitian_clustering, flow_imbalance, FlowClusters,
+)
+from .value_weighted import (
+    value_weighted_attention, value_weighted_edges, attention_contributions,
+    capture_attention_values, AttentionValues, ValueCapture,
+)
+from .operator_spectra import (
+    attention_operator, operator_spectrum, operator_measures, operator_metrics,
+    participation_ratio, OperatorSpectrum, OPERATOR_METRIC_NAMES,
+)
+from .forman import (
+    forman_curvature, forman_node_curvature, forman_quantiles, FORMAN_QUANTILES,
+)
+from .cache import (
+    SpectralCache, LayerSpectra, HeadSpectra, GRAPH_METRIC_NAMES, DIRECTED_GRAPH_METRIC_NAMES,
+)
 from .model import SpectralModel, compute_spectra
 from .interop import from_transformer_lens, from_nnsight, from_hf_outputs
 from . import viz
 from . import interventions
 from .interventions import (
     Patcher, PatchSpec, equal_count_bands, graph_filter, intervene, patch, weight_snr,
-    weight_svd_full,
+    weight_svd_full, edit_with_controls, EditControlResult,
+)
+from . import numeric
+from .audit import (
+    confound_audit, AuditResult, confound_covariates, covariates_from_cache, effective_rank,
+    bootstrap_ci, paired_bootstrap, auroc,
 )
 
-__version__ = "0.5.0"
+__version__ = "0.5.1"
 
 __all__ = [
     "GSPConfig",
@@ -48,10 +71,14 @@ __all__ = [
     "calculate_spectral_velocity",
     "METRIC_FAMILIES",
     "GraphConstructor",
+    "EDGE_WEIGHTS",
+    "GRAPH_DIRECTIONS",
     "LLMInstrumenter",
     "NonFiniteAttentionError",
     "assert_finite_attention",
     "DirectedTopologist",
+    "features",
+    "pseudospectra",
     "PerHeadDiagnostics",
     "per_head_metrics",
     "per_head_metrics_all_layers",
@@ -76,11 +103,38 @@ __all__ = [
     "ColumnDiagnostics",
     "per_column_metrics",
     "COLUMN_METRIC_NAMES",
+    "directed_operator",
+    "directed_total_variation",
+    "magnetic_laplacian",
+    "magnetic_spectrum",
+    "magnetic_hfer",
+    "magnetic_phase",
+    "hermitian_clustering",
+    "flow_imbalance",
+    "FlowClusters",
+    "value_weighted_attention",
+    "value_weighted_edges",
+    "attention_contributions",
+    "capture_attention_values",
+    "AttentionValues",
+    "ValueCapture",
+    "attention_operator",
+    "operator_spectrum",
+    "operator_measures",
+    "operator_metrics",
+    "participation_ratio",
+    "OperatorSpectrum",
+    "OPERATOR_METRIC_NAMES",
+    "forman_curvature",
+    "forman_node_curvature",
+    "forman_quantiles",
+    "FORMAN_QUANTILES",
     "SpectralModel",
     "SpectralCache",
     "LayerSpectra",
     "HeadSpectra",
     "GRAPH_METRIC_NAMES",
+    "DIRECTED_GRAPH_METRIC_NAMES",
     "compute_spectra",
     "from_transformer_lens",
     "from_nnsight",
@@ -95,5 +149,16 @@ __all__ = [
     "graph_filter",
     "weight_snr",
     "weight_svd_full",
+    "edit_with_controls",
+    "EditControlResult",
+    "numeric",
+    "confound_audit",
+    "AuditResult",
+    "confound_covariates",
+    "covariates_from_cache",
+    "effective_rank",
+    "bootstrap_ci",
+    "paired_bootstrap",
+    "auroc",
     "__version__",
 ]

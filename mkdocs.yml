@@ -95,6 +95,9 @@ nav:
       - Per-head analysis: tutorials/per-head.md
       - TransformerLens and nnsight: tutorials/interop.md
       - Interventions: tutorials/interventions.md
+      - Directed and value-weighted graphs: tutorials/directed-graphs.md
+      - Operator spectra in the attention geometry: tutorials/operator-spectra.md
+      - LM-Polygraph bridge: tutorials/lm-polygraph.md
   - Animated gallery: gallery.md
   - Use cases:
       - Overview: use-cases/index.md
@@ -103,6 +106,9 @@ nav:
       - Frequency-resolved patching: use-cases/frequency-patching.md
       - Phi-3 prepositions: use-cases/phi3-prepositions.md
       - Graph-filter side effects: use-cases/graph-filter-side-effects.md
+      - Numerical ICL: use-cases/numerical-icl.md
       - Injection defence (design, not run): use-cases/injection-defence.md
+  - What a symmetrised spectrum cannot see: symmetrised-spectrum.md
+  - Baselines: baselines.md
   - API reference: api.md
   - Changelog: changelog.md

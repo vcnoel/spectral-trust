@@ -186,27 +186,47 @@ def _span(cache) -> Optional[Tuple[int, int]]:
 def _graph_data(cache, layer: int, head: Optional[int], vectors: bool = False):
     """Adjacency, Laplacian eigenpairs and tokens of the graph the metrics
     were computed on (span applied). With ``vectors`` the eigenvectors are
-    appended to the returned tuple."""
+    appended to the returned tuple.
+
+    For ``head=None`` it is the graph of the ``graph`` namespace: the
+    symmetrised head-averaged attention, or, with value-weighted edges
+    (``GSPConfig.edge_weights``), the adjacency stored as
+    ``graph.adjacency`` when the patterns are kept. A directed graph
+    (``graph_direction="directed"``) raises. A head is that head's
+    symmetrised attention, the graph of the ``attn`` namespace."""
     import torch
 
-    from .graph import GraphConstructor
+    from .graph import GraphConstructor, default_graph
     from .spectral import SpectralAnalyzer
 
-    key = f"blocks.{layer}.attn.pattern"
-    if key not in cache:
-        raise ValueError(
-            f"layer {layer}'s attention pattern is not in the cache; run "
-            "run_with_spectra(..., keep_patterns=True) for the graph view")
-    a = torch.as_tensor(np.asarray(cache[key], dtype=np.float32))     # [H, S, S]
     cfg = cache.config
     gc = GraphConstructor(cfg)
-    sym = gc.symmetrize_attention(a.unsqueeze(0))                       # [1, H, S, S]
-    if head is None:
-        adj = gc.aggregate_heads(sym)[0]
+    measured = head is None and not default_graph(cfg)
+    if measured and getattr(cfg, "graph_direction", "symmetric") == "directed":
+        raise ValueError(
+            "the graph namespace of this cache was measured on a directed graph "
+            "(graph_direction='directed', magnetic Laplacian), which the graph views do not "
+            "show; pass head= for one head's symmetrised attention graph, or rerun with "
+            "graph_direction='symmetric'")
+    key = f"blocks.{layer}.graph.adjacency" if measured else f"blocks.{layer}.attn.pattern"
+    if key not in cache:
+        what = (f"the {getattr(cfg, 'edge_weights', 'attention')}-weighted graph of layer "
+                f"{layer}" if measured else f"layer {layer}'s attention pattern")
+        raise ValueError(
+            f"{what} is not in the cache; run run_with_spectra(..., keep_patterns=True) "
+            "for the graph view")
+    if measured:
+        # The value-weighted graph that the metrics were computed on.
+        adj = torch.as_tensor(np.asarray(cache[key], dtype=np.float32))  # [S, S]
     else:
-        if not 0 <= head < a.shape[0]:
-            raise IndexError(f"head {head} out of range for {a.shape[0]} heads")
-        adj = sym[0, head]
+        a = torch.as_tensor(np.asarray(cache[key], dtype=np.float32))  # [H, S, S]
+        sym = gc.symmetrize_attention(a.unsqueeze(0))                   # [1, H, S, S]
+        if head is None:
+            adj = gc.aggregate_heads(sym)[0]
+        else:
+            if not 0 <= head < a.shape[0]:
+                raise IndexError(f"head {head} out of range for {a.shape[0]} heads")
+            adj = sym[0, head]
     tokens = list(cache.tokens)
     span = _span(cache)
     offset = 0
@@ -233,6 +253,11 @@ def _graph_data(cache, layer: int, head: Optional[int], vectors: bool = False):
 def graph(cache, layer: int, head: Optional[int] = None, text: int = 0,
           max_edges: int = 400, min_weight: float = 0.02, size: int = 520) -> View:
     """The attention graph of one layer (head-averaged) or one head.
+
+    The layer graph is the one the ``graph`` namespace measured: with
+    value-weighted edges it is the value-weighted graph (stored when the
+    patterns are kept); a directed graph is not shown (``ValueError``; a
+    head's graph still is).
 
     Tokens are nodes on a circle, clockwise from the top. Edge opacity and
     width follow the symmetrised attention weight, relative to the largest

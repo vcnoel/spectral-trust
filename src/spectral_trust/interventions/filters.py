@@ -70,7 +70,7 @@ import torch
 
 from ..config import GSPConfig
 from ..fast import CHEBYSHEV_LOWER_MARGIN, _to_unit_interval, band_chebyshev_coefficients
-from ..graph import GraphConstructor
+from ..graph import GraphConstructor, default_graph
 
 FILTER_KINDS = ("lowpass", "highpass", "bandpass", "bandstop")
 
@@ -188,7 +188,13 @@ def ideal_response(lam, kind: str, cutoff: Optional[float] = None,
 def attention_adjacency(attention: torch.Tensor, config: GSPConfig,
                         dtype: torch.dtype = torch.float32) -> torch.Tensor:
     """Head-aggregated, symmetrised adjacency ``[B, S, S]`` from attention
-    ``[B, H, S, S]``, as the measurements build it (in ``dtype``)."""
+    ``[B, H, S, S]``, as the measurements build it (in ``dtype``). Filters
+    need a symmetric graph built from attention, so the config's
+    ``edge_weights`` and ``graph_direction`` must be the defaults."""
+    if not default_graph(config):
+        raise ValueError(
+            "graph filters and frequency-resolved patching run on the symmetrised attention "
+            "graph; edge_weights='attention' and graph_direction='symmetric' are required")
     gc = GraphConstructor(config)
     return gc.aggregate_heads(gc.symmetrize_attention(attention.to(dtype)))
 

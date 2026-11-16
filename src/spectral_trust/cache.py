@@ -25,6 +25,13 @@ whose linear-attention layers return no attention). Three namespaces:
     ``SpectralAnalyzer.analyze_layer``: every scalar of
     :class:`~spectral_trust.spectral.SpectralDiagnostics`, each with its
     family from ``METRIC_FAMILIES``.
+``operator``
+    the attention as an operator between weighted function spaces
+    (:mod:`spectral_trust.operator_spectra`, family "attention"):
+    ``participation_ratio``, ``participation_ratio_centered`` and
+    ``contraction``, ``[n_heads]`` or one value per layer
+    (``GSPConfig.operator_heads``), with ``blocks.{l}.operator.eigenvalues``
+    (decreasing). Computed only when named in ``metrics=``.
 
 Heads that were not computed (``heads=``) hold NaN, so ``[n_heads]`` arrays
 always index by head. Arrays that are not scalar metrics are stored next to
@@ -47,6 +54,8 @@ from .per_head import (
     PER_HEAD_HYBRID_METRIC_NAMES, PER_HEAD_METRIC_NAMES,
 )
 from .spectral import METRIC_FAMILIES
+from .directed import DIRECTED_METRIC_FAMILIES
+from .operator_spectra import OPERATOR_METRIC_NAMES
 
 #: Scalar metrics of the head-averaged graph (namespace ``graph``), in order.
 GRAPH_METRIC_NAMES: List[str] = [
@@ -55,22 +64,37 @@ GRAPH_METRIC_NAMES: List[str] = [
     "energy", "smoothness_index", "spectral_entropy", "hfer",
 ]
 
+#: Scalar metrics of the graph namespace that exist only for directed graphs
+#: (``GSPConfig(graph_direction="directed")``).
+DIRECTED_GRAPH_METRIC_NAMES: List[str] = ["directed_tv"]
+
+#: Scalar metrics of the graph namespace computed only when named in
+#: ``metrics=`` (neither ``None`` nor ``"graph"`` selects them).
+OPT_IN_GRAPH_METRIC_NAMES: List[str] = ["forman_curvature_mean"]
+
 #: Scalar metric names of each namespace.
 NAMESPACE_METRICS: Dict[str, List[str]] = {
     "attn": list(PER_HEAD_METRIC_NAMES),
     "resid": list(PER_HEAD_HYBRID_METRIC_NAMES),
     "graph": list(GRAPH_METRIC_NAMES),
+    "operator": list(OPERATOR_METRIC_NAMES),
 }
+
+#: Namespaces computed only when ``metrics=`` names them (or one of their
+#: metrics): ``metrics=None`` leaves them out.
+OPT_IN_NAMESPACES = ("operator",)
 
 #: Arrays stored next to the scalar metrics (not listed in ``metric_names``).
 ARRAY_NAMES: Dict[str, List[str]] = {
     "attn": ["eigenvalues", "pattern"],
     "resid": [],
-    "graph": ["eigenvalues", "fiedler_vector", "spectral_masses"],
+    "graph": ["eigenvalues", "fiedler_vector", "spectral_masses", "phase", "forman_quantiles",
+              "adjacency"],
+    "operator": ["eigenvalues"],
 }
 
 PER_HEAD_NAMESPACES = ("attn", "resid")
-_KEY = re.compile(r"^blocks\.(-?\d+)\.(attn|resid|graph)\.([A-Za-z0-9_]+)$")
+_KEY = re.compile(r"^blocks\.(-?\d+)\.(attn|resid|graph|operator)\.([A-Za-z0-9_]+)$")
 _FORMAT_VERSION = 1
 
 
@@ -82,12 +106,17 @@ def metric_family(qualified: str) -> str:
         return "attention"
     if namespace == "resid":
         return "hybrid"
-    if name == "fiedler_vector":
+    if namespace == "operator":
         return "attention"
+    if name in ("fiedler_vector", "phase", "forman_quantiles", "adjacency") \
+            or name in OPT_IN_GRAPH_METRIC_NAMES:
+        return "attention"
+    if name in DIRECTED_METRIC_FAMILIES:
+        return DIRECTED_METRIC_FAMILIES[name]
     return METRIC_FAMILIES.get(name, "hybrid" if name == "spectral_masses" else "attention")
 
 
-def resolve_metrics(metrics, hybrid: bool = True) -> List[str]:
+def resolve_metrics(metrics, hybrid: bool = True, directed: bool = False) -> List[str]:
     """Normalise a metric selection to namespaced names (``"attn.hfer"``).
 
     ``metrics`` is None (every metric), or a list whose entries are a
@@ -95,14 +124,34 @@ def resolve_metrics(metrics, hybrid: bool = True) -> List[str]:
     (``"graph.hfer"``), or a bare name, which selects it in every namespace
     that has it (``"hfer"`` gives ``attn.hfer``, ``resid.hfer`` and
     ``graph.hfer``). With ``hybrid=False`` the hybrid metrics are left out of
-    ``None`` and of namespaces, and naming one explicitly raises.
+    ``None`` and of namespaces, and naming one explicitly raises. With
+    ``directed=True`` the graph namespace also has the directed metrics
+    (:data:`DIRECTED_GRAPH_METRIC_NAMES`). The namespaces of
+    :data:`OPT_IN_NAMESPACES` (``operator``) are selected only by name
+    (``"operator"``, ``"operator.contraction"`` or a bare name such as
+    ``"participation_ratio"``); ``None`` leaves them out, as it leaves out
+    :data:`OPT_IN_GRAPH_METRIC_NAMES` (``graph.forman_curvature_mean``),
+    which the namespace ``"graph"`` does not select either.
     """
     def allowed(q):
         return hybrid or metric_family(q) == "attention"
 
-    every = [f"{ns}.{m}" for ns, names in NAMESPACE_METRICS.items() for m in names]
+    names_of = dict(NAMESPACE_METRICS)
+    if directed:
+        names_of["graph"] = list(GRAPH_METRIC_NAMES) + list(DIRECTED_GRAPH_METRIC_NAMES)
+    names_of["graph"] = list(names_of["graph"]) + list(OPT_IN_GRAPH_METRIC_NAMES)
+    opt_in = {f"graph.{m}" for m in OPT_IN_GRAPH_METRIC_NAMES}
+    every = [f"{ns}.{m}" for ns, names in names_of.items() for m in names]
+    if metrics is not None and not directed:
+        entries = [metrics] if isinstance(metrics, str) else list(metrics)
+        for entry in entries:
+            name = str(entry).strip().split(".", 1)[-1]
+            if name in DIRECTED_GRAPH_METRIC_NAMES:
+                raise ValueError(f"{entry!r} is measured on directed graphs only; pass "
+                                 "GSPConfig(graph_direction='directed')")
     if metrics is None:
-        return [q for q in every if allowed(q)]
+        return [q for q in every if allowed(q) and q not in opt_in
+                and q.split(".", 1)[0] not in OPT_IN_NAMESPACES]
     if isinstance(metrics, str):
         metrics = [metrics]
     out: List[str] = []
@@ -110,12 +159,12 @@ def resolve_metrics(metrics, hybrid: bool = True) -> List[str]:
         entry = str(entry).strip()
         if entry.endswith(".*"):
             entry = entry[:-2]
-        if entry in NAMESPACE_METRICS:
-            chosen = [f"{entry}.{m}" for m in NAMESPACE_METRICS[entry]]
+        if entry in names_of:
+            chosen = [f"{entry}.{m}" for m in names_of[entry] if f"{entry}.{m}" not in opt_in]
             chosen = [q for q in chosen if allowed(q)]
         elif "." in entry:
             ns, _, name = entry.partition(".")
-            if ns not in NAMESPACE_METRICS or name not in NAMESPACE_METRICS[ns]:
+            if ns not in names_of or name not in names_of[ns]:
                 raise ValueError(_unknown_metric(entry, every))
             chosen = [entry]
         else:
@@ -138,7 +187,7 @@ def _unknown_metric(entry: str, every: Sequence[str]) -> str:
     bare = sorted({q.split(".", 1)[1] for q in every})
     near = difflib.get_close_matches(entry, list(every) + bare, n=3)
     hint = f" Did you mean {', '.join(near)}?" if near else ""
-    return (f"unknown metric {entry!r}.{hint} Namespaces: attn, resid, graph; "
+    return (f"unknown metric {entry!r}.{hint} Namespaces: attn, resid, graph, operator; "
             f"metrics: {', '.join(bare)}")
 
 
@@ -284,7 +333,8 @@ class SpectralCache:
             name = str(name)
             if "." not in name:
                 ns = "attn" if name in NAMESPACE_METRICS["attn"] + ARRAY_NAMES["attn"] \
-                    else "resid" if name in NAMESPACE_METRICS["resid"] else "graph"
+                    else "resid" if name in NAMESPACE_METRICS["resid"] \
+                    else "operator" if name in NAMESPACE_METRICS["operator"] else "graph"
                 name = f"{ns}.{name}"
             return f"blocks.{int(layer)}.{name}"
         if not isinstance(key, str):
@@ -346,11 +396,13 @@ class SpectralCache:
 
     def metric(self, name: str, text: int = 0) -> np.ndarray:
         """One metric over every layer of one text: ``[layers, n_heads]`` for
-        the per-head namespaces, ``[layers]`` for ``graph``. Rows follow
+        the per-head namespaces, ``[layers]`` for ``graph`` (``operator``:
+        either, after ``GSPConfig.operator_heads``). Rows follow
         :attr:`layers`. A bare per-head name means ``attn``."""
         q = name if "." in name else (
             f"attn.{name}" if name in NAMESPACE_METRICS["attn"] else
-            f"resid.{name}" if name in NAMESPACE_METRICS["resid"] else f"graph.{name}")
+            f"resid.{name}" if name in NAMESPACE_METRICS["resid"] else
+            f"operator.{name}" if name in NAMESPACE_METRICS["operator"] else f"graph.{name}")
         if q not in self._metric_names:
             raise KeyError(f"{q!r} was not computed; metrics present: "
                            f"{', '.join(self._metric_names)}")
@@ -549,6 +601,12 @@ class LayerSpectra:
         return self._namespace("graph")
 
     @property
+    def operator(self) -> Dict[str, Any]:
+        """Operator-spectrum metrics, name -> ``[n_heads]`` or one value
+        (``GSPConfig.operator_heads``); empty unless they were computed."""
+        return self._namespace("operator")
+
+    @property
     def eigenvalues(self):
         """Spectrum of the head-averaged graph."""
         return self.cache.get(f"blocks.{self.index}.graph.eigenvalues")
@@ -576,6 +634,7 @@ class LayerSpectra:
         d = {f"graph.{k}": v for k, v in self.graph.items()}
         d.update({f"attn.{k}": v for k, v in self.attn.items()})
         d.update({f"resid.{k}": v for k, v in self.resid.items()})
+        d.update({f"operator.{k}": v for k, v in self.operator.items()})
         return d
 
     def __repr__(self) -> str:
@@ -585,6 +644,10 @@ class LayerSpectra:
         for ns in PER_HEAD_NAMESPACES:
             for k, v in self._namespace(ns).items():
                 lines.append(f"  {ns}.{k:<{27 - len(ns)}} {_fmt_heads(v)}")
+        for k, v in self.operator.items():
+            text = _fmt(v) if np.ndim(v) == 0 or (self.cache.is_batch and np.ndim(v) == 1) \
+                else _fmt_heads(v)
+            lines.append(f"  operator.{k:<19} {text}")
         return "\n".join(lines)
 
 
@@ -614,6 +677,18 @@ class HeadSpectra:
         return self._namespace("resid")
 
     @property
+    def operator(self) -> Dict[str, Any]:
+        """Per-head operator metrics (empty when they were computed per
+        layer, ``GSPConfig.operator_heads="mean"``)."""
+        if getattr(self.layer.cache.config, "operator_heads", "per_head") != "per_head":
+            return {}
+        return self._namespace("operator")
+
+    def _per_head_namespaces(self):
+        return tuple(ns for ns in PER_HEAD_NAMESPACES + ("operator",)
+                     if ns != "operator" or self.operator)
+
+    @property
     def eigenvalues(self):
         """This head's Laplacian spectrum, ascending."""
         v = self.layer.cache.get(f"blocks.{self.layer.index}.attn.eigenvalues")
@@ -622,11 +697,11 @@ class HeadSpectra:
     def __getitem__(self, name: str):
         if "." in name:
             ns, _, bare = name.partition(".")
-            values = self._namespace(ns)
+            values = self.operator if ns == "operator" else self._namespace(ns)
             if bare not in values:
                 raise KeyError(f"{name!r} is not in the cache")
             return values[bare]
-        hits = [ns for ns in PER_HEAD_NAMESPACES if name in self._namespace(ns)]
+        hits = [ns for ns in self._per_head_namespaces() if name in self._namespace(ns)]
         if len(hits) == 1:
             return self._namespace(hits[0])[name]
         if not hits:
@@ -637,6 +712,7 @@ class HeadSpectra:
     def to_dict(self) -> Dict[str, Any]:
         d = {f"attn.{k}": v for k, v in self.attn.items()}
         d.update({f"resid.{k}": v for k, v in self.resid.items()})
+        d.update({f"operator.{k}": v for k, v in self.operator.items()})
         return d
 
     def __repr__(self) -> str:
@@ -652,7 +728,7 @@ def _key_order(key: str):
     m = _KEY.match(key)
     if not m:
         return (10 ** 9, 9, key)
-    ns_rank = {"attn": 0, "resid": 1, "graph": 2}[m.group(2)]
+    ns_rank = {"attn": 0, "resid": 1, "graph": 2, "operator": 3}[m.group(2)]
     return (int(m.group(1)), ns_rank, m.group(3))
 
 

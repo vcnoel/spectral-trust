@@ -83,7 +83,60 @@ class GSPConfig:
     directed: bool = False
     calc_velocity: bool = False
     subgraph_indices: Optional[list] = None
+    # New in v0.5.1: True takes the nodes that subgraph_indices (analyze_text)
+    # or token_span (compute_spectra, run_with_spectra) keep from each head's
+    # attention and divides every kept row by its new sum before the graph is
+    # built (graph.drop_and_renormalize; Bao et al. 2026 drop the BOS token
+    # this way). False drops the nodes without renormalising, as before.
+    subgraph_renormalize: bool = False
     # Layer index of each attention tensor the model returns. None reads it
     # from the model config (layer_types) when the model returns attention for
     # only some layers, as hybrid linear-attention models do.
     attention_layer_map: Optional[list] = None
+
+    # New in v0.5.1: options of the head-averaged layer graph (the "graph"
+    # namespace of SpectralModel.run_with_spectra and compute_spectra, and
+    # GraphConstructor.layer_graph). The defaults build the graph that every
+    # earlier release built, with identical results.
+    # Edge weights: "attention" (the attention weights), "value" (the norm of
+    # what token j adds to token i's attention output,
+    # ||sum_h a^h_ij W_O^h v^h_j||, Kobayashi et al. 2020) or
+    # "value_per_head" (a^h_ij ||W_O^h v^h_j|| per head, then aggregated over
+    # heads like attention). See spectral_trust.value_weighted.
+    edge_weights: str = "attention"
+    # "symmetric" symmetrises the edges before the Laplacian (above);
+    # "directed" keeps them as the causal row-normalised operator
+    # P = D_out^-1 A, measured through its magnetic Laplacian and the directed
+    # total variation (spectral_trust.directed).
+    graph_direction: str = "symmetric"
+
+    # New in v0.5.1: charge q of the magnetic Laplacian of a directed graph
+    # (spectral_trust.directed). With edge weights in [0, 1] (rows of a
+    # row-normalised operator), the phase 2*pi*q*(A_ij - A_ji) stays in
+    # [-pi/2, pi/2] for q <= 1/4, and at q = 1/4 a one-way edge of weight 1
+    # gets the phase pi/2 (see spectral_trust.directed.magnetic_laplacian).
+    magnetic_q: float = 0.25
+
+    # New in v0.5.1: the "operator" namespace of SpectralModel.run_with_spectra
+    # and compute_spectra (spectral_trust.operator_spectra), computed only when
+    # it is named in metrics= (metrics=None leaves it out, so every earlier
+    # call is unchanged). Each layer's attention A is read as an operator
+    # L2(mu) -> L2(pi); its rows are renormalised first (the span's own edges
+    # under token_span).
+    # Measures: "pullback" (pi uniform, mu = A^T pi) or "counting" (A^T A).
+    operator_measure: str = "pullback"
+    # "per_head": one value per head ([n_heads], heads= applies); "mean": one
+    # value per layer, from the head-aggregated A (head_aggregation applies).
+    operator_heads: str = "per_head"
+    # A: "attention", or the value-weighted edges of spectral_trust.value_weighted
+    # with each row divided by its sum: "value_per_head" (a^h_ij ||W_O^h v^h_j||,
+    # per head) or "value" (||sum_h a^h_ij W_O^h v^h_j||, one matrix per
+    # layer, so operator_heads="mean" only).
+    operator_edges: str = "attention"
+
+    # New in v0.5.1: edge weights of graph.forman_curvature_mean (computed only
+    # when named in metrics=; spectral_trust.forman), measured on the layer
+    # graph that edge_weights and graph_direction build (directed curvature
+    # on a directed graph, undirected on a symmetric one): "neg_log"
+    # (max(-log a, 1e-9)), "attention" (a) or "unit" (1).
+    forman_weights: str = "neg_log"

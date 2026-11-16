@@ -16,7 +16,7 @@ import numpy as np
 @dataclass
 class LayerGraph:
     layer: int
-    W: np.ndarray            # [S, S] symmetrised attention (head-averaged or one head)
+    W: np.ndarray            # [S, S] the measured layer graph, or one head's symmetrised attention
     eigenvalues: np.ndarray  # [S] ascending
     vectors: np.ndarray      # [S, S] eigenvectors, column k for eigenvalue k
     fiedler: np.ndarray      # [S] Fiedler vector (library sign convention)
