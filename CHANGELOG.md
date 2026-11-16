@@ -19,7 +19,7 @@ diagonalises non-symmetric Laplacians with a general solver, and 0.3.0 made
 per-head functions, added in 0.3.0, had a related issue with `"rw"` that
 0.4.0 fixed (see v0.4.0).
 
-## Unreleased
+## v0.5.1 (2026-11-16)
 
 Directed and value-weighted attention graphs, measure-aware operator
 spectra, Forman curvature and an LM-Polygraph bridge. No result changes for
