@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 198 Stepping 2, GenuineIntel",
+    "threads": 4,
+    "torch": "2.11.0+cu128",
+    "numpy": "2.5.2"
+  },
+  "rows": [
+    {
+      "n": 128,
+      "sigma_min_ms_per_point_triangular": 1.119535937505134,
+      "sigma_min_ms_per_point_dense_svd": 7.975737500601099,
+      "sigma_min_max_rel_diff": 9.864643955913673e-14,
+      "pseudospectrum_50x50_s": 1.4060837000142783,
+      "pseudospectral_radius_s": 0.8797197000239976,
+      "pseudospectral_radius": 1.0989705642809613,
+      "pseudospectral_abscissa_s": 0.7363036999595352,
+      "pseudospectral_abscissa": 1.0989705642809613,
+      "kreiss_resolvent_s": 28.381289199984167,
+      "kreiss_resolvent": 11.313712630883794,
+      "kreiss_radii_s": 26.221710100013297,
+      "kreiss_radii": 11.313706416160585,
+      "sqrt_n": 11.313708498984761,
+      "henrici_s": 0.011053199996240437,
+      "numerical_range_s": 1.1865985000040382
+    },
+    {
+      "n": 512,
+      "sigma_min_ms_per_point_triangular": 4.562939062452642,
+      "sigma_min_ms_per_point_dense_svd": 127.09393124896451,
+      "sigma_min_max_rel_diff": 1.496676488032732e-13,
+      "pseudospectrum_50x50_s": 11.732236100011505,
+      "pseudospectral_radius_s": 16.428998799994588,
+      "pseudospectral_radius": 1.178915887899791,
+      "pseudospectral_abscissa_s": 12.581560800026637,
+      "pseudospectral_abscissa": 1.1789158878997923,
+      "kreiss_resolvent_s": 324.5004282000009,
+      "kreiss_resolvent": 22.62742526161058,
+      "kreiss_radii_s": 290.3210885000299,
+      "kreiss_radii": 22.627408546860295,
+      "sqrt_n": 22.627416997969522,
+      "henrici_s": 0.18945179996080697,
+      "numerical_range_s": 35.57347269996535
+    }
+  ]
+}

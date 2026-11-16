@@ -108,5 +108,7 @@ nav:
       - Graph-filter side effects: use-cases/graph-filter-side-effects.md
       - Numerical ICL: use-cases/numerical-icl.md
       - Injection defence (design, not run): use-cases/injection-defence.md
+  - What a symmetrised spectrum cannot see: symmetrised-spectrum.md
+  - Baselines: baselines.md
   - API reference: api.md
   - Changelog: changelog.md

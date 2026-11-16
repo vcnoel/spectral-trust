@@ -116,6 +116,26 @@ controls. No result changes for existing calls.
   controls.
 - Use case "Numerical ICL" and notebook `05_numerical_icl.ipynb`.
 
+Measures that answer the critiques of spectral attention diagnostics. No
+result changes: every 0.5.0 call is bit-identical
+(`tests/test_regression_050.py`).
+
+- `GSPConfig.subgraph_renormalize`: the nodes kept by `subgraph_indices` or
+  `token_span` are renormalised per row before the graph is built (BOS drop
+  as in Bao et al.); `graph.drop_and_renormalize`.
+- `spectral_trust.features`: `sink_mass`, `value_norms`,
+  `value_weighted_sink`, `effective_rank`, `attention_covariates`; the
+  asymmetry `G` and conductance `φ̂` of Dahlem et al. (`asymmetry`,
+  `capacity_phi`, `transport_sigma2`, `transport_operator`; from their
+  equations, no released code); `geometry_of_reason`, the paper's features
+  on the symmetric normalised Laplacian by default; `normalization="rw"`
+  reproduces its first released run bit for bit.
+- `spectral_trust.pseudospectra`: `sigma_min`, `pseudospectrum`,
+  `pseudospectral_radius`, `pseudospectral_abscissa`, `kreiss_constant`,
+  `departure_from_normality`, `numerical_range`, `depth_propagator`,
+  `nonnormality`.
+- Docs: "What a symmetrised spectrum cannot see" and "Baselines".
+
 ## v0.5.0 (2026-11-15)
 
 Interventions: the TransformerLens basics (patching, ablation, steering)

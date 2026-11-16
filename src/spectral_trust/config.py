@@ -83,6 +83,12 @@ class GSPConfig:
     directed: bool = False
     calc_velocity: bool = False
     subgraph_indices: Optional[list] = None
+    # New in v0.5.1: True takes the nodes that subgraph_indices (analyze_text)
+    # or token_span (compute_spectra, run_with_spectra) keep from each head's
+    # attention and divides every kept row by its new sum before the graph is
+    # built (graph.drop_and_renormalize; Bao et al. 2026 drop the BOS token
+    # this way). False drops the nodes without renormalising, as before.
+    subgraph_renormalize: bool = False
     # Layer index of each attention tensor the model returns. None reads it
     # from the model config (layer_types) when the model returns attention for
     # only some layers, as hybrid linear-attention models do.
