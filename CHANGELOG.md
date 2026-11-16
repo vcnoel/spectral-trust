@@ -102,6 +102,20 @@ the new opt-in metrics, every result is bit-identical to 0.5.0.
 - New pages: Operator spectra in the attention geometry; LM-Polygraph
   bridge. The directed-graphs page gains a Forman curvature section.
 
+Numerical in-context learning, a confound audit and edits with matched
+controls. No result changes for existing calls.
+
+- `spectral_trust.numeric`: the serialisation of Bao et al. (2026), value
+  token spans, the next-value distribution (restricted softmax or
+  hierarchical digit-wise) and the paper's layer diagnostics with its
+  non-graph controls (`profile_from_outputs`).
+- `st.confound_audit`: raw and covariate-adjusted effects of spectral
+  readouts with bootstrap intervals.
+- `st.edit_with_controls`: a graph filter or band patch next to
+  norm-matched permuted-graph, path-graph, random-subspace and scaling
+  controls.
+- Use case "Numerical ICL" and notebook `05_numerical_icl.ipynb`.
+
 ## v0.5.0 (2026-11-15)
 
 Interventions: the TransformerLens basics (patching, ablation, steering)

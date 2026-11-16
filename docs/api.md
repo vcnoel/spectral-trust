@@ -83,6 +83,54 @@ and `st.weight_svd_full` are also top-level names. See the
 
 ::: spectral_trust.interventions.weights.lowrank_snr
 
+::: spectral_trust.interventions.controls.edit_with_controls
+
+::: spectral_trust.interventions.controls.EditControlResult
+
+## Numerical in-context learning
+
+`spectral_trust.numeric`: serialised number sequences, the next-value
+distribution and the layer diagnostics of Bao et al. (2026); see the
+[use case](use-cases/numerical-icl.md).
+
+::: spectral_trust.numeric.quantize
+
+::: spectral_trust.numeric.serialize
+
+::: spectral_trust.numeric.value_spans
+
+::: spectral_trust.numeric.repeat_fraction
+
+::: spectral_trust.numeric.next_value_distribution
+
+::: spectral_trust.numeric.ValueDistribution
+
+::: spectral_trust.numeric.profile_from_outputs
+
+::: spectral_trust.numeric.graph_signal_metrics
+
+::: spectral_trust.numeric.positional_metrics
+
+::: spectral_trust.numeric.attention_gini
+
+::: spectral_trust.numeric.pool_nodes
+
+## Confound audit
+
+::: spectral_trust.audit.confound_audit
+
+::: spectral_trust.audit.AuditResult
+
+::: spectral_trust.audit.confound_covariates
+
+::: spectral_trust.audit.covariates_from_cache
+
+::: spectral_trust.audit.effective_rank
+
+::: spectral_trust.audit.bootstrap_ci
+
+::: spectral_trust.audit.paired_bootstrap
+
 ## Views
 
 `spectral_trust.viz`; also `SpectralCache.graph`, `.heatmap`, `.spectrum` and
