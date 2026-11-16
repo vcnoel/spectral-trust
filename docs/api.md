@@ -115,6 +115,20 @@ distribution and the layer diagnostics of Bao et al. (2026); see the
 
 ::: spectral_trust.numeric.pool_nodes
 
+Sequence generators, token-inventory controls and multi-step extrapolation:
+
+::: spectral_trust.numeric.dynamics
+
+::: spectral_trust.numeric.token_preserving_shuffle
+
+::: spectral_trust.numeric.inventory_covariates
+
+::: spectral_trust.numeric.rollout
+
+::: spectral_trust.numeric.Rollout
+
+::: spectral_trust.numeric.RolloutReadout
+
 ## Confound audit
 
 ::: spectral_trust.audit.confound_audit

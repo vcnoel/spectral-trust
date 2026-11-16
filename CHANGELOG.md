@@ -19,6 +19,35 @@ diagonalises non-symmetric Laplacians with a general solver, and 0.3.0 made
 per-head functions, added in 0.3.0, had a related issue with `"rw"` that
 0.4.0 fixed (see v0.4.0).
 
+## Unreleased
+
+Controls and generators for follow-up studies of numerical in-context
+learning. No result changes for existing calls.
+
+- `spectral_trust.numeric.dynamics`: seeded generators of the sequence
+  families of Bao et al. (2026), `periodic` (period p), `logistic` (the
+  logistic map at r, with burn-in) and `lorenz` (one chosen coordinate, RK4),
+  and of smooth families, `sine` (a chosen frequency), `damped_oscillator`
+  (closed form) and `pendulum` (Stormer-Verlet, symplectic; the energy drift
+  is reported). Each returns a `Trajectory` with the raw values and the
+  integers of the `000`-`999` format; `generate(name, ...)` and `FAMILIES`
+  name them.
+- `numeric.token_preserving_shuffle(values, seed)`: the values in a random
+  order, with the exact multiset of tokens kept. `numeric.inventory_covariates`:
+  the number of distinct values, the share of values seen before, the
+  entropy of the value distribution and, with a tokenizer, the number of
+  distinct token ids, per sequence, ready as covariates of
+  `st.confound_audit`.
+- `numeric.rollout(model, tokenizer, values, n_steps, target=...)`:
+  multi-step extrapolation that feeds back the mode of
+  `next_value_distribution` (or its rounded mean) and reports the absolute
+  and cumulative error per step against the true continuation. The prompt
+  runs once and each step extends its key-value cache, so an edit of
+  `st.edit_with_controls` reaches every step; `numeric.RolloutReadout`
+  makes a rollout that function's readout.
+- `next_value_distribution`: the hierarchical readout can start from an
+  existing key-value cache (internal; the same numbers).
+
 ## v0.5.2 (2026-11-16)
 
 A fix for recent `transformers` releases. No result changes.

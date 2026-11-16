@@ -309,6 +309,87 @@ level with the last 50 positions (+0.01 [−0.15, +0.18]). At blocks 7 and
 0.76. The first-digit gap is small (about 2 nats) and the intervals are
 wide.
 
+## Controls for follow-up studies
+
+Two directions build naturally on the paper: separating dynamical
+complexity from the token inventory of a sequence, and following the model
+beyond the next value. Three tools in `spectral_trust.numeric` support
+them.
+
+- **Generators** (`numeric.dynamics`): seeded versions of the paper's
+  families (`periodic`, `logistic` at r with burn-in, `lorenz` with a chosen
+  coordinate) and smooth ones (`sine` at a frequency, `damped_oscillator`,
+  `pendulum` with a symplectic integrator). Each returns a `Trajectory`
+  with the raw values and the integers of the `000`-`999` format, so
+  `traj.split(n_context, n_steps)` gives a context and its true
+  continuation.
+- **Token-inventory control**: `token_preserving_shuffle(values, seed)`
+  puts the values of a trajectory in a random order and keeps the exact
+  multiset of tokens; `inventory_covariates(sequences)` gives, per sequence,
+  the number of distinct values, the share of values seen before and the
+  entropy of the value distribution (and, with `tokenizer=`, the number of
+  distinct token ids), which the shuffle leaves unchanged. Passed to
+  `st.confound_audit`, they show how much of each diagnostic the inventory
+  accounts for, next to the shuffled trajectories as a direct contrast.
+- **Multi-step extrapolation**: `rollout(model, tokenizer, context,
+  n_steps, target=...)` feeds the model's own most probable value back into
+  the context at each step and reports the absolute error per step and its
+  running sum. Smooth dynamics such as a sine or a pendulum have low
+  dynamical complexity yet can drift over many steps; the rollout puts a
+  number on that drift, family by family.
+
+```python
+import numpy as np
+import spectral_trust as st
+from spectral_trust.numeric import (RolloutReadout, generate, inventory_covariates,
+                                    rollout, token_preserving_shuffle)
+
+# 1. the paper's families, each with its token-preserving shuffle
+specs = [("periodic", {"p": 8}), ("logistic", {"r": 3.9, "burn_in": 1000}),
+         ("lorenz", {"coord": "x"}), ("sine", {"frequency": 1 / 16})]
+seqs, chaotic, shuffled = [], [], []
+for fam, kw in specs:
+    for seed in range(8):
+        q = generate(fam, 200, seed=seed, **kw).ints
+        for shuf in (False, True):
+            seqs.append(token_preserving_shuffle(q, seed) if shuf else q)
+            chaotic.append(fam in ("logistic", "lorenz"))
+            shuffled.append(shuf)
+# lam2, hfer, exp_se: one value per sequence, from profile_from_outputs
+
+# 2. the inventory as covariates, and the shuffle as a covariate of its own
+cov = inventory_covariates(seqs, tokenizer=tok)
+cov["shuffled"] = np.array(shuffled, float)
+res = st.confound_audit({"fiedler": lam2, "hfer": hfer, "exp_se": exp_se},
+                        chaotic, cov)
+print(res.to_markdown())
+
+# 3. multi-step error on a sine and on period 8
+for fam, kw in (("sine", {"frequency": 1 / 16}), ("periodic", {"p": 8})):
+    ctx, cont = generate(fam, 120, seed=0, **kw).split(100, 20)
+    r = rollout(model, tok, ctx, 20, target=cont)
+    print(fam, r.abs_error, r.cum_error[-1], r.valid_steps)
+```
+
+The rollout runs the prompt once and extends its key-value cache with each
+predicted value, so it also serves as the readout of `st.edit_with_controls`:
+an edit of the prompt reaches every step, and its effect on multi-step error
+is read against the same matched controls as above.
+
+```python
+ctxs, conts = zip(*(generate("sine", 120, seed=s, frequency=1 / 16).split(100, 20)
+                    for s in range(8)))
+ro = RolloutReadout(tok, ctxs, conts, n_steps=20)
+res = st.edit_with_controls(model, ro.inputs, ro, layer=8, kind="lowpass", cutoff=0.5,
+                            strengths=(0.1, 0.2), positions=ro.positions,
+                            token_span=(1, None), controls=("permuted", "path", "scaling"))
+res.summary(["mae", "cum_error", "valid_steps"])
+```
+
+`valid_steps` counts the steps before the first error above `tol` (50 by
+default, 5% of the 50-950 range). `predict="mean"` feeds back the rounded
+expected value instead of the most probable one.
+
 ## Controls and limits
 
 - Small models only: the reproduction and the confound audit on
