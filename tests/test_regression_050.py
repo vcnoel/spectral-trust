@@ -9,7 +9,8 @@ bit-identical in the environment that wrote the fixture; elsewhere (another
 BLAS or library version) they must agree to float32 rounding, except the
 outputs that depend on the eigenvector basis (the Fiedler vector's sign and
 the split of spectral mass within repeated eigenvalues), which another
-eigensolver may legitimately return differently.
+eigensolver may legitimately return differently, and a few HFER values whose
+cutoff falls between nearly tied eigenvalues.
 """
 import platform
 import sys
@@ -51,4 +52,12 @@ def test_every_050_output_is_unchanged(recorded):
             np.allclose(got, ref, rtol=1e-5, atol=1e-6, equal_nan=True)
         if not same:
             bad.append(key)
+    if not exact:
+        # HFER splits the signal's energy at a cutoff index; where two eigenvalues
+        # nearly tie at the cutoff, another eigensolver may split their energy
+        # differently. Allow at most 5% of HFER outputs to differ across platforms.
+        n_hfer = sum(k.endswith("hfer") for k in recorded)
+        hfer_bad = [k for k in bad if k.endswith("hfer")]
+        assert len(hfer_bad) <= 0.05 * n_hfer, f"{len(hfer_bad)} of {n_hfer} HFER outputs changed"
+        bad = [k for k in bad if not k.endswith("hfer")]
     assert not bad, f"{len(bad)} outputs changed, e.g. {bad[:5]}"
