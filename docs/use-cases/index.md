@@ -2,8 +2,8 @@
 
 !!! note "Experimental"
     The interventions are new and experimental, and their API may change in a
-    minor release. Changes to the results of existing calls are listed in
-    the changelog. Audits are welcome: open a
+    minor release. Default results of existing calls are guarded by
+    bit-identity tests across releases. Audits are welcome: open a
     ["wrong number" issue](https://github.com/vcnoel/spectral-trust/issues/new?template=wrong-number.yml).
 
 Each page below applies spectral-trust to a real model and data set,
