@@ -9,7 +9,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="spectral_trust",
-    version="0.5.2",
+    version="0.5.3",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
     package_data={

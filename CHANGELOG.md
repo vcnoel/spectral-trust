@@ -19,7 +19,7 @@ diagonalises non-symmetric Laplacians with a general solver, and 0.3.0 made
 per-head functions, added in 0.3.0, had a related issue with `"rw"` that
 0.4.0 fixed (see v0.4.0).
 
-## Unreleased
+## v0.5.3 (2026-11-17)
 
 Controls and generators for follow-up studies of numerical in-context
 learning. No result changes for existing calls.
