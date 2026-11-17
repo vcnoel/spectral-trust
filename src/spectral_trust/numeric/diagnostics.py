@@ -33,7 +33,7 @@ Per layer:
 layers, as the paper reports.
 """
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Mapping, Optional, Sequence
 
 import numpy as np
 import torch
@@ -41,6 +41,31 @@ import torch
 #: Scalar metrics per layer, in order.
 PROFILE_METRICS = ("fiedler", "hfer", "spectral_entropy", "exp_se", "pos_hfer", "pos_exp_se",
                    "gini", "sink_mass", "signal_energy")
+
+
+#: Accepted ``edge_weights`` of :func:`profile_from_outputs` (as ``GSPConfig.edge_weights``).
+EDGE_WEIGHTS = ("attention", "value", "value_per_head")
+
+
+def _layer_edges(edges, layer: int, edge_weights: str, item: int):
+    """The ``[H, S, S]`` (``[1, S, S]`` for ``"value"``) edges of one item."""
+    if layer not in edges:
+        raise ValueError(f"edges has no layer {layer} (layers {sorted(edges)})")
+    e = edges[layer]
+    e = e if torch.is_tensor(e) else torch.as_tensor(np.asarray(e))
+    full = 3 if edge_weights == "value" else 4
+    if e.dim() == full:
+        e = e[item]
+    return e if edge_weights == "value_per_head" else e.reshape(1, *e.shape[-2:])
+
+
+def _center_of(h: np.ndarray, keep: Sequence[int], positions) -> np.ndarray:
+    """Mean of ``h [S, d]`` over ``positions`` (default ``keep``)."""
+    S = h.shape[0]
+    pos = list(keep) if positions is None else sorted({int(p) % S for p in positions})
+    if not pos:
+        raise ValueError("center_positions selects no position")
+    return h[pos].mean(0, keepdims=True)
 
 
 def _np(x) -> np.ndarray:
@@ -208,7 +233,11 @@ def profile_from_outputs(attentions, hidden_states=None, *, layers: Optional[Seq
                          renormalize: bool = True, hfer_cutoff: float = 0.5, n_low: int = 10,
                          basis: str = "combinatorial", groups: Optional[Sequence[Sequence[int]]] = None,
                          positional: bool = True, gini: bool = True,
-                         keep_masses: bool = False, item: int = 0) -> GraphSignalProfile:
+                         keep_masses: bool = False, item: int = 0,
+                         edge_weights: str = "attention",
+                         edges: Optional[Mapping[int, object]] = None, center: bool = False,
+                         center_positions: Optional[Sequence[int]] = None
+                         ) -> GraphSignalProfile:
     """Diagnostics of every layer of one forward pass.
 
     Args:
@@ -231,7 +260,35 @@ def profile_from_outputs(attentions, hidden_states=None, *, layers: Optional[Seq
         positional, gini: compute the non-graph controls.
         keep_masses: keep the per-mode energies of each layer.
         item: batch item to read.
+        edge_weights: the graph's edges, as ``GSPConfig.edge_weights``:
+            ``"attention"`` (default, the paper's graph), ``"value"`` (the
+            norm of what token j adds to token i's attention output, summed
+            over heads inside the norm) or ``"value_per_head"``
+            (``a^h_ij ||W_O^h v^h_j||`` per head, then averaged like
+            attention). Value-weighted edges give little weight to a sink
+            whose value vectors are small (Kobayashi et al. 2020).
+        edges: with value edges, ``{layer: tensor}`` as returned by
+            :func:`~spectral_trust.value_weighted_attention` (``[B, S, S]``
+            for ``"value"``, ``[B, H, S, S]`` for ``"value_per_head"``,
+            ``per_head=True``), from the same input; :func:`profile` computes
+            them. Dropping and renormalising apply to them as to attention;
+            ``gini`` and ``sink_mass`` always read the attention.
+        center: subtract, in each layer, the mean hidden state over
+            ``center_positions`` from the signal of every node before the
+            graph Fourier transform (and the positional DCT), which removes
+            the shared (DC) component; an ablation of Bao et al.'s updated
+            paper. Off by default (results unchanged). To be aligned with
+            the authors' code once it is public.
+        center_positions: positions (in the original sequence) whose mean is
+            subtracted, e.g. ``value_spans(...).numeric_positions`` for the
+            value tokens; default every node of the graph (after ``drop``).
     """
+    if edge_weights not in EDGE_WEIGHTS:
+        raise ValueError(f"edge_weights must be one of {EDGE_WEIGHTS}, got {edge_weights!r}")
+    if edge_weights != "attention" and edges is None:
+        raise ValueError(f"edge_weights={edge_weights!r} needs edges= (from "
+                         f"st.value_weighted_attention(model, ids, per_head="
+                         f"{edge_weights == 'value_per_head'})) or numeric.profile")
     if pairing not in ("input", "output"):
         raise ValueError("pairing must be 'input' or 'output'")
     n = len(attentions)
@@ -245,11 +302,16 @@ def profile_from_outputs(attentions, hidden_states=None, *, layers: Optional[Seq
         dropped = sorted({int(d) % S for d in drop})
         keep = [i for i in range(S) if i not in set(dropped)]
         W, Ap = attention_graph(a, dropped, renormalize)
+        if edge_weights != "attention":
+            W, _ = attention_graph(_layer_edges(edges, l, edge_weights, item), dropped,
+                                   renormalize)
         X = None
         if hidden_states is not None:
             h = hidden_states[l if pairing == "input" else l + 1]
             h = h[item] if h.dim() == 3 else h
             X = _np(h)[keep]
+            if center:
+                X = X - _center_of(_np(h), keep, center_positions)
         Wg, Xg = W, X
         if groups is not None:
             pos = {p: j for j, p in enumerate(keep)}
@@ -267,3 +329,35 @@ def profile_from_outputs(attentions, hidden_states=None, *, layers: Optional[Seq
             rows.setdefault(k, []).append(v)
     per_layer = {k: np.asarray(v, dtype=np.float64) for k, v in rows.items()}
     return GraphSignalProfile(layers, per_layer, masses)
+
+
+@torch.no_grad()
+def profile(model, input_ids, *, edge_weights: str = "attention", tokenizer=None,
+            **kwargs) -> GraphSignalProfile:
+    """:func:`profile_from_outputs` of one input, forward pass included.
+
+    Args:
+        model: a Hugging Face causal LM or a :class:`~spectral_trust.SpectralModel`,
+            loaded with ``attn_implementation="eager"`` (attention weights are
+            needed).
+        input_ids: ``[S]`` or ``[1, S]``.
+        edge_weights: ``"attention"``, ``"value"`` or ``"value_per_head"``;
+            value edges come from
+            :func:`~spectral_trust.value_weighted_attention` on the same input.
+        **kwargs: passed to :func:`profile_from_outputs` (``drop``,
+            ``renormalize``, ``basis``, ``layers``, ...).
+    """
+    from ..interventions._arch import unwrap
+    if edge_weights not in EDGE_WEIGHTS:
+        raise ValueError(f"edge_weights must be one of {EDGE_WEIGHTS}, got {edge_weights!r}")
+    hf = unwrap(model)
+    ids = torch.as_tensor(input_ids, dtype=torch.long).reshape(1, -1)
+    ids = ids.to(next(hf.parameters()).device)
+    out = hf(input_ids=ids, output_attentions=True, output_hidden_states=True, use_cache=False)
+    edges = None
+    if edge_weights != "attention":
+        from ..value_weighted import value_weighted_attention
+        edges = value_weighted_attention(model, ids, per_head=edge_weights == "value_per_head",
+                                         tokenizer=tokenizer)
+    return profile_from_outputs(out.attentions, out.hidden_states, edge_weights=edge_weights,
+                                edges=edges, **kwargs)

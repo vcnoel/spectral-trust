@@ -45,6 +45,8 @@ and `st.weight_svd_full` are also top-level names. See the
 
 ::: spectral_trust.interventions.context.remove_edges_from_pattern
 
+::: spectral_trust.interventions.context.sink_bias
+
 ::: spectral_trust.interventions.patching.patch
 
 ::: spectral_trust.interventions.patching.Patcher
@@ -114,6 +116,25 @@ distribution and the layer diagnostics of Bao et al. (2026); see the
 ::: spectral_trust.numeric.attention_gini
 
 ::: spectral_trust.numeric.pool_nodes
+
+The diagnostics on value-weighted graphs (`edge_weights="value"` or
+`"value_per_head"`), forward pass included:
+
+::: spectral_trust.numeric.profile
+
+Sequence generators, token-inventory controls and multi-step extrapolation:
+
+::: spectral_trust.numeric.dynamics
+
+::: spectral_trust.numeric.token_preserving_shuffle
+
+::: spectral_trust.numeric.inventory_covariates
+
+::: spectral_trust.numeric.rollout
+
+::: spectral_trust.numeric.Rollout
+
+::: spectral_trust.numeric.RolloutReadout
 
 ## Confound audit
 

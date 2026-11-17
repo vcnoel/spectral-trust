@@ -152,16 +152,30 @@ def next_value_distribution(model, input_ids, tokenizer=None, *, digits: int = 3
                                            float(min_prob), max(1, int(chunk))), "hierarchical")
 
 
+_CACHE_METHODS = ("crop", "batch_repeat_interleave", "batch_select_indices", "get_seq_length")
+
+
+def _can_cache(cache) -> bool:
+    return all(hasattr(cache, m) for m in _CACHE_METHODS)
+
+
 def _hierarchical(hf, ids, dig: List[int], digits: int, min_prob: float, chunk: int):
+    out = hf(input_ids=ids, use_cache=True)
+    return _hierarchical_from(hf, ids, out.logits[0, -1], out.past_key_values, dig, digits,
+                              min_prob, chunk)
+
+
+def _hierarchical_from(hf, ids, last_logits, cache, dig: List[int], digits: int,
+                       min_prob: float, chunk: int):
+    """The hierarchical distribution after ``ids`` [1, S], from the logits at
+    its last position and the key-value cache of ``ids`` (length S, batch 1).
+    The cache is left with the prompt's S positions in its first row."""
     S = ids.shape[1]
     dig_t = torch.as_tensor(dig, device=ids.device)
-    out = hf(input_ids=ids, use_cache=True)
-    cache = out.past_key_values
-    can_cache = all(hasattr(cache, m) for m in ("crop", "batch_repeat_interleave",
-                                                 "batch_select_indices"))
+    can_cache = _can_cache(cache)
     probs = np.zeros(10 ** digits)
     # frontier: (prefix digits tuple, log prob of the prefix, log probs of the next digit [10])
-    first = torch.log_softmax(out.logits[0, -1].to(torch.float64)[dig_t], -1).cpu().numpy()
+    first = torch.log_softmax(last_logits.to(torch.float64)[dig_t], -1).cpu().numpy()
     frontier = [((), 0.0, first)]
     for level in range(digits):
         rest = digits - level - 1

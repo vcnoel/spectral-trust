@@ -27,7 +27,7 @@ import torch
 
 from ..config import GSPConfig
 from . import _registry as reg
-from ._arch import Arch, first_hidden, replace_first, unwrap
+from ._arch import Arch, first_hidden, layer_list, replace_first, unwrap
 from ._hooks import canonical_site, register_site_hook
 from .filters import FilterSpec, GraphSpec, apply_filter
 from .weights import linear_weight, matrix_snr, svd_scale_matrix
@@ -325,6 +325,76 @@ class Intervention:
         edit = self._new_edit(f"hook {site} layer {lay}")
         edit.handles.extend(register_site_hook(self.arch, site, lay, fn))
         return edit
+
+    def sink_bias(self, layers, b: float, hub: int = 0) -> Edit:
+        """Add the constant ``b`` to every query's attention score (logit,
+        before the softmax) toward the key at position ``hub`` (counted from
+        the first real token: left padding is skipped) at ``layers``, in
+        every head. ``b < 0`` moves attention away from the hub (by default
+        the first token, usually the attention sink), ``b > 0`` toward it.
+
+        Works through eager attention (switched on while the edit is
+        active) on the additive attention mask, whose last dimension is the
+        key length, so it holds under cached generation. ``b = 0`` installs
+        nothing: the model is unchanged. New after 0.5.2 (unreleased)."""
+        lays = [self.arch.layer_index(lay) for lay in layer_list(layers, self.arch.n_layers)]
+        b, hub = float(b), int(hub)
+        if hub < 0:
+            raise ValueError("hub must be a non-negative position")
+        edit = self._new_edit(f"sink_bias b={b:g} hub={hub} layers {lays}")
+        if b == 0.0:
+            return edit
+        self._require_eager()
+
+        def fn(mask, query, key, module):
+            return _sink_bias_mask(mask, query, key, b, hub, self._fwd["mask"])
+        for lay in lays:
+            attn = self.arch.attention(lay)
+            key_ = id(attn)
+            edit.undo.append(reg.acquire_mask_editor(attn, self, fn))
+
+            def pre(module, args, kwargs, key_=key_):
+                reg.MASK_CALLED[key_] = False
+
+            def post(module, args, out, key_=key_, lay=lay):
+                if not reg.MASK_CALLED.get(key_, False):
+                    raise RuntimeError(f"layer {lay}'s attention did not go through "
+                                       f"eager_attention_forward; sink_bias needs it")
+            edit.handles.append(attn.register_forward_pre_hook(pre, with_kwargs=True))
+            edit.handles.append(attn.register_forward_hook(post))
+        return edit
+
+
+def _sink_bias_mask(mask, query: torch.Tensor, key: torch.Tensor, b: float, hub: int,
+                    mask2d: Optional[torch.Tensor]) -> torch.Tensor:
+    """The additive mask ``[B, 1 or H, q, k]`` with ``b`` added at the hub's
+    column on every query that can see it. The hub is ``hub`` plus the
+    number of left-padding keys of each row, read from the 2-D attention mask
+    of the call when it covers the keys, else from the 4-D mask."""
+    B, q = query.shape[0], query.shape[-2]
+    if mask is None:
+        mask = torch.zeros(B, 1, q, key.shape[-2], dtype=query.dtype, device=query.device)
+    elif mask.dtype == torch.bool:
+        mask = torch.zeros(mask.shape, dtype=query.dtype, device=query.device).masked_fill(
+            ~mask, torch.finfo(query.dtype).min)
+    k = mask.shape[-1]                                     # key length (cache included)
+    new = mask.expand(B, *mask.shape[1:]).clone()
+    low = torch.finfo(new.dtype).min / 2
+    visible = new > low
+    if mask2d is not None and mask2d.shape[0] == B and mask2d.shape[-1] >= k:
+        real = mask2d[:, :k].to(device=new.device).bool()
+    else:
+        real = visible.any(dim=1).any(dim=1)               # [B, k]: keys some query sees
+    has = real.any(dim=-1)
+    pos = torch.where(has, real.long().argmax(dim=-1), torch.zeros_like(has, dtype=torch.long))
+    pos = pos + hub
+    rows = torch.arange(B, device=new.device)[has & (pos < k)]
+    cols = pos[has & (pos < k)]
+    if len(rows):
+        col = new[rows, :, :, cols]                        # [n, heads, q]
+        vis = visible[rows, :, :, cols]
+        new[rows, :, :, cols] = torch.where(vis, col + b, col)
+    return new
 
 
 class ResidSite:
@@ -1010,3 +1080,22 @@ def intervene(model, config: Optional[GSPConfig] = None, tokenizer=None) -> Inte
     Added in 0.5.0.
     """
     return Intervention(model, config=config, tokenizer=tokenizer)
+
+
+def sink_bias(model, layers, b: float, hub: int = 0) -> Intervention:
+    """Bias every query's attention score toward the hub key by ``b``.
+
+    A context manager: ``with sink_bias(model, [4, 5], -2.0): ...`` adds the
+    logit ``b`` to the attention score toward position ``hub`` (default the
+    first token, the usual attention sink) in every head of ``layers``,
+    and undoes it on exit. See :meth:`Intervention.sink_bias`; inside an
+    :func:`intervene` block, ``iv.sink_bias(layers, b)`` combines it with
+    other edits. New after 0.5.2 (unreleased).
+    """
+    iv = Intervention(model)
+    try:
+        iv.sink_bias(layers, b, hub)
+    except Exception:
+        iv.close()
+        raise
+    return iv
