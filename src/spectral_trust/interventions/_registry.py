@@ -65,6 +65,11 @@ PATTERN_CALLED: Dict[int, bool] = {}
 #: id(attention module) -> [(owner id, fn(module, value, weights, out))], read-only
 #: observers of the attention's values, weights and output (after any edit)
 CAPTURES: Dict[int, List] = {}
+#: id(attention module) -> [(owner id, fn(mask, query, key, module) -> mask)]: edits of
+#: the additive attention mask (pre-softmax scores) before the eager attention runs
+MASK_EDITS: Dict[int, List] = {}
+#: id(attention module) -> whether the wrapper applied its mask edits in the current call
+MASK_CALLED: Dict[int, bool] = {}
 _VERIFIED = set()
 _EAGER_FN: Dict[str, dict] = {}
 
@@ -76,6 +81,11 @@ def _notify(module, value, weights, out) -> None:
 
 def _make_wrapper(orig):
     def eager_attention_forward(module, query, key, value, attention_mask, *args, **kwargs):
+        mask_edits = MASK_EDITS.get(id(module))
+        if mask_edits:
+            MASK_CALLED[id(module)] = True
+            for _, fn in list(mask_edits):
+                attention_mask = fn(attention_mask, query, key, module)
         out, weights = orig(module, query, key, value, attention_mask, *args, **kwargs)
         edits = PATTERN_EDITS.get(id(module))
         if not edits:
@@ -194,6 +204,27 @@ def acquire_pattern_editor(attn_module, owner, fn) -> Callable[[], None]:
             if not lst:
                 PATTERN_EDITS.pop(id(attn_module), None)
                 _VERIFIED.discard(id(attn_module))
+            _unwrap_eager(modname)
+    return release
+
+
+def acquire_mask_editor(attn_module, owner, fn) -> Callable[[], None]:
+    """Pass ``attn_module``'s attention mask through ``fn(mask, query, key,
+    module)`` before its eager attention runs. Returns the function that
+    undoes it."""
+    modname, mod = _eager_module(attn_module, "attention-score edits")
+    entry = (id(owner), fn)
+    with _LOCK:
+        _wrap_eager(modname, mod)
+        MASK_EDITS.setdefault(id(attn_module), []).append(entry)
+
+    def release():
+        with _LOCK:
+            lst = MASK_EDITS.get(id(attn_module), [])
+            if entry in lst:
+                lst.remove(entry)
+            if not lst:
+                MASK_EDITS.pop(id(attn_module), None)
             _unwrap_eager(modname)
     return release
 

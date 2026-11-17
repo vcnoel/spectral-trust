@@ -12,6 +12,9 @@ TransformerLens basics. Added in 0.5.0.
   attention-edge removal with an explicit choice of where the removed mass
   goes (:meth:`AttentionSite.remove_edges`), and singular-value rescaling of
   a weight matrix (:meth:`WeightSite.svd_scale`).
+- :func:`sink_bias`: a constant logit added to every query's attention score
+  toward one key (the first token by default), cached generation included
+  (new after 0.5.2, unreleased).
 - :func:`patch` and :class:`Patcher`: activation patching, plain or
   frequency-resolved (one band of a token-axis graph eigenbasis).
 - :func:`weight_snr`: ``sigma_1 / median(sigma)`` of a weight matrix, and
@@ -24,7 +27,7 @@ The top-level package exports ``st.intervene`` (the context manager),
 """
 from .context import (
     GRAPH_FILTER_WARN_RELATIVE_EDIT, KEEP_SINK_WARN_FACTOR, AttentionSite, Edit, Intervention,
-    ResidSite, WeightSite, intervene, remove_edges_from_pattern,
+    ResidSite, WeightSite, intervene, remove_edges_from_pattern, sink_bias,
 )
 from .filters import (
     FILTER_KINDS, GRAPH_NAMES, PRECISIONS, FilterSpec, attention_adjacency, compute_placement,
@@ -42,7 +45,8 @@ from .weights import (
 
 __all__ = [
     "intervene", "Intervention", "Edit", "ResidSite", "AttentionSite", "WeightSite",
-    "remove_edges_from_pattern", "KEEP_SINK_WARN_FACTOR", "GRAPH_FILTER_WARN_RELATIVE_EDIT",
+    "remove_edges_from_pattern", "sink_bias", "KEEP_SINK_WARN_FACTOR",
+    "GRAPH_FILTER_WARN_RELATIVE_EDIT",
     "graph_filter", "FilterSpec", "filter_coefficients", "filter_response", "ideal_response",
     "attention_adjacency", "path_adjacency", "laplacian", "laplacian64", "FILTER_KINDS",
     "GRAPH_NAMES", "PRECISIONS", "compute_placement",
