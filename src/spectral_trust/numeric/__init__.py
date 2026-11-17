@@ -31,13 +31,16 @@ New after 0.5.2 (unreleased):
 - :func:`rollout`: multi-step extrapolation that feeds back the model's own
   predictions, with per-step and cumulative error; :class:`RolloutReadout`
   makes it the readout of ``st.edit_with_controls``.
+- ``profile_from_outputs(..., edge_weights="value" | "value_per_head",
+  edges=...)`` and :func:`profile`: the diagnostics on value-weighted graphs
+  (:mod:`spectral_trust.value_weighted`), which discount the sink.
 """
 from . import dynamics
 from .controls import INVENTORY_COVARIATES, inventory_covariates, token_preserving_shuffle
 from .diagnostics import (
-    PROFILE_METRICS, GraphSignalProfile, attention_gini, attention_graph,
+    EDGE_WEIGHTS, PROFILE_METRICS, GraphSignalProfile, attention_gini, attention_graph,
     combinatorial_laplacian, graph_signal_metrics, normalized_laplacian, pool_nodes,
-    positional_metrics, profile_from_outputs, sink_mass,
+    positional_metrics, profile, profile_from_outputs, sink_mass,
 )
 from .dynamics import (
     FAMILIES, Trajectory, damped_oscillator, generate, logistic, lorenz, pendulum, periodic, sine,
@@ -55,5 +58,5 @@ __all__ = [
     "dynamics", "Trajectory", "FAMILIES", "generate", "periodic", "logistic", "lorenz", "sine",
     "damped_oscillator", "pendulum",
     "token_preserving_shuffle", "inventory_covariates", "INVENTORY_COVARIATES",
-    "rollout", "Rollout", "RolloutReadout",
+    "rollout", "Rollout", "RolloutReadout", "profile", "EDGE_WEIGHTS",
 ]

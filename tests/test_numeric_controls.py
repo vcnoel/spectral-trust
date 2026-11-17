@@ -254,3 +254,72 @@ def test_rollout_readout_with_edit_with_controls(sharp_model):
         ro(digit_model, torch.tensor([[0, 1, 2, 11]]))
     with pytest.raises(ValueError):
         RolloutReadout(tok, [ctx[0], ctx[0]], [cont[0], cont[1]], n_steps=2)
+
+
+# ── value-weighted graphs in the diagnostics ─────────────────────────────────
+
+@pytest.mark.parametrize("mode", ["attention", "value", "value_per_head"])
+def test_profile_on_value_weighted_graphs_matches_compute_spectra(mode):
+    from spectral_trust.numeric import profile, profile_from_outputs
+    m = _llama(12, seed=3, layers=3)
+    ids = torch.tensor([[0] + [1 + (i * 7) % 10 for i in range(23)]])
+    cfg = GSPConfig(device="cpu", verbose=False, save_plots=False, edge_weights=mode)
+    with torch.no_grad():
+        out = m(input_ids=ids, output_attentions=True, output_hidden_states=True)
+    edges = (None if mode == "attention"
+             else st.value_weighted_attention(m, ids, per_head=mode == "value_per_head"))
+    ref = st.compute_spectra({lay: out.attentions[lay] for lay in range(3)},
+                             {lay: out.hidden_states[lay + 1] for lay in range(3)},
+                             tokens=[[str(i) for i in ids[0].tolist()]], config=cfg, edges=edges)
+    # compute_spectra's construction: no drop, no renormalisation, normalised basis,
+    # states after the block, HFER over the top hfer_cutoff_ratio of the modes
+    p = profile(m, ids, edge_weights=mode, drop=(), renormalize=False, basis="normalized",
+                pairing="output", hfer_cutoff=cfg.hfer_cutoff_ratio)
+    for lay in range(3):
+        for mine, theirs in (("fiedler", "fiedler_value"), ("hfer", "hfer"),
+                             ("spectral_entropy", "spectral_entropy")):
+            assert p.per_layer[mine][lay] == pytest.approx(
+                ref[f"blocks.{lay}.graph.{theirs}"], rel=1e-4, abs=1e-5), (mode, lay, mine)
+    # the default is bit-identical to a call without the new arguments
+    plain = profile_from_outputs(out.attentions, out.hidden_states)
+    again = profile_from_outputs(out.attentions, out.hidden_states, edge_weights="attention")
+    for k in plain.per_layer:
+        assert np.array_equal(plain.per_layer[k], again.per_layer[k])
+    if mode != "attention":
+        pv = profile_from_outputs(out.attentions, out.hidden_states, edge_weights=mode,
+                                  edges=edges)
+        assert not np.allclose(pv.per_layer["fiedler"], plain.per_layer["fiedler"])
+        assert np.array_equal(pv.per_layer["sink_mass"], plain.per_layer["sink_mass"])
+        with pytest.raises(ValueError):
+            profile_from_outputs(out.attentions, out.hidden_states, edge_weights=mode)
+    with pytest.raises(ValueError):
+        profile_from_outputs(out.attentions, edge_weights="values")
+
+
+def test_centering_removes_the_dc_component():
+    from spectral_trust.numeric import profile_from_outputs
+    m = _llama(12, seed=3, layers=2)
+    ids = torch.tensor([[0] + [1 + (i * 3) % 10 for i in range(19)]])
+    with torch.no_grad():
+        out = m(input_ids=ids, output_attentions=True, output_hidden_states=True)
+    plain = profile_from_outputs(out.attentions, out.hidden_states, keep_masses=True)
+    off = profile_from_outputs(out.attentions, out.hidden_states, keep_masses=True,
+                               center=False, center_positions=[1, 2])
+    for k in plain.per_layer:                         # the default is unchanged
+        assert np.array_equal(plain.per_layer[k], off.per_layer[k])
+    c = profile_from_outputs(out.attentions, out.hidden_states, keep_masses=True, center=True)
+    for lay in (0, 1):
+        # mode 0 of the combinatorial Laplacian of a connected graph is constant
+        assert plain.masses[lay][0] > 1e-3 * plain.masses[lay].sum()
+        assert c.masses[lay][0] < 1e-10 * c.masses[lay].sum()
+    # by hand: the same as centering the hidden states first
+    hs = [h - h[:, 1:].mean(1, keepdim=True) for h in out.hidden_states]
+    ref = profile_from_outputs(out.attentions, hs)
+    for k in ("hfer", "exp_se", "pos_hfer"):
+        assert np.allclose(c.per_layer[k], ref.per_layer[k])
+    # centring on a subset (e.g. the value tokens) uses that subset's mean
+    sub = profile_from_outputs(out.attentions, out.hidden_states, center=True,
+                               center_positions=list(range(1, 20, 2)))
+    hs = [h - h[:, 1:20:2].mean(1, keepdim=True) for h in out.hidden_states]
+    assert np.allclose(sub.per_layer["hfer"],
+                       profile_from_outputs(out.attentions, hs).per_layer["hfer"])
