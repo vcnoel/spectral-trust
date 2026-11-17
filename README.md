@@ -46,6 +46,39 @@ Used in research at Cornell University, Goodfire AI, Imperial College London
 and École Polytechnique, including a paper accepted at EACL 2027
 ([list](https://github.com/vcnoel/spectral-trust#used-in-research)).
 
+## New in 0.5.1 to 0.5.3: more graphs, more measures, numerical ICL
+
+<p align="center"><img src="docs/assets/sine_rollout.gif" width="760" alt="Qwen2.5-0.5B extrapolating two sines value by value: the sine it predicts one step ahead still drifts over many steps"></p>
+
+*Qwen2.5-0.5B continues a sine from 150 values, feeding back its own predictions. A sine with 6 periods in context stays on track; one with 1.5 periods drifts, although each next value is predicted with near-zero error. Computed with `numeric.rollout`.*
+
+- **Graphs.** Value-weighted, directed and magnetic attention graphs; the
+  measure-aware operator spectra of Viganò et al. (NeurIPS 2026); Forman
+  curvature; pseudospectra of the triangular attention matrix; sink and
+  asymmetry features (0.5.1).
+- **Benchmarks.** Any metric as an [LM-Polygraph](https://vcnoel.github.io/spectral-trust/tutorials/lm-polygraph/) uncertainty estimator (0.5.1).
+- **Numerical in-context learning** ([use case](https://vcnoel.github.io/spectral-trust/use-cases/numerical-icl/), Colab 05): the
+  serialisation and diagnostics of Bao et al. (EACL 2027), a confound audit,
+  edits with matched controls (0.5.1); seeded dynamics generators, the
+  token-preserving shuffle and inventory covariates, multi-step rollout,
+  value-weighted and centred diagnostics, and `interventions.sink_bias`,
+  which moves the attention sink during generation (0.5.3).
+
+```python
+from spectral_trust.numeric import dynamics, rollout
+from spectral_trust.interventions import sink_bias
+
+traj = dynamics.sine(frequency=1 / 25.1)       # a sine with a non-integer period
+context, truth = traj.split(150, 20)
+r = rollout(model, tok, context, 20, target=truth)
+r.abs_error, r.cum_error                       # error at each step, and summed
+
+with sink_bias(model, [12], -2.0):              # less attention to the first token
+    r_moved = rollout(model, tok, context, 20, target=truth)
+```
+
+Every 0.5.0 call returns bit-identical results, pinned by a regression test.
+
 ## New in 0.5.0: interventions
 
 The interventions are new and experimental: their API may change in a minor
@@ -132,6 +165,7 @@ API are in the
 | [02 Animated views](https://github.com/vcnoel/spectral-trust/blob/main/notebooks/02_animated_views.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/notebooks/02_animated_views.ipynb) | CPU | `flow` as an interactive page and a video, `waterfall` as a GIF, `compare` as a video |
 | [03 Interventions](https://github.com/vcnoel/spectral-trust/blob/main/notebooks/03_interventions.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/notebooks/03_interventions.ipynb) | CPU | the three edits above on 200 IOI prompts, each against its control, computed in the notebook |
 | [04 Phi-3 prepositions](https://github.com/vcnoel/spectral-trust/blob/main/notebooks/04_phi3_prepositions.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/notebooks/04_phi3_prepositions.ipynb) | T4 GPU | Phi-3-mini: the trigger-word probe, λ2 against sink mass on 72 active/passive pairs, the Fiedler split of one sentence |
+| [05 Numerical ICL](https://github.com/vcnoel/spectral-trust/blob/main/notebooks/05_numerical_icl.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vcnoel/spectral-trust/blob/main/notebooks/05_numerical_icl.ipynb) | CPU | Qwen2.5-0.5B: the simple-versus-chaotic contrast of Bao et al., the confound audit and one edit with its matched controls |
 
 ## Use cases
 
@@ -678,7 +712,7 @@ and the graph signal processing framework paper:
 @software{noel_spectral_trust,
   author  = {No{\"e}l, Valentin},
   title   = {spectral-trust: graph-spectral diagnostics for transformer attention},
-  version = {0.5.0},
+  version = {0.5.3},
   year    = {2026},
   url     = {https://github.com/vcnoel/spectral-trust},
   license = {Apache-2.0}
