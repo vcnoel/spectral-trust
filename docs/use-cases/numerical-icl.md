@@ -313,8 +313,8 @@ wide.
 
 Two directions build naturally on the paper: separating dynamical
 complexity from the token inventory of a sequence, and following the model
-beyond the next value. Three tools in `spectral_trust.numeric` support
-them.
+beyond the next value. The tools below support them, together with value-weighted
+graphs and a sink intervention (end of this section).
 
 - **Generators** (`numeric.dynamics`): seeded versions of the paper's
   families (`periodic`, `logistic` at r with burn-in, `lorenz` with a chosen
@@ -364,12 +364,24 @@ res = st.confound_audit({"fiedler": lam2, "hfer": hfer, "exp_se": exp_se},
                         chaotic, cov)
 print(res.to_markdown())
 
-# 3. multi-step error on a sine and on period 8
-for fam, kw in (("sine", {"frequency": 1 / 16}), ("periodic", {"p": 8})):
+# 3. multi-step error on period 8, two sines and a pendulum
+for fam, kw in (("periodic", {"p": 8}), ("sine", {"frequency": 1 / 16}),
+                ("sine", {"frequency": 0.0371}), ("pendulum", {"omega": 2 * np.pi / 16})):
     ctx, cont = generate(fam, 120, seed=0, **kw).split(100, 20)
     r = rollout(model, tok, ctx, 20, target=cont)
     print(fam, r.abs_error, r.cum_error[-1], r.valid_steps)
 ```
+
+On Qwen2.5-0.5B (100-value contexts, 20 steps, mean of 3 seeds), period 8
+and a sine at 1/16 cycle per value are continued without error for all 20
+steps: a sine whose period is a whole number of values is, once quantised, a
+periodic sequence that the model can copy. A sine at 0.0371 cycle per value,
+whose samples never repeat, starts at an error of 0.3 and drifts to 12.7
+after 10 steps and 30.7 after 20 (cumulative 266); the pendulum's
+cumulative error reaches 1078 and its error first exceeds 50 after 13.7
+steps on average. Choosing frequencies incommensurate with the sampling
+keeps a smooth family from collapsing into a periodic one, which makes the
+contrast between smooth and discrete dynamics clean.
 
 The rollout runs the prompt once and extends its key-value cache with each
 predicted value, so it also serves as the readout of `st.edit_with_controls`:
@@ -389,6 +401,42 @@ res.summary(["mae", "cum_error", "valid_steps"])
 `valid_steps` counts the steps before the first error above `tol` (50 by
 default, 5% of the 50-950 range). `predict="mean"` feeds back the rounded
 expected value instead of the most probable one.
+
+**Moving the sink.** `st.interventions.sink_bias(model, layers, b)` adds the
+logit `b` to every query's attention score toward the first token (the
+usual sink) at the chosen layers, and holds under cached generation. Next to
+it, the diagnostics can be read on value-weighted graphs, which give little
+weight to a sink whose value vectors are small, and on centred hidden
+states:
+
+```python
+from spectral_trust.interventions import sink_bias
+from spectral_trust.numeric import profile
+
+ids = tok(serialize(generate("periodic", 100, seed=0, p=8).ints))["input_ids"]
+for b in (0.0, -2.0, -4.0):                 # model loaded with attn_implementation="eager"
+    with sink_bias(model, range(model.config.num_hidden_layers), b):
+        p = profile(model, ids, drop=())
+    print(b, p.mean["fiedler"], p.mean["sink_mass"])
+profile(model, ids, drop=(), edge_weights="value")          # the value-weighted graph
+profile(model, ids, center=True, center_positions=sp.numeric_positions)
+```
+
+On one period-8 input on Qwen2.5-0.5B (no BOS, so the first token is a
+digit), b = 0, −2 and −4 at every layer bring the sink mass from 0.30 to
+0.17 and 0.01, and λ2 (first token kept) from 0.44 to 0.30 and 0.38; with
+the first token dropped and the rows renormalised, from 0.34 to 0.25 and
+0.44. λ2 moves with the sink, and not in one direction, which makes sink
+mass a covariate worth reporting next to it. With the first token dropped,
+a bias toward it leaves the renormalised rows of the biased layer itself
+unchanged (the softmax is invariant to it), so these changes reach the graph
+through the hidden states of later layers. The value-weighted graph gives
+λ2 = 0.30 on the unbiased input, against 0.44 for the attention graph.
+
+`center=True` subtracts each layer's mean hidden state (over
+`center_positions`, by default every node) before the graph Fourier
+transform, which removes the DC component; it is offered as an option to
+align with the authors' code once it is public.
 
 ## Controls and limits
 

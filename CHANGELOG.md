@@ -45,6 +45,24 @@ learning. No result changes for existing calls.
   runs once and each step extends its key-value cache, so an edit of
   `st.edit_with_controls` reaches every step; `numeric.RolloutReadout`
   makes a rollout that function's readout.
+- Value-weighted graphs in the numeric diagnostics:
+  `profile_from_outputs(..., edge_weights="value" | "value_per_head",
+  edges=...)` builds the graph from `st.value_weighted_attention` (the same
+  edges as `compute_spectra` under `GSPConfig.edge_weights`), and
+  `numeric.profile(model, ids, edge_weights=...)` runs the forward pass and
+  the value capture. λ2, HFER and SE match `compute_spectra` on the same
+  inputs; `gini` and `sink_mass` still read the attention.
+- `profile_from_outputs(..., center=True, center_positions=...)`: subtracts
+  each layer's mean hidden state (over the value tokens, or every node)
+  before the graph Fourier transform, removing the DC component; an ablation
+  of the authors' updated paper, to be aligned with their code once it is
+  public. Off by default.
+- `st.interventions.sink_bias(model, layers, b, hub=0)` and
+  `Intervention.sink_bias`: add the logit `b` to every query's attention
+  score toward the hub key (default the first real token) at the chosen
+  layers, through eager attention, on the additive mask, so it holds under
+  cached generation and left padding; `b = 0` installs nothing. Undone on
+  exit like the other interventions.
 - `next_value_distribution`: the hierarchical readout can start from an
   existing key-value cache (internal; the same numbers).
 
